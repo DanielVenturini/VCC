@@ -19,7 +19,7 @@ char *currentCharacter = NULL;  /// salvar o caracter que nao deveria ter sido l
 FILE *fileReader;               /// ponteiro para leitura do arquivo
 
 typedef enum {                  /// palavras reservadas e simbolos
-    SE, ENTAO, SENAO, ENQUANTO, SOMA, SUB, MULT, DIV, NUM, ID, ATTR, MENOR, MAIOR, IGUAL, A_COL, F_COL
+    SE, ENTAO, SENAO, REPITA, SOMA, SUB, INTEIRO, FLOAT, MULT, DIV, NUM, ID, ATTR, MENOR, MAIOR, IGUAL, A_COL, F_COL, A_PAR, F_PAR
 } TokenType;
 
 typedef struct {                /// tokens propriamente ditos
@@ -69,7 +69,8 @@ char* getCharacter(){
 #define NUMERO 2        /// '123.213'
 #define IDENTIFICADOR 3 /// 'string' pode ser uma variavel ou palavra reservada
 #define ATRIBUICAO 4    /// ':='
-#define UNICO 5         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' estes sao unicos e seus valores sao seus significados
+#define UNICO 5         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' estes sao unicos e seus valores sao seus significados
+#define COMENTARIO 6
 
 TokenRecord* getToken(void){
 
@@ -95,18 +96,21 @@ TokenRecord* getToken(void){
         switch(currentToken){
 
             case INICIAL:               /// primeira vez, entao ve qual sera o proximo a processar
-                if (*c >= 48 && *c <= 57){
+                if (*c >= '0' && *c <= '9'){
                     currentToken = NUMERO;
                 } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') ){
                     currentToken = IDENTIFICADOR;
-                } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '=' || *c == '>' || *c == '[' || *c == ']'){
+                } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '=' || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')'){
                     currentToken = UNICO;
-                } else if (*c == ' ' || *c == 13 || *c == 10) {
+                } else if (*c == ' ' || *c == 13 || *c == 10 || *c == '\t') {
                     break;   /// entao volta para o comeco do laco e le o proximo caracter
+                } else if (*c == '{') {
+                    currentToken = COMENTARIO;
                 } else if (*c == EOF){
                     currentToken = EOF;
                 } else {
-                    printf("Aquiiiiiii\n");
+                    currentToken = EOF;
+                    printf("CARACTER INVALIDO: %d\n", *c);
                 }
 
                 /// quando sai do case inicial, volta para o 'switch(currentToken)' e pega o proximo token
@@ -196,6 +200,13 @@ TokenRecord* getToken(void){
                         token->tokenval = F_COL;
                         token->attribute.stringval = c;
                         break;
+                    case '(':
+                        token->tokenval = A_PAR;
+                        token->attribute.stringval = c;
+                        break;
+                    case ')':
+                        token->tokenval = F_PAR;
+                        token->attribute.stringval = c;
                     case ':':
                         token->tokenval = ATTR;
                         token->attribute.stringval = c;
@@ -208,6 +219,11 @@ TokenRecord* getToken(void){
                 finishToken = TRUE;                     /// termina de ler
                 break;
 
+            case COMENTARIO:
+                printf("COMENTARIO IGNORADO\n");
+                while( *(c = getCharacter()) != '}');   /// consumindo tudo o que esta entre o '{' e o '}'
+                currentToken = INICIAL;                 /// volta para estado inicial
+                break;
             case EOF:    /// EOF
                 finishToken = TRUE;
                 token = token = (TokenRecord*) malloc(sizeof(TokenRecord));
@@ -233,17 +249,17 @@ int main(int argc, char *argv[]){
     while(token->tokenval != EOF){
 
         if (token->tokenval == ID)
-            printf("Identificador: %s\n", token->attribute.stringval);
+            printf("(ID, %s)\n", token->attribute.stringval);
         else if (token->tokenval == NUM)
-            printf("Numero: %d\n", token->attribute.numval);
+            printf("(NUM, %d)\n", token->attribute.numval);
         else if (token->tokenval == SOMA || token->tokenval == SUB ||token->tokenval == MULT ||token->tokenval == DIV)
-            printf("Operacao: %c\n", *token->attribute.stringval);
+            printf("( %c )\n", *token->attribute.stringval);
         else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUAL)
-            printf("Comparacao: %c\n", *token->attribute.stringval);
-        else if (token->tokenval == A_COL || token->tokenval == F_COL)
-            printf("Operador: %c\n", *token->attribute.stringval);
+            printf("( %c )\n", *token->attribute.stringval);
+        else if (token->tokenval == A_COL || token->tokenval == F_COL || token->tokenval == A_PAR || token->tokenval == F_PAR)
+            printf("( %c )\n", *token->attribute.stringval);
         else if (token->tokenval == ATTR)
-            printf("Atribuicao: %c\n", *token->attribute.stringval);
+            printf("( %c )\n", *token->attribute.stringval);
 
         free(token);
         token = getToken();
