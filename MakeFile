@@ -1,0 +1,8 @@
+all:	compile
+
+compile: varredura.c
+	gcc varredura.c -o varredura
+
+clean:
+	rm varredura
+
