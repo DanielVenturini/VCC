@@ -117,7 +117,7 @@ TokenRecord* getToken(void){
                 goto recomputaSwitch;
 
             case NUMERO:    /// este estado le ate o final do numero
-                resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// numeros de 0 ate 999999
+                resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// numeros de 0 ate 99999999
 
                 for(i = 0; i < SIZE_NUM; i ++){                 /// le no maximo 6 digitos
 
@@ -134,7 +134,7 @@ TokenRecord* getToken(void){
                 currentCharacter = c;                           /// nao processa o caracter atual
 
                 token = (TokenRecord*) malloc(sizeof(TokenRecord)); /// cria o token
-                token->tokenval = NUM;                               /// diz que ele eh numero
+                token->tokenval = NUM;                              /// diz que ele eh numero
                 token->attribute.numval = atoi(resp);               /// guarda o valor
 
                 break;
@@ -207,10 +207,21 @@ TokenRecord* getToken(void){
                     case ')':
                         token->tokenval = F_PAR;
                         token->attribute.stringval = c;
-                    case ':':
+                    case ':':   /// pode ser ': ou ':='
                         token->tokenval = ATTR;
-                        token->attribute.stringval = c;
+                        char *nextCharacter = getCharacter();   /// eh preciso saber se o proximo eh '='
+
+                        if(*nextCharacter == '='){
+                            token->attribute.stringval = (char *) malloc(3*sizeof(char));
+                            token->attribute.stringval[0] = *c;
+                            token->attribute.stringval[1] = *nextCharacter;
+                            token->attribute.stringval[2] = '\0';
+                        } else {                                /// entao eh somento ':'
+                            token->attribute.stringval = c;
+                            currentCharacter = nextCharacter;
+                        }
                         break;
+
                     default:
                         printf("OPERANDO UNICO NAO IMPLEMENTADO: %c\n", *c);
                         break;
@@ -259,7 +270,7 @@ int main(int argc, char *argv[]){
         else if (token->tokenval == A_COL || token->tokenval == F_COL || token->tokenval == A_PAR || token->tokenval == F_PAR)
             printf("( %c )\n", *token->attribute.stringval);
         else if (token->tokenval == ATTR)
-            printf("( %c )\n", *token->attribute.stringval);
+            printf("( %s )\n", token->attribute.stringval);
 
         free(token);
         token = getToken();
