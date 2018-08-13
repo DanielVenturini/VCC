@@ -95,16 +95,18 @@ TokenRecord* getToken(void){
         switch(currentToken){
 
             case INICIAL:               /// primeira vez, entao ve qual sera o proximo a processar
-                if (*c >= '0' && *c <= '9'){
+                if (*c >= 48 && *c <= 57){
                     currentToken = NUMERO;
                 } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') ){
                     currentToken = IDENTIFICADOR;
                 } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '=' || *c == '>' || *c == '[' || *c == ']'){
                     currentToken = UNICO;
-                } else if (*c == ' ' || *c == '\n') {
-                    continue;   /// entao volta para o comeco do laco e le o proximo caracter
+                } else if (*c == ' ' || *c == 13 || *c == 10) {
+                    break;   /// entao volta para o comeco do laco e le o proximo caracter
                 } else if (*c == EOF){
                     currentToken = EOF;
+                } else {
+                    printf("Aquiiiiiii\n");
                 }
 
                 /// quando sai do case inicial, volta para o 'switch(currentToken)' e pega o proximo token
@@ -116,7 +118,6 @@ TokenRecord* getToken(void){
                 for(i = 0; i < SIZE_NUM; i ++){                 /// le no maximo 6 digitos
 
                     resp[i] = *c;                               /// adiciona o numero na resposta
-                    printf("%c ", resp[i]);
                     c = getCharacter();                         /// le o proximo
 
                     if(*c < '0' || *c > '9'){                   /// nao eh um digito
@@ -129,7 +130,7 @@ TokenRecord* getToken(void){
                 currentCharacter = c;                           /// nao processa o caracter atual
 
                 token = (TokenRecord*) malloc(sizeof(TokenRecord)); /// cria o token
-                token->tokenval = ID;                               /// diz que ele eh numero
+                token->tokenval = NUM;                               /// diz que ele eh numero
                 token->attribute.numval = atoi(resp);               /// guarda o valor
 
                 break;
@@ -169,13 +170,10 @@ TokenRecord* getToken(void){
                         break;
                     case '*':
                         token->tokenval = MULT;
-                        token->attribute.stringval = c;                        break;
-                    case '/':
-                        token->tokenval = DIV;
                         token->attribute.stringval = c;
                         break;
-                    case ':':
-                        token->tokenval = ATTR;
+                    case '/':
+                        token->tokenval = DIV;
                         token->attribute.stringval = c;
                         break;
                     case '<':
@@ -197,6 +195,13 @@ TokenRecord* getToken(void){
                     case ']':
                         token->tokenval = F_COL;
                         token->attribute.stringval = c;
+                        break;
+                    case ':':
+                        token->tokenval = ATTR;
+                        token->attribute.stringval = c;
+                        break;
+                    default:
+                        printf("OPERANDO UNICO NAO IMPLEMENTADO: %c\n", *c);
                         break;
                 }
 
