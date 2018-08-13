@@ -9,14 +9,17 @@
 #define FALSE 0
 #define TRUE 1
 
+#define SIZE_NUM 7
+#define SIZE_IDENT 20
+
 /********************************************************************
 *                   ESTRUTURAS NECESSARIAS                          *
 ********************************************************************/
-char currentCharacter = ' ';    /// salvar o caracter que nao deveria ter sido lido - verificacao a frente
+char *currentCharacter = NULL;  /// salvar o caracter que nao deveria ter sido lido - verificacao a frente
 FILE *fileReader;               /// ponteiro para leitura do arquivo
 
 typedef enum {                  /// palavras reservadas e simbolos
-    SE, ENTAO, SENAO, ENQUANTO, MAIS, MENOS, NUM, ID, ATTR
+    SE, ENTAO, SENAO, ENQUANTO, SOMA, SUB, MULT, DIV, NUM, ID, ATTR, MENOR, MAIOR, IGUAL, A_COL, F_COL
 } TokenType;
 
 typedef struct {                /// tokens propriamente ditos
@@ -47,9 +50,9 @@ char* getCharacter(){
 
     char *c = malloc(sizeof(char));
 
-    if(currentCharacter != ' '){    /// se ja tiver um caracter que nao foi processado pela getToken(void)
-        *c = currentCharacter;
-        currentCharacter = ' ';
+    if(currentCharacter != NULL){    /// se ja tiver um caracter que nao foi processado pela getToken(void)
+        c = currentCharacter;
+        currentCharacter = NULL;
 
         return c;
     }
@@ -67,8 +70,6 @@ char* getCharacter(){
 #define IDENTIFICADOR 3 /// 'string' pode ser uma variavel ou palavra reservada
 #define ATRIBUICAO 4    /// ':='
 #define UNICO 5         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' estes sao unicos e seus valores sao seus significados
-#define ERRO 6
-#define FIM -1
 
 TokenRecord* getToken(void){
 
@@ -80,83 +81,134 @@ TokenRecord* getToken(void){
 
     while(!finishToken){
         c = getCharacter();
-        printf("\n");
 
-        if(*c == FIM){
-            currentToken = FIM;
+        if(*c == EOF){
+            currentToken = EOF;
         }
 
         /// usando switch duplamente aninhado:
         /// o primeiro nivel diz respeito ao que esta processando
         /// o segundo nivel diz respeito ao estado de processamento do token atual
 
+        char i;
         recomputaSwitch:
         switch(currentToken){
 
             case INICIAL:               /// primeira vez, entao ve qual sera o proximo a processar
-                                        /// verifica com a tabela ascii
-                if(*c == 32){
-                    currentToken = ESPACO;
-                } else if (*c >= 48 && *c <= 57){
+                /// verifica com a tabela ascii
+                if (*c >= 48 && *c <= 57){
                     currentToken = NUMERO;
                 } else if ( (*c >= 65 && *c <= 90) || (*c >= 97 && *c <= 122) ){
                     currentToken = IDENTIFICADOR;
-                } else if (*c == 58){
-                    currentToken = ATRIBUICAO;
-                } else if (*c == 42 || *c == 43 || *c == 45 || *c == 47 || *c == 60 || *c == 61 || *c == 62 || *c == 91 || *c == 93){
-                    /// estes sao: * + - / < = > [ ]
+                } else if (*c == 42 || *c == 43 || *c == 45 || *c == 47 || *c == 58 || *c == 60 || *c == 61 || *c == 62 || *c == 91 || *c == 93){
+                    /// estes sao: * + - / : < = > [ ]
                     currentToken = UNICO;
+                } else if (*c == 32 || *c == 13) {  /// quebra de linha ou espaco
+                    continue;   /// entao volta para o comeco do laco e le o proximo caracter
+                } else if (*c == EOF){
+                    currentToken = EOF;
                 }
 
+                /// quando sai do case inicial, volta para o 'switch(currentToken)' e pega o proximo token
                 goto recomputaSwitch;
 
             case NUMERO:    /// este estado le ate o final do numero
-                resp = (char*) malloc(7*sizeof(char));  /// numeros de 0 ate 999999
-                char i;
+                resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// numeros de 0 ate 999999
 
-                for(i = 0; i < 6; i ++){        /// le no maximo 6 digitos
+                for(i = 0; i < SIZE_NUM; i ++){               /// le no maximo 6 digitos
 
-                    resp[i] = *c;               /// adiciona o numero na resposta
+                    resp[i] = *c;                               /// adiciona o numero na resposta
                     printf("%c ", resp[i]);
-                    c = getCharacter();         /// le o proximo
+                    c = getCharacter();                         /// le o proximo
 
-                    if(*c < 48 || *c > 57){     /// nao eh um digito
-                        break;                  /// termina este for
+                    if(*c < 48 || *c > 57){                     /// nao eh um digito
+                        break;                                  /// termina este for
                     }
                 }
 
-                finishToken = TRUE;     /// termina de ler
-                resp[i+1] = '\0';       /// finaliza a representacao do numero no resposta
-                currentCharacter = *c;  /// nao processa o caracter atual
-                free(c);                /// libera a memoria do caracter
+                finishToken = TRUE;                             /// termina de ler
+                resp[i+1] = '\0';                               /// finaliza a representacao do numero no resposta
+                currentCharacter = c;                           /// nao processa o caracter atual
 
                 token = (TokenRecord*) malloc(sizeof(TokenRecord)); /// cria o token
-                token->tokenval = NUM;                              /// diz que ele eh numero
+                token->tokenval = ID;                               /// diz que ele eh numero
                 token->attribute.numval = atoi(resp);               /// guarda o valor
 
                 break;
 
             case IDENTIFICADOR:
-                printf("identificador: %c, %d\n", *c, *c);
-                currentToken = INICIAL;
+                token = (TokenRecord*) malloc(sizeof(TokenRecord));                 /// cria o token
+                token->tokenval = ID;                                               /// diz que ele eh identificador
+                token->attribute.stringval = (char*) malloc(SIZE_NUM*sizeof(char)); /// letras de ate SIZE_NUM caracteres
+
+                for(i = 0; i < SIZE_IDENT; i ++){                       /// le no maximo SIZE_IDENT caracteres
+
+                    token->attribute.stringval[i] = *c;                 /// adiciona o numero na resposta
+                    c = getCharacter();                                 /// le o proximo
+
+                    if( ((*c < 65 || *c > 90) && (*c < 97 || *c > 122)) &&  /// nao eh um digito
+                        (*c < 47 || *c > 57) ){                             /// nao eh um numero
+                        break;                                              /// termina este for
+                    }
+                }
+
+                finishToken = TRUE;                     /// termina de ler
+                token->attribute.stringval[i+1] = '\0'; /// finaliza a representacao do numero no resposta
+                currentCharacter = c;                   /// nao processa o caracter atual
+
                 break;
 
-            case ATRIBUICAO:
-                printf("atribuicao: %c\n", *c);                currentToken = INICIAL;
+            case UNICO:     /// estes sao: * + - / : < = > [ ]
+                token = (TokenRecord*) malloc(sizeof(TokenRecord));
+                switch(*c){
+                    case '+':
+                        token->tokenval = SOMA;
+                        token->attribute.stringval = c;
+                        break;
+                    case '-':
+                        token->tokenval = SUB;
+                        token->attribute.stringval = c;
+                        break;
+                    case '*':
+                        token->tokenval = MULT;
+                        token->attribute.stringval = c;                        break;
+                    case '/':
+                        token->tokenval = DIV;
+                        token->attribute.stringval = c;
+                        break;
+                    case ':':
+                        token->tokenval = ATTR;
+                        token->attribute.stringval = c;
+                        break;
+                    case '<':
+                        token->tokenval = MENOR;
+                        token->attribute.stringval = c;
+                        break;
+                    case '=':
+                        token->tokenval = IGUAL;
+                        token->attribute.stringval = c;
+                        break;
+                    case '>':
+                        token->tokenval = MAIOR;
+                        token->attribute.stringval = c;
+                        break;
+                    case '[':
+                        token->tokenval = A_COL;
+                        token->attribute.stringval = c;
+                        break;
+                    case ']':
+                        token->tokenval = F_COL;
+                        token->attribute.stringval = c;
+                        break;
+                }
+
+                finishToken = TRUE;                     /// termina de ler
                 break;
 
-            case UNICO:
-                printf("unico: %c, %d\n", *c, *c);
-                currentToken = INICIAL;
-                break;
-
-            case ESPACO:    /// este espaco ja foi lido, entao retorna para o estado inicial
-                printf("espaco");
-                currentToken = INICIAL;
-                break;
-
-            case FIM:    /// EOF
+            case EOF:    /// EOF
                 finishToken = TRUE;
+                token = token = (TokenRecord*) malloc(sizeof(TokenRecord));
+                token->tokenval = EOF;
                 break;
         }
     }
@@ -173,11 +225,25 @@ int main(int argc, char *argv[]){
     if(openFile(argv[1])){      /// erro ao abrir arquivo
         return 1;
     }
-
     TokenRecord *token = getToken();
-    printf("Token encontrado: %d", token->attribute.numval);
-    token = getToken();
-    printf("Token encontrado: %d", token->attribute.numval);
+    while(token->tokenval != EOF){
+
+        if (token->tokenval == ID)
+            printf("Identificador: %s\n", token->attribute.stringval);
+        else if (token->tokenval == NUM)
+            printf("Numero: %d\n", token->attribute.numval);
+        else if (token->tokenval == SOMA || token->tokenval == SUB ||token->tokenval == MULT ||token->tokenval == DIV)
+            printf("Operacao: %c\n", token->attribute.stringval);
+        else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUAL)
+            printf("Comparacao: %c\n", token->attribute.stringval);
+        else if (token->tokenval == A_COL || token->tokenval == F_COL)
+            printf("Operador: %c\n", token->attribute.stringval);
+        else if (token->tokenval == ATTR)
+            printf("Atribuicao: %c\n", *token->attribute.stringval);
+
+        free(token);
+        token = getToken();
+    }
 
     return 0;
 }
