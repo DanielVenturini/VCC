@@ -6,7 +6,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    if(openFile(argv[1])){      /// erro ao abrir arquivo
+    if(openFile(argv[1]) == '1'){      /// erro ao abrir arquivo
         return 1;
     }
 
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
         if (token->tokenval == ID)
             printf("(ID, %s)\n", token->attribute.stringval);
         else if (token->tokenval == NUM)
-            printf("(NUM, %d)\n", token->attribute.numval);
+            printf("(NUM, %f)\n", token->attribute.numval);
         else if (token->tokenval == SOMA || token->tokenval == SUB ||token->tokenval == MULT ||token->tokenval == DIV)
             printf("( %c )\n", *token->attribute.stringval);
         else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUAL)

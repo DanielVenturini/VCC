@@ -14,15 +14,30 @@ FILE *fileReader;               /// ponteiro para leitura do arquivo
 /********************************************************************
 *                   IMPLEMENTACAO DAS FUNCOES                       *
 ********************************************************************/
-int openFile(char *filename){
+void emptyStatement(void){/*do nothing*/}
+
+/// para evitar realocar sempre, somente sera realocado
+/// se o 'size_data' for maior que a metade do SIZE_[NUM|IDENT]
+int realoca(char *c, char i, char size_max){
+
+    printf("\nREALOCANDO\n");
+    printf("Tamanho maximo atual: %d.\n", size_max);
+    printf("Tamanho atual: %d.\n", i);
+    char new_size = i + (int) size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho maximo inicial menos 1
+    printf("Tamanho maximo atualizado: %d.\n", new_size);
+    c = (char *) realloc(c, new_size*sizeof(char)); /// realoca
+    return new_size;                                /// retorna o novo tamanho
+}
+
+char openFile(char *filename){
     fileReader = fopen(filename, "r");
 
     if(fileReader == NULL){
         fprintf(stderr, "ERR: arquivo '%s' nao existe.\n", filename);
-        return 1;
+        return '1';
     }
 
-    return 0;
+    return '0';
 }
 
 char* getCharacter(){
@@ -96,41 +111,76 @@ TokenRecord* getToken(void){
                 goto recomputaSwitch;
 
             case NUMERO:    /// este estado le ate o final do numero
-                resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// numeros de 0 ate 99999999
+                emptyStatement();                               /// nao faz nada, apenas o 'int size_...' - declaracao - nao pode ser o primeiro
+                char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
+                resp = (char*) malloc(size_num*sizeof(char));   /// numeros inicialmente de 0 ate 9_999_999_999 sem virgula
+                char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
-                for(i = 0; i < SIZE_NUM; i ++){                 /// le no maximo 6 digitos
+                for(i = 0; i < size_num; i ++){                 /// le no maximo 10 digitos
 
                     resp[i] = *c;                               /// adiciona o numero na resposta
                     c = getCharacter();                         /// le o proximo
 
-                    if(*c < '0' || *c > '9'){                   /// nao eh um digito
+                    if(i == size_num-1){                        /// se precisar realocar
+                        size_num = realoca(resp, i, size_num);
+                    }
+
+                    if(*c == '.'){                              /// eh float
+                        isFloat = TRUE;                         /// marca que eh float
+                        resp[++i] = *c;                         /// adiciona o ponto
+                        break;
+
+                    } else if(*c < '0' || *c > '9'){            /// nao eh um digito
                         break;                                  /// termina este for
                     }
                 }
 
-                finishToken = TRUE;                             /// termina de ler
-                resp[i+1] = '\0';                               /// finaliza a representacao do numero no resposta
-                currentCharacter = c;                           /// nao processa o caracter atual
+                if(isFloat){
 
-                token = (TokenRecord*) malloc(sizeof(TokenRecord)); /// cria o token
-                token->tokenval = NUM;                              /// diz que ele eh numero
-                token->attribute.numval = atoi(resp);               /// guarda o valor
+                    do{
+
+                        c = getCharacter();
+                        if(*c < '0' || *c > '9'){               /// nao eh um digito
+                            break;                              /// termina este for
+                        }
+
+                        if(i++ == size_num-1){                  /// se precisar realocar
+                            size_num = realoca(resp, i, size_num);
+                        }
+
+                        resp[i] = *c;
+                    } while(i < size_num);
+                }
+
+                finishToken = TRUE;                                     /// termina de ler
+                resp[i+1] = '\0';                                       /// finaliza a representacao do numero no resposta
+                currentCharacter = c;                                   /// nao processa o caracter atual
+                token = (TokenRecord*) malloc(sizeof(TokenRecord));     /// cria o token
+                token->tokenval = NUM;                                  /// diz que ele eh numero
+                token->attribute.numval = isFloat?atof(resp):atoi(resp);/// se tiver sido guardado um valor float, chama a atof(); senao, a atoi()
+                free(resp);                                             /// desaloca a memoria
 
                 break;
 
             case IDENTIFICADOR:
-                token = (TokenRecord*) malloc(sizeof(TokenRecord));                 /// cria o token
-                token->tokenval = ID;                                               /// diz que ele eh identificador
-                token->attribute.stringval = (char*) malloc(SIZE_NUM*sizeof(char)); /// letras de ate SIZE_NUM caracteres
+                emptyStatement();
+                char size_ident = SIZE_IDENT;
+                token = (TokenRecord*) malloc(sizeof(TokenRecord));                     /// cria o token
+                token->tokenval = ID;                                                   /// diz que ele eh identificador
+                token->attribute.stringval = (char*) malloc(size_ident*sizeof(char));   /// letras de ate size_ident caracteres
 
-                for(i = 0; i < SIZE_IDENT; i ++){                               /// le no maximo SIZE_IDENT caracteres
+                for(i = 0; i < size_ident; i ++){                               /// le no maximo size_ident caracteres
 
                     token->attribute.stringval[i] = *c;                         /// adiciona o numero na resposta
                     c = getCharacter();                                         /// le o proximo
 
                     if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao eh um digito
-                        (*c < '0' || *c > '9') ){                               /// nao eh um numero
+                        (*c < '0' || *c > '9')  && *c != '_'){                  /// nao eh um numero nem '_'
                         break;                                                  /// termina este for
+                    }
+
+                    if(i == size_ident-1){                                      /// se precisar realocar
+                        size_ident = realoca(resp, i, size_ident/1.5);
                     }
                 }
 

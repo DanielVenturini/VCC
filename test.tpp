@@ -1,7 +1,9 @@
 inteiro: n
 
 inteiro fatorial(inteiro: n)
-	inteiro: fat
+	inteiro: string_de_tamanho_grande_para_teste_de_realocacao
+	inteiro: test_float
+	test_float: 402331909.123
 	se n > 0 entao {não calcula se n > 0}
 		fat := 1
 		repita

@@ -5,8 +5,8 @@
 #define FALSE 0
 #define TRUE 1
 
-#define SIZE_NUM 7
-#define SIZE_IDENT 20
+#define SIZE_NUM 10				/// quantidade maxima - inicialmente - de digitos em um numero
+#define SIZE_IDENT 21			/// quantidade maxima - inicialmente - de caracteres em uma string
 
 /********************************************************************
 *                   ESTRUTURAS NECESSARIAS                          *
@@ -21,7 +21,7 @@ typedef struct {                /// tokens propriamente ditos
     TokenType tokenval;
     union {
         char *stringval;
-        int numval;
+        float numval;
     } attribute;
 
 } TokenRecord;
@@ -30,6 +30,6 @@ typedef struct {                /// tokens propriamente ditos
 *                   	DEFINICAO DAS FUNCOES                       *
 ********************************************************************/
 
-int openFile(char *filename);   /// realiza as operacoes de abertura do arquivo
-char* getCharacter();    /// le um unico caracter do arquivo ou retorna um que ja foi lido mas nao processado
-TokenRecord* getToken(void);       /// retorna um token
+char openFile(char *filename);	/// realiza as operacoes de abertura do arquivo
+char* getCharacter();    		/// le um unico caracter do arquivo ou retorna um que ja foi lido mas nao processado
+TokenRecord* getToken(void);    /// retorna um token
