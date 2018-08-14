@@ -6,31 +6,10 @@
     #include <stdlib.h>
 #endif // STDLIB_H
 
-#define FALSE 0
-#define TRUE 1
+#include "varredura.h"
 
-#define SIZE_NUM 7
-#define SIZE_IDENT 20
-
-/********************************************************************
-*                   ESTRUTURAS NECESSARIAS                          *
-********************************************************************/
 char *currentCharacter = NULL;  /// salvar o caracter que nao deveria ter sido lido - verificacao a frente
 FILE *fileReader;               /// ponteiro para leitura do arquivo
-
-typedef enum {                  /// palavras reservadas e simbolos
-    SE, ENTAO, SENAO, REPITA, SOMA, SUB, INTEIRO, FLOAT, MULT, DIV, NUM, ID, ATTR, MENOR, MAIOR, IGUAL, A_COL, F_COL, A_PAR, F_PAR
-} TokenType;
-
-typedef struct {                /// tokens propriamente ditos
-
-    TokenType tokenval;
-    union {
-        char *stringval;
-        int numval;
-    } attribute;
-
-} TokenRecord;
 
 /********************************************************************
 *                   IMPLEMENTACAO DAS FUNCOES                       *
@@ -245,37 +224,3 @@ TokenRecord* getToken(void){
 
     return token;
 }
-
-int main(int argc, char *argv[]){
-    if(argc != 2){
-        fprintf(stderr, "Use: vcc file.tpp");
-        return 1;
-    }
-
-    if(openFile(argv[1])){      /// erro ao abrir arquivo
-        return 1;
-    }
-
-    TokenRecord *token = getToken();
-    while(token->tokenval != EOF){
-
-        if (token->tokenval == ID)
-            printf("(ID, %s)\n", token->attribute.stringval);
-        else if (token->tokenval == NUM)
-            printf("(NUM, %d)\n", token->attribute.numval);
-        else if (token->tokenval == SOMA || token->tokenval == SUB ||token->tokenval == MULT ||token->tokenval == DIV)
-            printf("( %c )\n", *token->attribute.stringval);
-        else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUAL)
-            printf("( %c )\n", *token->attribute.stringval);
-        else if (token->tokenval == A_COL || token->tokenval == F_COL || token->tokenval == A_PAR || token->tokenval == F_PAR)
-            printf("( %c )\n", *token->attribute.stringval);
-        else if (token->tokenval == ATTR)
-            printf("( %s )\n", token->attribute.stringval);
-
-        free(token);
-        token = getToken();
-    }
-
-    return 0;
-}
-
