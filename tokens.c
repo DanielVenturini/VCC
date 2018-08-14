@@ -95,15 +95,13 @@ TokenRecord* getToken(void){
         switch(currentToken){
 
             case INICIAL:               /// primeira vez, entao ve qual sera o proximo a processar
-                /// verifica com a tabela ascii
-                if (*c >= 48 && *c <= 57){
+                if (*c >= '0' && *c <= '9'){
                     currentToken = NUMERO;
-                } else if ( (*c >= 65 && *c <= 90) || (*c >= 97 && *c <= 122) ){
+                } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') ){
                     currentToken = IDENTIFICADOR;
-                } else if (*c == 42 || *c == 43 || *c == 45 || *c == 47 || *c == 58 || *c == 60 || *c == 61 || *c == 62 || *c == 91 || *c == 93){
-                    /// estes sao: * + - / : < = > [ ]
+                } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '=' || *c == '>' || *c == '[' || *c == ']'){
                     currentToken = UNICO;
-                } else if (*c == 32 || *c == 13) {  /// quebra de linha ou espaco
+                } else if (*c == ' ' || *c == '\n') {
                     continue;   /// entao volta para o comeco do laco e le o proximo caracter
                 } else if (*c == EOF){
                     currentToken = EOF;
@@ -115,13 +113,13 @@ TokenRecord* getToken(void){
             case NUMERO:    /// este estado le ate o final do numero
                 resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// numeros de 0 ate 999999
 
-                for(i = 0; i < SIZE_NUM; i ++){               /// le no maximo 6 digitos
+                for(i = 0; i < SIZE_NUM; i ++){                 /// le no maximo 6 digitos
 
                     resp[i] = *c;                               /// adiciona o numero na resposta
                     printf("%c ", resp[i]);
                     c = getCharacter();                         /// le o proximo
 
-                    if(*c < 48 || *c > 57){                     /// nao eh um digito
+                    if(*c < '0' || *c > '9'){                   /// nao eh um digito
                         break;                                  /// termina este for
                     }
                 }
@@ -141,14 +139,14 @@ TokenRecord* getToken(void){
                 token->tokenval = ID;                                               /// diz que ele eh identificador
                 token->attribute.stringval = (char*) malloc(SIZE_NUM*sizeof(char)); /// letras de ate SIZE_NUM caracteres
 
-                for(i = 0; i < SIZE_IDENT; i ++){                       /// le no maximo SIZE_IDENT caracteres
+                for(i = 0; i < SIZE_IDENT; i ++){                               /// le no maximo SIZE_IDENT caracteres
 
-                    token->attribute.stringval[i] = *c;                 /// adiciona o numero na resposta
-                    c = getCharacter();                                 /// le o proximo
+                    token->attribute.stringval[i] = *c;                         /// adiciona o numero na resposta
+                    c = getCharacter();                                         /// le o proximo
 
-                    if( ((*c < 65 || *c > 90) && (*c < 97 || *c > 122)) &&  /// nao eh um digito
-                        (*c < 47 || *c > 57) ){                             /// nao eh um numero
-                        break;                                              /// termina este for
+                    if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao eh um digito
+                        (*c < '0' || *c > '9') ){                               /// nao eh um numero
+                        break;                                                  /// termina este for
                     }
                 }
 
@@ -225,6 +223,7 @@ int main(int argc, char *argv[]){
     if(openFile(argv[1])){      /// erro ao abrir arquivo
         return 1;
     }
+
     TokenRecord *token = getToken();
     while(token->tokenval != EOF){
 
@@ -233,11 +232,11 @@ int main(int argc, char *argv[]){
         else if (token->tokenval == NUM)
             printf("Numero: %d\n", token->attribute.numval);
         else if (token->tokenval == SOMA || token->tokenval == SUB ||token->tokenval == MULT ||token->tokenval == DIV)
-            printf("Operacao: %c\n", token->attribute.stringval);
+            printf("Operacao: %c\n", *token->attribute.stringval);
         else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUAL)
-            printf("Comparacao: %c\n", token->attribute.stringval);
+            printf("Comparacao: %c\n", *token->attribute.stringval);
         else if (token->tokenval == A_COL || token->tokenval == F_COL)
-            printf("Operador: %c\n", token->attribute.stringval);
+            printf("Operador: %c\n", *token->attribute.stringval);
         else if (token->tokenval == ATTR)
             printf("Atribuicao: %c\n", *token->attribute.stringval);
 
