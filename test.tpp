@@ -37,3 +37,5 @@ inteiro principal()
 	fim
 	retorna(0)
 fim
+
+se(b == 2 || b && dia) entao

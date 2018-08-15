@@ -1,40 +1,34 @@
-#ifndef STDIO_H
-    #include <stdio.h>
-#endif // STDIO_H
-
-#ifndef STDLIB_H
-    #include <stdlib.h>
-#endif // STDLIB_H
-
 #include "varredura.h"
 
-char *currentCharacter = NULL;  /// salvar o caracter que nao deveria ter sido lido - verificacao a frente
-FILE *fileReader;               /// ponteiro para leitura do arquivo
-pthread_t *desalocador = NULL;  /// cria thread responsavel por desalocar a memoria
+char *caracterAtual = NULL;  /// salvar o caracter que foi lido mas não processado - verificação a frente
+FILE *leitorArquivo;               /// ponteiro para leitura do arquivo
+pthread_t *desalocador = NULL;  /// ponteiro da thread responsável por desalocar a memória
 
 /********************************************************************
-*                   IMPLEMENTACAO DAS FUNCOES                       *
+*                   IMPLEMENTAÇÃO DAS FUNÇÕES                       *
 ********************************************************************/
 /// apenas desaloca a memoria alocada neste ponteiro
+/// como é usado por uma thread, tem que ser void *
 void *desaloca(void *ptr){
     free(ptr);
 }
 
+/// função usada para realocar memória se a letra ou o número tiver muitos caracteres.
 /// para evitar realocar sempre, somente sera realocado
 /// se o 'size_data' for maior que a metade do SIZE_[NUM|IDENT]
 int realoca(char *c, char i, char size_max){
 
-    printf("COMECANDO ALOCAR\n");
-    char new_size = i + (int) size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho maximo inicial menos 1
+    char new_size = i + (int) size_max-1;           /// novo tamanho sera o tamanho atual mais o tamanho máximo inicial menos 1
     c = (char *) realloc(c, new_size*sizeof(char)); /// realoca
-    printf("TERMINOU DE ALOCAR\n");
     return new_size;                                /// retorna o novo tamanho
 }
 
+/// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
+/// o ponteiro do arquivo é guardado para ser lido caracter por caracter na função getCaracter
 char openFile(char *filename){
-    fileReader = fopen(filename, "r");
+    leitorArquivo = fopen(filename, "r");
 
-    if(fileReader == NULL){
+    if(leitorArquivo == NULL){
         fprintf(stderr, "ERR: arquivo '%s' nao existe.\n", filename);
         return '1';
     }
@@ -42,18 +36,18 @@ char openFile(char *filename){
     return '0';
 }
 
-char* getCharacter(){
+char* getCaracter(){
 
     char *c = malloc(sizeof(char));
 
-    if(currentCharacter != NULL){    /// se ja tiver um caracter que nao foi processado pela getToken(void)
-        c = currentCharacter;
-        currentCharacter = NULL;
+    if(caracterAtual != NULL){    /// se ja tiver um caracter que nao foi processado pela getToken(void)
+        c = caracterAtual;
+        caracterAtual = NULL;
 
         return c;
     }
 
-    *c = getc(fileReader);
+    *c = getc(leitorArquivo);
 
     return c;
 }
@@ -65,93 +59,96 @@ char* getCharacter(){
 #define NUMERO 2        /// '123.213'
 #define IDENTIFICADOR 3 /// 'string' pode ser uma variavel ou palavra reservada
 #define UNICO 4         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' ',' estes sao unicos e seus valores sao seus significados
-#define COMENTARIO 5
+#define LOGICO 5        /// && e ||
+#define COMENTARIO 6
 
 TokenRecord* getToken(void){
 
     char *c;                    /// cada caracter lido
-    char *resp;                /// o resultado do token
+    char *resp;                 /// o resultado do token
     int finishToken = FALSE;    /// se terminou de ler o token
-    int currentToken = INICIAL; /// o token atual de processamento
+    int tokenAtual = INICIAL;   /// o token atual de processamento
     TokenRecord *token;         /// o token propriamente dito
 
     while(!finishToken){
-        c = getCharacter();
+        c = getCaracter();      /// lê o caracter
 
-        if(*c == EOF){
-            currentToken = EOF;
+        if(*c == EOF){          /// se já chegou no fim do arquivo
+            tokenAtual = EOF;   /// retorna um token EOF
         }
 
-        char i;
-        recomputaSwitch:
-        switch(currentToken){
+        char i;                 /// usado nos cases de tokens de números e identificadores
+        recomputaSwitch:        /// label do goto para nao precisar ler caracter novamente
+        switch(tokenAtual){
 
-            case INICIAL:               /// primeira vez, entao ve qual sera o proximo a processar
+            case INICIAL:       /// primeira vez, entao ve qual sera o proximo a processar
                 if (*c >= '0' && *c <= '9'){
-                    currentToken = NUMERO;
+                    tokenAtual = NUMERO;
                 } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') ){
-                    currentToken = IDENTIFICADOR;
+                    tokenAtual = IDENTIFICADOR;
                 } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '='
-                        || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')' || *c == ','){
-                    currentToken = UNICO;
+                        || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')' || *c == ',' || *c == '!'){
+                    tokenAtual = UNICO;
                 } else if (*c == ' ' || *c == 13 || *c == 10 || *c == '\t') {
-                    break;   /// entao volta para o comeco do laco e le o proximo caracter
+                            /// espaço, nova linha, line feed ou tabulação
+                    break;  /// entao volta para o comeco do laco e le o proximo caracter
                 } else if (*c == '{') {
-                    currentToken = COMENTARIO;
+                    tokenAtual = COMENTARIO;
+                } else if (*c == '&' || *c == '|'){
+                    tokenAtual = LOGICO;
                 } else if (*c == EOF){
-                    currentToken = EOF;
-                } else {
-                    currentToken = EOF;
+                    tokenAtual = EOF;
+                } else {    /// algum caracter não válido
+                    tokenAtual = EOF;
                     printf("CARACTER INVALIDO: %d\n", *c);
                 }
 
-                /// quando sai do case inicial, volta para o 'switch(currentToken)' e pega o proximo token
+                /// quando sai do case inicial, volta para o 'switch(tokenAtual)' para processar o token identificado no case INICI
                 goto recomputaSwitch;
 
             case NUMERO:    /// este estado le ate o final do numero
-                resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// numeros inicialmente de 0 ate 9_999_999_999 sem virgula
+                resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// váriavel para guardar cada dígito do número
                 char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
                 char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
-                for(i = 0; i < size_num; i ++){                 /// le no maximo 10 digitos
+                for(i = 0; TRUE; i ++){                         /// fica lendo até parar de ler dígitos
 
-                    resp[i] = *c;                               /// adiciona o numero na resposta
-                    c = getCharacter();                         /// le o proximo
+                    resp[i] = *c;                               /// adiciona o digito na resposta
+                    c = getCaracter();                          /// le o proximo
 
                     if(i == size_num-1){                        /// se precisar realocar
                         size_num = realoca(resp, i, size_num);
                     }
 
-                    if(*c == '.'){                              /// eh float
-                        isFloat = TRUE;                         /// marca que eh float
+                    if(*c == '.'){                              /// se tiver um ponto, é um float
+                        isFloat = TRUE;                         /// marca que é float
                         resp[++i] = *c;                         /// adiciona o ponto
-                        break;
-
+                        break;                                  /// sai deste for, pois tem que ir para o próximo estado
                     } else if(*c < '0' || *c > '9'){            /// nao eh um digito
                         break;                                  /// termina este for
                     }
                 }
 
-                if(isFloat){
+                if(isFloat){                                    /// se for float, lê até acabar os dígitos
 
                     do{
 
-                        c = getCharacter();
-                        if(*c < '0' || *c > '9'){               /// nao eh um digito
-                            break;                              /// termina este for
+                        c = getCaracter();                      /// recupera o caracter
+                        if(*c < '0' || *c > '9'){               /// se não for dígito, termina de ler
+                            break;                              /// termina este for e cria a struct token
                         }
 
                         if(i++ == size_num-1){                  /// se precisar realocar
                             size_num = realoca(resp, i, size_num);
                         }
 
-                        resp[i] = *c;
-                    } while(i < size_num);
+                        resp[i] = *c;                           /// é um digito, então guarda.
+                    } while(1);                                 /// antes tinha uma condição aqui, mas sempre antes de terminar a condição, era alocado
                 }
 
                 finishToken = TRUE;                                     /// termina de ler
                 resp[i+1] = '\0';                                       /// finaliza a representacao do numero no resposta
-                currentCharacter = c;                                   /// nao processa o caracter atual
+                caracterAtual = c;                                   /// nao processa o caracter atual
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));     /// cria o token
 
                 /// transformacao do numero
@@ -180,13 +177,13 @@ TokenRecord* getToken(void){
                 char size_ident = SIZE_IDENT;
                 char *stringval = (char*) malloc(size_ident*sizeof(char));      /// letras de ate size_ident caracteres
 
-                for(i = 0; i < size_ident; i ++){                               /// le no maximo size_ident caracteres
+                for(i = 0; TRUE; i ++){                                         /// lê enquanto tiver caracteres para ler
 
-                    stringval[i] = *c;                                          /// adiciona o numero na resposta
-                    c = getCharacter();                                         /// le o proximo
+                    stringval[i] = *c;                                          /// adiciona o caracter na resposta
+                    c = getCaracter();                                          /// le o proximo
 
-                    if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao eh um digito
-                        (*c < '0' || *c > '9')  && *c != '_'){                  /// nao eh um numero nem '_'
+                    if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao é um digito
+                        (*c < '0' || *c > '9')  && *c != '_'){                  /// nao é um numero nem '_'
                         break;                                                  /// termina este for
                     }
 
@@ -196,22 +193,22 @@ TokenRecord* getToken(void){
                 }
 
                 finishToken = TRUE;                     /// termina de ler
-                stringval[i+1] = '\0';                  /// finaliza a representacao do identificador
-                token->val = (void *) stringval;        /// guarda o ponteiro do numero
-                currentCharacter = c;                   /// nao processa o caracter atual
+                stringval[i+1] = '\0';                  /// finaliza a representação do identificador
+                token->val = (void *) stringval;        /// guarda o ponteiro do identificador
+                caracterAtual = c;                      /// não processa o caracter atual
 
                 break;
 
-            case UNICO:     /// estes sao: * + - / : < = > [ ] ,
+            case UNICO:     /// estes são: * + - / : < = > [ ] , !
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->val = c;
 
                 switch(*c){
                     case '+':
-                        token->tokenval = MAIS;
+                        token->tokenval = SOMA;
                         break;
                     case '-':
-                        token->tokenval = MENOS;
+                        token->tokenval = SUBTRACAO;
                         break;
                     case '*':
                         token->tokenval = MULTIPLICACAO;
@@ -223,7 +220,7 @@ TokenRecord* getToken(void){
                         token->tokenval = MENOR;
                         break;
                     case '=':
-                        token->tokenval = IGUAL;
+                        token->tokenval = IGUALDADE;
                         break;
                     case '>':
                         token->tokenval = MAIOR;
@@ -243,19 +240,22 @@ TokenRecord* getToken(void){
                     case ',':
                         token->tokenval = VIRGULA;
                         break;
+                    case '!':
+                        token->tokenval = NEGACAO;
+                        break;
                     case ':':   /// pode ser ': ou ':='
-                        token->tokenval = DOIS_PONTOS;          /// a principio eh dois pontos
-                        char *nextCharacter = getCharacter();   /// eh preciso saber se o proximo eh '='
+                        token->tokenval = DOIS_PONTOS;          /// a principio são dois pontos
+                        char *nextCharacter = getCaracter();    /// é preciso saber se o próximo é '='
 
-                        if(*nextCharacter == '='){              /// eh um ':='
+                        if(*nextCharacter == '='){              /// verifica se é um ':='
                             token->tokenval = ATRIBUICAO;
                             char *stringval = (char *) malloc(3*sizeof(char));  /// aloco o espaco necessario
-                            stringval[0] = *c;                                  /// preenchenco com ':' '=' '\0'
-                            stringval[1] = *nextCharacter;
-                            stringval[2] = '\0';
+                            stringval[0] = *c;                                  /// ':'
+                            stringval[1] = *nextCharacter;                      /// '='
+                            stringval[2] = '\0';                                /// '\0'
                             token->val = (void *) stringval;    /// guardando o ponteiro no token
-                        } else {                                /// entao eh somento ':'
-                            currentCharacter = nextCharacter;
+                        } else {                                /// entao é somente ':'
+                            caracterAtual = nextCharacter;
                         }
                         break;
 
@@ -267,22 +267,43 @@ TokenRecord* getToken(void){
                 finishToken = TRUE;                     /// termina de ler
                 break;
 
+            case LOGICO:
+                    tokenAtual = EOF;                   /// apenas para não deixar um statement vazio
+                    char *nextCharacter = getCaracter();
+                    if (*c != *nextCharacter){          /// não são os mesmos caracteres: '||' ou '&&'
+                        caracterAtual = nextCharacter;
+                        goto recomputaSwitch;           /// cria um token de EOF
+                    }
+
+                    finishToken = TRUE;
+                    resp = (char *) malloc(3*sizeof(char));
+                    resp[0] = *c;
+                    resp[1] = *nextCharacter;
+                    resp[2] = '\0';
+
+                    token = (TokenRecord*) malloc(sizeof(TokenRecord));
+                    token->tokenval = (*c == '&' ? E_LOGICO : OU_LOGICO);
+                    token->val = resp;
+
+                break;
+
             case COMENTARIO:
                 printf("COMENTARIO IGNORADO\n");
                 char qtd = 1;                           /// quantidade de fechas - '}' - que faltam
                 while(qtd){
-                    c = getCharacter();
+                    c = getCaracter();
                     if (*c == '}')
                         qtd --;
                     else if (*c == '{')
                         qtd ++;
                 }
 
-                currentToken = INICIAL;                 /// volta para estado inicial
+                tokenAtual = INICIAL;                 /// volta para estado inicial
                 break;
+
             case EOF:    /// EOF
                 finishToken = TRUE;
-                token = token = (TokenRecord*) malloc(sizeof(TokenRecord));
+                token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->tokenval = EOF;
                 break;
         }

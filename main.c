@@ -21,9 +21,9 @@ int main(int argc, char *argv[]){
             printf("(NUM, %d)\n", *((int *) token->val));
         else if (token->tokenval == NUM_F)
             printf("(NUM, %f)\n", *((float *) token->val));
-        else if (token->tokenval == MAIS || token->tokenval == MENOS ||token->tokenval == MULTIPLICACAO ||token->tokenval == DIVISAO)
+        else if (token->tokenval == SOMA || token->tokenval == SUBTRACAO ||token->tokenval == MULTIPLICACAO ||token->tokenval == DIVISAO)
             printf("( %c )\n", *((char *) token->val));
-        else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUAL)
+        else if (token->tokenval == MAIOR || token->tokenval == MENOR || token->tokenval == IGUALDADE)
             printf("( %c )\n", *((char *) token->val));
         else if (token->tokenval == ABRE_COLCHETES || token->tokenval == FECHA_COLCHETES
         	  || token->tokenval == ABRE_PARENTESES || token->tokenval == FECHA_PARENTESES)
@@ -32,6 +32,8 @@ int main(int argc, char *argv[]){
         	printf("( %c )\n", *((char *) token->val));
         else if (token->tokenval == ATRIBUICAO)
             printf("( %s )\n", (char *) token->val);
+        else if (token->tokenval == E_LOGICO || token->tokenval == OU_LOGICO)
+        	printf("( %s )\n", (char *) token->val);
 
     } while (token->tokenval != EOF);
 
