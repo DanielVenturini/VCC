@@ -1,7 +1,7 @@
 all: main
 
 main: varredura
-	gcc main.c lexical/varredura.o -o vcc
+	gcc main.c lexical/varredura.o -o vcc -lpthread
 	make clean
 
 varredura:
