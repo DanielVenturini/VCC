@@ -155,22 +155,23 @@ TokenRecord* getToken(void){
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));     /// cria o token
 
                 /// transformacao do numero
-                token->tokenval = isFloat?NUM_I:NUM_F;                  /// marca se eh numero inteiro ou float
-                if(isFloat){
-                    int *stringval = (int *) malloc(sizeof(int));
-                    *stringval = atoi(resp);                            /// recupera o valor inteiro
-                    token->val = (void *) stringval;                    /// guarda no string val
-                } else {
+                token->tokenval = isFloat?NUM_F:NUM_I;                  /// marca se eh numero inteiro ou float
+                if(isFloat) {
                     float *stringval = (float *) malloc(sizeof(float));
                     *stringval = atof(resp);
                     token->val = (void *) stringval;
+                } else {
+                    int *stringval = (int *) malloc(sizeof(int));
+                    *stringval = atoi(resp);                            /// recupera o valor inteiro
+                    token->val = (void *) stringval;                    /// guarda no string val
                 }
 
                 if(!desalocador){                                       /// se ainda nao tiver sido usado thread
                     desalocador = (pthread_t*) malloc(sizeof(pthread_t));
                 }
 
-                pthread_create(desalocador, NULL, desaloca, (void *)resp);   /// inicia desalocar com a thread
+                pthread_create(desalocador, NULL, desaloca, (void *)resp);   /// inicia desalocar com a thread*/
+                //free(resp);
                 break;
 
             case IDENTIFICADOR:
@@ -201,7 +202,7 @@ TokenRecord* getToken(void){
 
                 break;
 
-            case UNICO:     /// estes sao: * + - / : < = > [ ]
+            case UNICO:     /// estes sao: * + - / : < = > [ ] ,
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->val = c;
 
@@ -268,7 +269,15 @@ TokenRecord* getToken(void){
 
             case COMENTARIO:
                 printf("COMENTARIO IGNORADO\n");
-                while( *(c = getCharacter()) != '}');   /// consumindo tudo o que esta entre o '{' e o '}'
+                char qtd = 1;                           /// quantidade de fechas - '}' - que faltam
+                while(qtd){
+                    c = getCharacter();
+                    if (*c == '}')
+                        qtd --;
+                    else if (*c == '{')
+                        qtd ++;
+                }
+
                 currentToken = INICIAL;                 /// volta para estado inicial
                 break;
             case EOF:    /// EOF
