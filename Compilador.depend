@@ -1,5 +1,0 @@
-# depslib dependency file v1.0
-1534117544 source:c:\users\danielventurini\github projects\compilador\compilador\tokens.c
-	<stdio.h>
-	<stdlib.h>
-

@@ -15,17 +15,15 @@ void *desaloca(void *ptr){
 
 /// função usada para realocar memória se a letra ou o número tiver muitos caracteres.
 /// para evitar realocar sempre, somente sera realocado
-/// se o 'size_data' for maior que a metade do SIZE_[NUM|IDENT]
-int realoca(char *c, char i, char size_max){
-
-    char new_size = i + (int) size_max-1;           /// novo tamanho sera o tamanho atual mais o tamanho máximo inicial menos 1
-    c = (char *) realloc(c, new_size*sizeof(char)); /// realoca
-    return new_size;                                /// retorna o novo tamanho
+/// c é o ponteiro para o vetor a alocar; i é o tamanho total; size_max é o tamanho total deste dado: SIZE_NUM|SIZE_ID
+void realoca(char *c, char *i, char *size_max) {
+    *size_max = (char) *i + *size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho máximo inicial menos 1
+    c = (char *) realloc(c, *size_max*sizeof(char));/// realoca
 }
 
 /// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
 /// o ponteiro do arquivo é guardado para ser lido caracter por caracter na função getCaracter
-char openFile(char *filename){
+char openFile(char *filename) {
     leitorArquivo = fopen(filename, "r");
 
     if(leitorArquivo == NULL){
@@ -36,6 +34,8 @@ char openFile(char *filename){
     return '0';
 }
 
+/// retorna um caracter que ainda não tenha sido processado
+/// ou retorna um caracter direto do arquivo
 char* getCaracter(){
 
     char *c = malloc(sizeof(char));
@@ -52,20 +52,40 @@ char* getCaracter(){
     return c;
 }
 
-/// estes sao os possiveis tokens para processar
-/// eles sao usados no estado inicial para saber qual sera o token a processar
+/// apenas recupera os proximos caracteres que são números e
+/// insere na 'resp' a partir do 'i' com no 'máximo size_num'+'i' sem realocar
+/*void getNumeros(char *resp, char *i, char *size_num){
+
+    while(1) {
+
+        char *caracter = getCaracter();         /// recupera o próximo
+
+        if(*i == *size_num-1){                  /// se precisar realocar
+            realoca(resp, i, size_num);
+        }
+
+        if(*caracter < '0' || *caracter > '9'){ /// se não for um número
+        }
+
+        resp[*i] = *caracter;
+    }
+}*/
+
+/// estes são os possíveis tokens para processar
+/// eles são usados no estado inicial para saber qual será o token a processar
 #define INICIAL 0
 #define ESPACO 1        /// ' '
 #define NUMERO 2        /// '123.213'
 #define IDENTIFICADOR 3 /// 'string' pode ser uma variavel ou palavra reservada
 #define UNICO 4         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' ',' estes sao unicos e seus valores sao seus significados
 #define LOGICO 5        /// && e ||
-#define COMENTARIO 6
+#define COMENTARIO 6    /// { }
+#define NI 7            /// caracter não identificado
 
 TokenRecord* getToken(void){
 
     char *c;                    /// cada caracter lido
-    char *resp;                 /// o resultado do token
+    char *resp;                 /// o resultado do token - este será usado para guardar somente dos tokens id ou numero.
     int finishToken = FALSE;    /// se terminou de ler o token
     int tokenAtual = INICIAL;   /// o token atual de processamento
     TokenRecord *token;         /// o token propriamente dito
@@ -111,13 +131,14 @@ TokenRecord* getToken(void){
                 char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
                 char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
+                ///*
                 for(i = 0; TRUE; i ++){                         /// fica lendo até parar de ler dígitos
 
                     resp[i] = *c;                               /// adiciona o digito na resposta
                     c = getCaracter();                          /// le o proximo
 
                     if(i == size_num-1){                        /// se precisar realocar
-                        size_num = realoca(resp, i, size_num);
+                        realoca(resp, &i, &size_num);
                     }
 
                     if(*c == '.'){                              /// se tiver um ponto, é um float
@@ -128,6 +149,7 @@ TokenRecord* getToken(void){
                         break;                                  /// termina este for
                     }
                 }
+                //*/
 
                 if(isFloat){                                    /// se for float, lê até acabar os dígitos
 
@@ -139,7 +161,7 @@ TokenRecord* getToken(void){
                         }
 
                         if(i++ == size_num-1){                  /// se precisar realocar
-                            size_num = realoca(resp, i, size_num);
+                            realoca(resp, &i, &size_num);
                         }
 
                         resp[i] = *c;                           /// é um digito, então guarda.
@@ -188,7 +210,7 @@ TokenRecord* getToken(void){
                     }
 
                     if(i == size_ident-1){                                      /// se precisar realocar
-                        size_ident = realoca(resp, i, size_ident/1.5);
+                        realoca(resp, &i, &size_ident);
                     }
                 }
 
@@ -305,6 +327,12 @@ TokenRecord* getToken(void){
                 finishToken = TRUE;
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->tokenval = EOF;
+                break;
+
+            case NI:    /// NAO_IDENTIFICADO
+                finishToken = TRUE;
+                token = (TokenRecord*) malloc(sizeof(TokenRecord));
+                token->tokenval = NAO_IDENTIFICADO;
                 break;
         }
     }
