@@ -52,24 +52,40 @@ char* getCaracter(){
     return c;
 }
 
-/// apenas recupera os proximos caracteres que são números e
-/// insere na 'resp' a partir do 'i' com no 'máximo size_num'+'i' sem realocar
-/*void getNumeros(char *resp, char *i, char *size_num){
+/// lê toda a sequência de digitos e guarda em 'resp'.
+/// como pode ser chamada de outras funções, por exemplo, 'getFlutuante',
+/// irá começar a concatenar a partir de 'i'.
+/// 'size_max' é o tamanho máximo que pode ser lido sem precisar de usar um 'realloc'
+/// 'c' é o dígito que ainda não foi processado
+char getDecimal(char *resp, char i, char size_max, char *c) {
 
-    while(1) {
+    while(TRUE){                            /// fica lendo até parar de ler dígitos
 
-        char *caracter = getCaracter();         /// recupera o próximo
-
-        if(*i == *size_num-1){                  /// se precisar realocar
-            realoca(resp, i, size_num);
+        if(*c < '0' || *c > '9'){           /// não é um digito
+            caracterAtual = c;              /// guarda o caracter que não é número
+            return i;                       /// retorna a próxima posição vazia do array
         }
 
-        if(*caracter < '0' || *caracter > '9'){ /// se não for um número
+        if(i % size_max == size_max-1){     /// se precisar realocar
+            realoca(resp, &i, &size_max);
         }
 
-        resp[*i] = *caracter;
+        resp[i] = *c;                       /// adiciona o digito na resposta
+        c = getCaracter();                  /// le o proximo
+
+        i ++;
     }
-}*/
+}
+
+/// lê toda a sequência de números a e guarda em 'resp'.
+/// 'c' deve ser o '.' que trousse a esta função.
+char getFlutuante(char *resp, char i, char size_max) {
+
+    resp[i] = *getCaracter();                   /// consome o caractere
+    char *c = getCaracter();                    /// pega o próximo
+
+    return getDecimal(resp, i+1, size_max, c);   /// lê todo o resto de número
+}
 
 /// estes são os possíveis tokens para processar
 /// eles são usados no estado inicial para saber qual será o token a processar
@@ -127,54 +143,31 @@ TokenRecord* getToken(void){
                 goto recomputaSwitch;
 
             case NUMERO:    /// este estado le ate o final do numero
+
                 resp = (char*) malloc(SIZE_NUM*sizeof(char));   /// váriavel para guardar cada dígito do número
                 char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
                 char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
-                ///*
-                for(i = 0; TRUE; i ++){                         /// fica lendo até parar de ler dígitos
+                /// número decimal
+                i = getDecimal(resp, (char) 0, size_num, c);    /// lê todo o número e retorna a última posição do array
 
-                    resp[i] = *c;                               /// adiciona o digito na resposta
-                    c = getCaracter();                          /// le o proximo
-
-                    if(i == size_num-1){                        /// se precisar realocar
-                        realoca(resp, &i, &size_num);
-                    }
-
-                    if(*c == '.'){                              /// se tiver um ponto, é um float
-                        isFloat = TRUE;                         /// marca que é float
-                        resp[++i] = *c;                         /// adiciona o ponto
-                        break;                                  /// sai deste for, pois tem que ir para o próximo estado
-                    } else if(*c < '0' || *c > '9'){            /// nao eh um digito
-                        break;                                  /// termina este for
-                    }
-                }
-                //*/
-
-                if(isFloat){                                    /// se for float, lê até acabar os dígitos
-
-                    do{
-
-                        c = getCaracter();                      /// recupera o caracter
-                        if(*c < '0' || *c > '9'){               /// se não for dígito, termina de ler
-                            break;                              /// termina este for e cria a struct token
-                        }
-
-                        if(i++ == size_num-1){                  /// se precisar realocar
-                            realoca(resp, &i, &size_num);
-                        }
-
-                        resp[i] = *c;                           /// é um digito, então guarda.
-                    } while(1);                                 /// antes tinha uma condição aqui, mas sempre antes de terminar a condição, era alocado
+                /// número flutuante
+                if(*caracterAtual == '.'){                      /// se for igual há um ponto, lê o ponto e o número depois do ponto
+                    i = getFlutuante(resp, i, size_num);        /// lê todo o restante de números depois da vírgula
+                    isFloat = TRUE;
                 }
 
-                finishToken = TRUE;                                     /// termina de ler
-                resp[i+1] = '\0';                                       /// finaliza a representacao do numero no resposta
-                caracterAtual = c;                                   /// nao processa o caracter atual
-                token = (TokenRecord*) malloc(sizeof(TokenRecord));     /// cria o token
+                /// número com notação científica
+                /*if(*characterAtual == 'e' || *characterAtual == 'E'){
+                    /// chama a função que pega o caractere
+                }*/
+
+                finishToken = TRUE;                                 /// termina de ler
+                resp[i] = '\0';                                     /// finaliza a representacao do numero no resposta
+                token = (TokenRecord*) malloc(sizeof(TokenRecord)); /// cria o token
 
                 /// transformacao do numero
-                token->tokenval = isFloat?NUM_F:NUM_I;                  /// marca se eh numero inteiro ou float
+                token->tokenval = isFloat ? NUM_F:NUM_I;            /// marca se é numero inteiro ou float
                 if(isFloat) {
                     float *stringval = (float *) malloc(sizeof(float));
                     *stringval = atof(resp);

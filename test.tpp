@@ -26,7 +26,7 @@ fim
 inteiro: a, b
 inteiro principal()
 	inteiro: c
-	a := 1
+	a := 73
 	b := 2.3
 	c := a + b
 
@@ -35,5 +35,5 @@ inteiro principal()
 	senao
 		escreva(b)
 	fim
-	retorna(0)
+	retorna(4)
 fim
