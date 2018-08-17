@@ -1,7 +1,7 @@
 #include "varredura.h"
 
-char *caracterAtual = NULL;  /// salvar o caracter que foi lido mas não processado - verificação a frente
-FILE *leitorArquivo;               /// ponteiro para leitura do arquivo
+char *caracterAtual = NULL;     /// salvar o caracter que foi lido mas não processado - verificação a frente
+FILE *leitorArquivo;            /// ponteiro para leitura do arquivo
 pthread_t *desalocador = NULL;  /// ponteiro da thread responsável por desalocar a memória
 
 /********************************************************************
@@ -16,9 +16,10 @@ void *desaloca(void *ptr){
 /// função usada para realocar memória se a letra ou o número tiver muitos caracteres.
 /// para evitar realocar sempre, somente sera realocado
 /// c é o ponteiro para o vetor a alocar; i é o tamanho total; size_max é o tamanho total deste dado: SIZE_NUM|SIZE_ID
-void realoca(char *c, char *i, char *size_max) {
+char *realoca(char *c, char *i, char *size_max) {
     *size_max = (char) *i + *size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho máximo inicial menos 1
     c = (char *) realloc(c, *size_max*sizeof(char));/// realoca
+    return c;
 }
 
 /// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
@@ -135,7 +136,7 @@ TokenRecord* getToken(void){
                 } else if (*c == EOF){
                     tokenAtual = EOF;
                 } else {    /// algum caracter não válido
-                    tokenAtual = EOF;
+                    tokenAtual = NI;
                     printf("CARACTER INVALIDO: %d\n", *c);
                 }
 
@@ -170,7 +171,7 @@ TokenRecord* getToken(void){
                 token->tokenval = isFloat ? NUM_F:NUM_I;            /// marca se é numero inteiro ou float
                 if(isFloat) {
                     float *stringval = (float *) malloc(sizeof(float));
-                    *stringval = atof(resp);
+                    *stringval = atol(resp);
                     token->val = (void *) stringval;
                 } else {
                     int *stringval = (int *) malloc(sizeof(int));
@@ -203,7 +204,7 @@ TokenRecord* getToken(void){
                     }
 
                     if(i == size_ident-1){                                      /// se precisar realocar
-                        realoca(resp, &i, &size_ident);
+                        stringval = realoca(stringval, &i, &size_ident);        /// realoca e devolve o novo ponteiro para stringval
                     }
                 }
 
@@ -216,7 +217,6 @@ TokenRecord* getToken(void){
 
             case UNICO:     /// estes são: * + - / : < = > [ ] , !
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
-                token->val = c;
 
                 switch(*c){
                     case '+':
@@ -264,26 +264,16 @@ TokenRecord* getToken(void){
 
                         if(*nextCharacter == '='){              /// verifica se é um ':='
                             token->tokenval = ATRIBUICAO;
-                            char *stringval = (char *) malloc(3*sizeof(char));  /// aloco o espaco necessario
-                            stringval[0] = *c;                                  /// ':'
-                            stringval[1] = *nextCharacter;                      /// '='
-                            stringval[2] = '\0';                                /// '\0'
-                            token->val = (void *) stringval;    /// guardando o ponteiro no token
                         } else {                                /// entao é somente ':'
                             caracterAtual = nextCharacter;
                         }
-                        break;
-
-                    default:
-                        printf("OPERANDO UNICO NAO IMPLEMENTADO: %c\n", *c);
-                        break;
                 }
 
                 finishToken = TRUE;                     /// termina de ler
                 break;
 
             case LOGICO:
-                    tokenAtual = EOF;                   /// apenas para não deixar um statement vazio
+                    tokenAtual = NI;                    /// apenas para não deixar um statement vazio
                     char *nextCharacter = getCaracter();
                     if (*c != *nextCharacter){          /// não são os mesmos caracteres: '||' ou '&&'
                         caracterAtual = nextCharacter;
@@ -291,14 +281,8 @@ TokenRecord* getToken(void){
                     }
 
                     finishToken = TRUE;
-                    resp = (char *) malloc(3*sizeof(char));
-                    resp[0] = *c;
-                    resp[1] = *nextCharacter;
-                    resp[2] = '\0';
-
                     token = (TokenRecord*) malloc(sizeof(TokenRecord));
                     token->tokenval = (*c == '&' ? E_LOGICO : OU_LOGICO);
-                    token->val = resp;
 
                 break;
 
@@ -331,4 +315,46 @@ TokenRecord* getToken(void){
     }
 
     return token;
+}
+
+void print(TokenRecord *token){
+        if (token->tokenval == ID)
+            printf("(ID, %s)\n", (char *) token->val);
+        else if (token->tokenval == NUM_I)
+            printf("(NUM, %d)\n", *((int *) token->val));
+        else if (token->tokenval == NUM_F)
+            printf("(NUM, %f)\n", *((float *) token->val));
+        else if (token->tokenval == SOMA)
+            printf("( + )\n");
+        else if (token->tokenval == SUBTRACAO)
+            printf("( - )\n");
+        else if (token->tokenval == MULTIPLICACAO)
+            printf("( * )\n");
+        else if (token->tokenval == DIVISAO)
+            printf("( / )\n");
+        else if (token->tokenval == MAIOR)
+            printf("( > )\n");
+        else if (token->tokenval == MENOR)
+            printf("( < )\n");
+        else if (token->tokenval == IGUALDADE)
+            printf("( = )\n");
+        else if (token->tokenval == ABRE_COLCHETES)
+            printf("( [ )\n");
+        else if (token->tokenval == FECHA_COLCHETES)
+            printf("( ] )\n");
+        else if (token->tokenval == ABRE_PARENTESES)
+            printf("( ( )\n");
+        else if (token->tokenval == FECHA_PARENTESES)
+            printf("( ) )\n");
+        else if (token->tokenval == VIRGULA)
+            printf("( , )\n");
+        else if (token->tokenval == DOIS_PONTOS)
+            printf("( : )\n");
+        else if (token->tokenval == ATRIBUICAO)
+            printf("( := )\n");
+        else if (token->tokenval == E_LOGICO)
+            printf("( && )\n");
+        else if (token->tokenval == OU_LOGICO)
+            printf("( || )\n");
+        /// falta o >= <=
 }

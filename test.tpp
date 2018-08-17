@@ -35,5 +35,5 @@ inteiro principal()
 	senao
 		escreva(b)
 	fim
-	retorna(4)
+	retorna(0)
 fim

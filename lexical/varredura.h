@@ -27,8 +27,8 @@ typedef struct {                /// tokens propriamente ditos
 /********************************************************************
 *                   	DEFINICAO DAS FUNÇÕES                       *
 ********************************************************************/
-
+/// estas são as que são usadas fora do arquivo varredura.c
 void *desaloca(void *ptr);		/// desaloca a 'ptr' memória usando uma thread
 char openFile(char *filename);	/// realiza as operações de abertura do arquivo
-char* getCaracter();    		/// lê um único caracter do arquivo ou retorna um que já foi lido mas não processado
 TokenRecord* getToken(void);    /// retorna um token
+void print(TokenRecord *token);	/// imprime o valor de um token
