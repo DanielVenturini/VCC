@@ -10,7 +10,6 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    int i = -10;
     TokenRecord *token;
     do {
 

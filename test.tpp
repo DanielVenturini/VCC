@@ -30,7 +30,7 @@ inteiro principal()
 	b := 2.3
 	c := a + b
 
-	se(c > 2) entao
+	se(c <=> 2) entao
 		escreva(c)
 	senao
 		escreva(b)

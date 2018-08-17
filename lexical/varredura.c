@@ -68,7 +68,7 @@ char getDecimal(char *resp, char i, char size_max, char *c) {
         }
 
         if(i % size_max == size_max-1){     /// se precisar realocar
-            realoca(resp, &i, &size_max);
+            resp = realoca(resp, &i, &size_max);
         }
 
         resp[i] = *c;                       /// adiciona o digito na resposta
@@ -88,6 +88,21 @@ char getFlutuante(char *resp, char i, char size_max) {
     return getDecimal(resp, i+1, size_max, c);   /// lê todo o resto de número
 }
 
+/// alguns tokens podem mudar dependendo do próximo caracter: >, >=
+/// esta função verifica se o próximo caracter é igual ao 'proximoCaracter'.
+/// se for, troca o tipo atual do token para o 'tipo'
+char verificaAFrente(TokenRecord *token, char proximoCaracter, TokenType tipo){
+    char *caracter = getCaracter();
+
+    if(*caracter != proximoCaracter){   /// se o caracter lido for diferente do esperado
+        caracterAtual = caracter;       /// guarda o caracter não processado
+        return '0';                     /// retorna que não foi trocado, pois o '<' pode ser '<=' e '<>'
+    }
+
+    token->tokenval = tipo;             /// troca o tipo;
+    return '1';
+}
+
 /// estes são os possíveis tokens para processar
 /// eles são usados no estado inicial para saber qual será o token a processar
 #define INICIAL 0
@@ -103,6 +118,7 @@ TokenRecord* getToken(void){
 
     char *c;                    /// cada caracter lido
     char *resp;                 /// o resultado do token - este será usado para guardar somente dos tokens id ou numero.
+    char *nextCharacter;        /// alguns tokens precisam ver o próximo para saber quem são: '>' '>='
     int finishToken = FALSE;    /// se terminou de ler o token
     int tokenAtual = INICIAL;   /// o token atual de processamento
     TokenRecord *token;         /// o token propriamente dito
@@ -149,10 +165,8 @@ TokenRecord* getToken(void){
                 char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
                 char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
-                /// número decimal
                 i = getDecimal(resp, (char) 0, size_num, c);    /// lê todo o número e retorna a última posição do array
 
-                /// número flutuante
                 if(*caracterAtual == '.'){                      /// se for igual há um ponto, lê o ponto e o número depois do ponto
                     i = getFlutuante(resp, i, size_num);        /// lê todo o restante de números depois da vírgula
                     isFloat = TRUE;
@@ -231,14 +245,8 @@ TokenRecord* getToken(void){
                     case '/':
                         token->tokenval = DIVISAO;
                         break;
-                    case '<':
-                        token->tokenval = MENOR;
-                        break;
                     case '=':
                         token->tokenval = IGUALDADE;
-                        break;
-                    case '>':
-                        token->tokenval = MAIOR;
                         break;
                     case '[':
                         token->tokenval = ABRE_COLCHETES;
@@ -258,15 +266,19 @@ TokenRecord* getToken(void){
                     case '!':
                         token->tokenval = NEGACAO;
                         break;
+                    case '>':   /// pode ser '>' ou '>='
+                        token->tokenval = MAIOR;
+                        verificaAFrente(token, '=', MAIOR_IGUAL);
+                        break;
+                    case '<':   /// pode ser '<' ou '<=' ou '<>'
+                        token->tokenval = MENOR;
+                        if(verificaAFrente(token, '=', MENOR_IGUAL) != '1') /// se não for '<='
+                            verificaAFrente(token, '>', DIFERENTE);         /// teste se é '<>'
+                        break;
                     case ':':   /// pode ser ': ou ':='
                         token->tokenval = DOIS_PONTOS;          /// a principio são dois pontos
-                        char *nextCharacter = getCaracter();    /// é preciso saber se o próximo é '='
-
-                        if(*nextCharacter == '='){              /// verifica se é um ':='
-                            token->tokenval = ATRIBUICAO;
-                        } else {                                /// entao é somente ':'
-                            caracterAtual = nextCharacter;
-                        }
+                        verificaAFrente(token, '=', ATRIBUICAO);
+                        break;
                 }
 
                 finishToken = TRUE;                     /// termina de ler
@@ -277,6 +289,7 @@ TokenRecord* getToken(void){
                     char *nextCharacter = getCaracter();
                     if (*c != *nextCharacter){          /// não são os mesmos caracteres: '||' ou '&&'
                         caracterAtual = nextCharacter;
+                        tokenAtual = NI;                /// token não identificado
                         goto recomputaSwitch;           /// cria um token de EOF
                     }
 
@@ -287,9 +300,10 @@ TokenRecord* getToken(void){
                 break;
 
             case COMENTARIO:
-                printf("COMENTARIO IGNORADO\n");
-                char qtd = 1;                           /// quantidade de fechas - '}' - que faltam
-                while(qtd){
+                tokenAtual = INICIAL;   /// volta para estado inicial quando sair do while
+
+                char qtd = 1;           /// quantidade de fechas - '}' - que faltam
+                while(qtd){             /// só termina de processar o comentário quando tiver fechado todos os abre
                     c = getCaracter();
                     if (*c == '}')
                         qtd --;
@@ -297,7 +311,6 @@ TokenRecord* getToken(void){
                         qtd ++;
                 }
 
-                tokenAtual = INICIAL;                 /// volta para estado inicial
                 break;
 
             case EOF:    /// EOF
@@ -336,6 +349,10 @@ void print(TokenRecord *token){
             printf("( > )\n");
         else if (token->tokenval == MENOR)
             printf("( < )\n");
+        else if (token->tokenval == MAIOR_IGUAL)
+            printf("( >= )\n");
+        else if (token->tokenval == MENOR_IGUAL)
+            printf("( <= )\n");
         else if (token->tokenval == IGUALDADE)
             printf("( = )\n");
         else if (token->tokenval == ABRE_COLCHETES)
@@ -356,5 +373,9 @@ void print(TokenRecord *token){
             printf("( && )\n");
         else if (token->tokenval == OU_LOGICO)
             printf("( || )\n");
+        else if (token->tokenval == DIFERENTE)
+            printf("( <> )\n");
+        else if (token->tokenval == NI)
+            printf("( TOKEN NAO IDENTIFICADO )");
         /// falta o >= <=
 }
