@@ -2,33 +2,33 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-/// dados que ser√£o usados para processar os tokens
+/// dados que ser„o usados para processar os tokens
 #define FALSE 0
 #define TRUE 1
 
-#define SIZE_NUM 10				/// quantidade m√°xima - inicialmente - de digitos em um numero
-#define SIZE_IDENT 21			/// quantidade m√°xima - inicialmente - de caracteres em uma string
+#define SIZE_NUM 10				/// quantidade m·xima - inicialmente - de digitos em um numero
+#define SIZE_IDENT 21			/// quantidade m·xima - inicialmente - de caracteres em uma string
 
 /********************************************************************
-*                   ESTRUTURAS NECESS√ÅRIAS                          *
+*                   ESTRUTURAS NECESS¡RIAS                          *
 ********************************************************************/
 
-typedef enum {                  /// palavras reservadas e s√≠mbolos
+typedef enum {                  /// palavras reservadas e sÌmbolos
     SE, ENTAO, SENAO, FIM, REPITA, FLUTUANTE, RETORNA, ATE, LEIA, ESCREVA, INTEIRO, SOMA, SUBTRACAO, MULTIPLICACAO, DIVISAO, IGUALDADE, VIRGULA, NUM_I, NUM_F, ID, ATRIBUICAO, MENOR, MAIOR, MAIOR_IGUAL, MENOR_IGUAL, DIFERENTE, ABRE_COLCHETES, FECHA_COLCHETES, ABRE_PARENTESES, FECHA_PARENTESES, DOIS_PONTOS, E_LOGICO, OU_LOGICO, NEGACAO, NAO_IDENTIFICADO
 } TokenType;
 
 typedef struct {                /// tokens propriamente ditos
 
     TokenType tokenval;			/// tipo do token
-    void *val;					/// posi√ß√£o deste na memoria. Foi escolhido um ponteiro void para guardar o endere√ßo de qualquer valor na mem√≥ria
+    void *val;					/// posiÁ„oo deste na memoria. Foi escolhido um ponteiro void para guardar o endereÁo de qualquer valor na memÛria
 
 } TokenRecord;
 
 /********************************************************************
-*                   	DEFINICAO DAS FUN√á√ïES                       *
+*                   	DEFINICAO DAS FUN«’ES                       *
 ********************************************************************/
-/// estas s√£o as que s√£o usadas fora do arquivo varredura.c
-void *desaloca(void *ptr);		/// desaloca a 'ptr' mem√≥ria usando uma thread
-char openFile(char *filename);	/// realiza as opera√ß√µes de abertura do arquivo
+/// estas s„o as que s„o usadas fora do arquivo varredura.c
+void *desaloca(void *ptr);		/// desaloca a 'ptr' memÛria usando uma thread
+char openFile(char *filename);	/// realiza as operaÁıes de abertura do arquivo
 TokenRecord* getToken(void);    /// retorna um token
 void print(TokenRecord *token);	/// imprime o valor de um token

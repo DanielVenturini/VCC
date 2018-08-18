@@ -4,14 +4,14 @@ inteiro fatorial(inteiro: n)
 	inteiro: string_de_tamanho_grande_para_teste_de_realocacao
 	inteiro: test_float
 	test_float: 402331909.123
-	se n > 0 entao {nÃ£o calcula se n > 0}
+	se n > 0 entao {não calcula se n > 0}
 		fat := 1
 		repita
 			fat := fat * n
 			n := n - 1
-		ate n = 0
+		até n = 0
 		retorna(fat) {retorna o valor do fatorial de n}
-	senao
+	senão
 		retorna(0)
 	fim
 fim
@@ -30,9 +30,9 @@ inteiro principal()
 	b := 2.3
 	c := a + b
 
-	se(c <=> 2) entao
+	se(c <> 2) então
 		escreva(c)
-	senao
+	senão
 		escreva(b)
 	fim
 	retorna(0)
