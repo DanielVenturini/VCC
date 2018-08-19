@@ -2,17 +2,59 @@
 
 char respVal = 0;               /// se respVal for 0, resp não está apontando para um endereço alocado. Se for 1, não precisa realocar em resp
 char *resp = NULL;              /// o resultado do token - este será usado para guardar somente dos tokens id ou numero.
-char *caracterAtual = NULL;     /// salvar o caracter que foi lido mas não processado - verificação a frente
+unsigned short int posFile = 0; /// posição do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, então mudamos o ponteiro para trás. Permite arquivos com até 65.535 caracteres
 FILE *leitorArquivo;            /// ponteiro para leitura do arquivo
 pthread_t *desalocador = NULL;  /// ponteiro da thread responsável por desalocar a memória
 
 /********************************************************************
 *                   IMPLEMENTAÇÃO DAS FUNÇÕES                       *
 ********************************************************************/
+/// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
+/// o ponteiro do arquivo é guardado para ser lido caracter por caracter na função getCaracter
+char openFile(char *filename) {
+    leitorArquivo = fopen(filename, "r");
+
+    if(leitorArquivo == NULL){
+        fprintf(stderr, "ERR: arquivo '%s' nao existe.\n", filename);
+        return '1';
+    }
+
+    return '0';
+}
+
+/// retorna um caracter que ainda não tenha sido processado
+/// ou retorna um caracter direto do arquivo
+char* getCaracter(){
+
+    char *c = malloc(sizeof(char));     /// aloca um espaço
+    *c = getc(leitorArquivo);           /// lê do arquivo
+    posFile ++;                         /// incrementa a posição do arquivo
+
+    return c;
+}
+
+void voltaCaracter(){
+    posFile --;                                     /// decrementa a quantidade de caracteres lido
+    char status = fseek(leitorArquivo, posFile, 0); /// desloca o ponteiro para, a partir do zero, uma posição atrás da atual
+
+    if(status == -1) {                              /// se deu erro
+        printf("ERRO AO VOLTAR CARACTER NO ARQUIVO\n");
+    }
+}
+
 /// apenas desaloca a memoria alocada neste ponteiro
 /// como é usado por uma thread, tem que ser void *
 void *desaloca(void *ptr){
     free(ptr);
+}
+
+/// função usada para realocar memória se a letra ou o número tiver muitos caracteres.
+/// para evitar realocar sempre, somente sera realocado
+/// c é o ponteiro para o vetor a alocar; i é o tamanho total; size_max é o tamanho total deste dado: SIZE_NUM|SIZE_ID
+char *realoca(char *c, char *i, char *size_max) {
+    *size_max = (char) *i + *size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho máximo inicial menos 1
+    c = (char *) realloc(c, *size_max*sizeof(char));/// realoca
+    return c;
 }
 
 /// verifica se um identificador é igual á uma palavra reservada.
@@ -114,46 +156,6 @@ void palavrasReservadas(TokenRecord *token){
     respVal = 1;
 }
 
-/// função usada para realocar memória se a letra ou o número tiver muitos caracteres.
-/// para evitar realocar sempre, somente sera realocado
-/// c é o ponteiro para o vetor a alocar; i é o tamanho total; size_max é o tamanho total deste dado: SIZE_NUM|SIZE_ID
-char *realoca(char *c, char *i, char *size_max) {
-    *size_max = (char) *i + *size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho máximo inicial menos 1
-    c = (char *) realloc(c, *size_max*sizeof(char));/// realoca
-    return c;
-}
-
-/// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
-/// o ponteiro do arquivo é guardado para ser lido caracter por caracter na função getCaracter
-char openFile(char *filename) {
-    leitorArquivo = fopen(filename, "r");
-
-    if(leitorArquivo == NULL){
-        fprintf(stderr, "ERR: arquivo '%s' nao existe.\n", filename);
-        return '1';
-    }
-
-    return '0';
-}
-
-/// retorna um caracter que ainda não tenha sido processado
-/// ou retorna um caracter direto do arquivo
-char* getCaracter(){
-
-    char *c = malloc(sizeof(char));
-
-    if(caracterAtual != NULL){    /// se ja tiver um caracter que nao foi processado pela getToken(void)
-        c = caracterAtual;
-        caracterAtual = NULL;
-
-        return c;
-    }
-
-    *c = getc(leitorArquivo);
-
-    return c;
-}
-
 /// lê toda a sequência de digitos e guarda em 'resp'.
 /// como pode ser chamada de outras funções, por exemplo, 'getFlutuante',
 /// irá começar a concatenar a partir de 'i'.
@@ -164,7 +166,7 @@ char getDecimal(char *resp, char i, char size_max, char *c) {
     while(TRUE){                            /// fica lendo até parar de ler dígitos
 
         if(*c < '0' || *c > '9'){           /// não é um digito
-            caracterAtual = c;              /// guarda o caracter que não é número
+            voltaCaracter();                /// volta o caracter no arquivo
             return i;                       /// retorna a próxima posição vazia do array
         }
 
@@ -183,8 +185,8 @@ char getDecimal(char *resp, char i, char size_max, char *c) {
 /// 'c' deve ser o '.' que trousse a esta função.
 char getFlutuante(char *resp, char i, char size_max) {
 
-    resp[i] = *getCaracter();                   /// consome o caractere
-    char *c = getCaracter();                    /// pega o próximo
+    resp[i] = '.';              /// consome o caractere
+    char *c = getCaracter();    /// pega o próximo
 
     return getDecimal(resp, i+1, size_max, c);   /// lê todo o resto de número
 }
@@ -199,7 +201,7 @@ char getNotacaoCientifica(char *resp, char i, char size_max) {
     if((*sinal_numero != '-' && *sinal_numero != '+') && (*sinal_numero < '0' || *sinal_numero > '9')){   /// não é '-' nem '+' nem número
 
         fseek(leitorArquivo, ftell(leitorArquivo)-1, 0);/// retorna o ponteiro para o caracter não processado
-        caracterAtual = e;                              /// volta o 'e' ou 'E' para o 'caracterAtual'
+        voltaCaracter();                                /// volta o 'e' ou 'E' para o arquivo
 
         return i;
     }
@@ -221,7 +223,7 @@ char verificaAFrente(TokenRecord *token, char proximoCaracter, TokenType tipo){
     char *caracter = getCaracter();
 
     if(*caracter != proximoCaracter){   /// se o caracter lido for diferente do esperado
-        caracterAtual = caracter;       /// guarda o caracter não processado
+        voltaCaracter();                /// guarda o caracter não processado
         return '0';                     /// retorna que não foi trocado, pois o '<' pode ser '<=' e '<>'
     }
 
@@ -293,14 +295,19 @@ TokenRecord* getToken(void){
 
                 i = getDecimal(resp, (char) 0, size_num, c);    /// lê todo o número e retorna a última posição do array
 
-                if(*caracterAtual == '.'){                      /// se for igual há um ponto, lê o ponto e o número depois do ponto
+                if(*getCaracter() == '.'){                      /// se for igual há um ponto, lê o ponto e o número depois do ponto
                     i = getFlutuante(resp, i, size_num);        /// lê todo o restante de números depois da vírgula
                     isFloat = TRUE;
+                } else {
+                    voltaCaracter();                            /// se não for o '.', volta o caracter
                 }
 
+                char *caracterAtual = getCaracter();
                 /// número com notação científica
                 if(*caracterAtual == 'e' || *caracterAtual == 'E'){
                     i = getNotacaoCientifica(resp, i, size_num);
+                } else {
+                    voltaCaracter();
                 }
 
                 finishToken = TRUE;                                 /// termina de ler
@@ -317,10 +324,6 @@ TokenRecord* getToken(void){
                     int *numval = (int *) malloc(sizeof(int));
                     *numval = atoi(resp);                            /// recupera o valor inteiro
                     token->val = (void *) numval;                    /// guarda no string val
-                }
-
-                if(!desalocador){                                       /// se ainda nao tiver sido usado thread
-                    desalocador = (pthread_t*) malloc(sizeof(pthread_t));
                 }
 
                 respVal = 1;
@@ -350,11 +353,11 @@ TokenRecord* getToken(void){
                     }
                 }
 
-                finishToken = TRUE;             /// termina de ler
-                resp[i+1] = '\0';               /// finaliza a representação do identificador
-                token->val = (void *) resp;     /// guarda o ponteiro do identificador
-                caracterAtual = c;              /// não processa o caracter atual
-                palavrasReservadas(token);      /// verifica se o valor do token não é uma palavra reservada e troca o seu tipo
+                finishToken = TRUE;         /// termina de ler
+                resp[i+1] = '\0';           /// finaliza a representação do identificador
+                token->val = (void *) resp; /// guarda o ponteiro do identificador
+                voltaCaracter();            /// não processa o caracter atual
+                palavrasReservadas(token);  /// verifica se o valor do token não é uma palavra reservada e troca o seu tipo
 
                 break;
 
@@ -417,7 +420,7 @@ TokenRecord* getToken(void){
                     tokenAtual = NI;                    /// o token ainda não foi identificado
                     char *nextCharacter = getCaracter();
                     if (*c != *nextCharacter){          /// não são os mesmos caracteres: '||' ou '&&'
-                        caracterAtual = nextCharacter;  /// guarda o último caractere lido, o 'nextCharacter', pois o 'c' será processado pelo case 'NI'
+                        voltaCaracter();                /// guarda o último caractere lido, o 'nextCharacter', pois o 'c' será processado pelo case 'NI'
                         tokenAtual = NI;                /// token não identificado
                         goto recomputaSwitch;           /// cria um token de NI
                     }
