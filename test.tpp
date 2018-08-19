@@ -27,7 +27,7 @@ inteiro: a, b
 inteiro principal()
 	inteiro: c
 	a := 73
-	b := 2.3
+	b := 1.973e-10
 	c := a + b
 
 	se(c <> 2) então

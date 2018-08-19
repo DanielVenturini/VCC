@@ -189,6 +189,31 @@ char getFlutuante(char *resp, char i, char size_max) {
     return getDecimal(resp, i+1, size_max, c);   /// lê todo o resto de número
 }
 
+/// o caracter atual é 'e' ou 'E'.
+/// Então lê um '-' ou '+' seguido de um número
+char getNotacaoCientifica(char *resp, char i, char size_max) {
+
+    char *e = getCaracter();            /// este é 'e' ou 'E'
+    char *sinal_numero = getCaracter(); /// deve ser '-', '+' ou número
+
+    if((*sinal_numero != '-' && *sinal_numero != '+') && (*sinal_numero < '0' || *sinal_numero > '9')){   /// não é '-' nem '+' nem número
+
+        fseek(leitorArquivo, ftell(leitorArquivo)-1, 0);/// retorna o ponteiro para o caracter não processado
+        caracterAtual = e;                              /// volta o 'e' ou 'E' para o 'caracterAtual'
+
+        return i;
+    }
+
+    if(i % size_max == size_max-2){     /// se precisar realocar, realoca duas posições
+        resp = realoca(resp, &i, &size_max);
+    }
+
+    resp[i++] = *e;             /// 'e' ou 'E'
+    resp[i++] = *sinal_numero;  /// numero ou sinal
+
+    return getDecimal(resp, i, size_max, getCaracter());/// lê todo o resto de número
+}
+
 /// alguns tokens podem mudar dependendo do próximo caracter: >, >=
 /// esta função verifica se o próximo caracter é igual ao 'proximoCaracter'.
 /// se for, troca o tipo atual do token para o 'tipo'
@@ -274,9 +299,9 @@ TokenRecord* getToken(void){
                 }
 
                 /// número com notação científica
-                /*if(*characterAtual == 'e' || *characterAtual == 'E'){
-                    /// chama a função que pega o caractere
-                }*/
+                if(*caracterAtual == 'e' || *caracterAtual == 'E'){
+                    i = getNotacaoCientifica(resp, i, size_num);
+                }
 
                 finishToken = TRUE;                                 /// termina de ler
                 resp[i] = '\0';                                     /// finaliza a representacao do numero no resposta
@@ -286,7 +311,7 @@ TokenRecord* getToken(void){
                 token->tokenval = isFloat ? NUM_F:NUM_I;            /// marca se é numero inteiro ou float
                 if(isFloat) {
                     float *numval = (float *) malloc(sizeof(float));
-                    *numval = atol(resp);
+                    *numval = atof(resp);
                     token->val = (void *) numval;
                 } else {
                     int *numval = (int *) malloc(sizeof(int));
@@ -299,7 +324,6 @@ TokenRecord* getToken(void){
                 }
 
                 respVal = 1;
-                ///pthread_create(desalocador, NULL, desaloca, (void *)resp);   /// inicia desalocar com a thread
                 break;
 
             case IDENTIFICADOR:
@@ -428,6 +452,7 @@ TokenRecord* getToken(void){
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->tokenval = NAO_IDENTIFICADO;
                 token->val = (void *) c;
+                respVal = 1;            /// este endereço não pode ser reaproveitado
                 break;
         }
     }
