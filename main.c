@@ -14,7 +14,7 @@ int main(int argc, char *argv[]){
     do {
 
     	token = getToken();
-        print(token);
+        printToken(token);
 
     } while (token->tokenval != EOF);
 

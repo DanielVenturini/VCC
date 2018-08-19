@@ -16,56 +16,87 @@ void *desaloca(void *ptr){
 /// verifica se um identificador é igual á uma palavra reservada.
 /// se o for chegar até o final, quer dizer que cada caracter são iguais.
 /// vale também para identificadores acentuadpos: SENÃO, ENTÃO e ATÉ
-char iguais(char* identificador[], char* palavraReservada[]){
+char iguais(char* identificador, char palavraReservada[]){
     char i;
-    for(i = 0; (*identificador[i] == *palavraReservada[i]) && *identificador[i] != '\0' && *palavraReservada[i] != '\0'; i ++);
+    for(i = 0; (identificador[i] == palavraReservada[i]) && identificador[i] != '\0' && palavraReservada[i] != '\0'; i ++);
 
-    return (*identificador[i]==*palavraReservada[i] && *palavraReservada[i]=='\0')?'1':'0';
+    return (identificador[i]==palavraReservada[i] && palavraReservada[i]=='\0')?'1':'0';
 }
 
 void palavrasReservadas(TokenRecord *token){
 
     /// descobre qual é o caracter inicial do identificador, pois elimina mais da metade das palavras reservadas
-    switch((char *) token->val[0]){
+    switch(((char *) token->val)[0]){
         case 'a':   /// pode ser o 'até'
-            if(iguais((char *) token->val, "até\0") == '0')    /// se forem diferentes
-                return;                                             /// não faz nada
+            if(iguais(token->val, "até\0") == '0')              /// se forem diferentes
+                return;                                         /// não faz nada
 
             token->tokenval = ATE;
             break;
 
-        case 'e':   /// pode ser o 'escreva' ou 'então'
+        case 'e':   /// pode ser o 'então' ou 'escreva'
+            if(iguais(token->val, "então\0") == '1')            /// é o então
+                token->tokenval = ENTAO;                        /// atualiza o token
+            else if (iguais(token->val, "escreva\0") == '1')
+                token->tokenval = ESCREVA;
+            else
+                return;                                         /// retorna pra não desalocar o token->val
+
             break;
 
         case 'i':   /// pode ser o 'inteiro'
-            if(iguais((char *) token->val, "inteiro\0") == '0') /// se forem diferentes
+            if(iguais(token->val, "inteiro\0") == '0')          /// se forem diferentes
                 return;                                         /// não faz nada
 
             token->tokenval = INTEIRO;
             break;
 
         case 'f':   /// pode ser 'fim' ou 'flutuante'
+            if(iguais(token->val, "fim\0") == '1')              /// é o fim
+                token->tokenval = FIM;                          /// atualiza o token
+            else if (iguais(token->val, "flutuante\0") == '1')
+                token->tokenval = FLUTUANTE;
+            else
+                return;                                         /// retorna pra não desalocar o token->val
+
             break;
 
         case 'l':   /// pode ser o 'leia'
-            if(iguais((char *) token->val, "leia\0") == '0')    /// se forem diferentes
+            if(iguais(token->val, "leia\0") == '0')             /// se forem diferentes
                 return;                                         /// não faz nada
 
             token->tokenval = LEIA;
             break;
 
-        case 'r':   /// pode ser o 'retorna' ou 'repita'
+        case 'r':   /// pode ser o 'repita' ou 'retorna'
+            if(iguais(token->val, "repita\0") == '1')           /// é o repita
+                token->tokenval = REPITA;                       /// atualiza o token
+            else if (iguais(token->val, "retorna\0") == '1')
+                token->tokenval = RETORNA;
+            else
+                return;                                         /// retorna pra não desalocar o token->val
+
             break;
 
         case 's':   /// pode ser o 'se' ou 'senão'
+            if(iguais(token->val, "se\0") == '1')               /// é o se
+                token->tokenval = SE;                           /// atualiza o token
+            else if (iguais(token->val, "senão\0") == '1')
+                token->tokenval = SENAO;
+            else
+                return;                                         /// retorna pra não desalocar o token->val
+
             break;
+
+        default:    /// outra palavra que não começa com estas letras
+            return; /// então retorna para não desalocar
     }
 
     if(!desalocador){                                               /// se ainda não tiver sido usado thread
         desalocador = (pthread_t*) malloc(sizeof(pthread_t));
     }
 
-    pthread_create(desalocador, NULL, desaloca, token->tokenval);   /// desaloca pois não precisa ter esta informação
+    pthread_create(desalocador, NULL, desaloca, token->val);        /// desaloca pois não precisa ter esta informação
 }
 
 /// função usada para realocar memória se a letra ou o número tiver muitos caracteres.
@@ -268,7 +299,8 @@ TokenRecord* getToken(void){
                     c = getCaracter();                                          /// le o proximo
 
                     if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao é um digito
-                        (*c < '0' || *c > '9')  && *c != '_'){                  /// nao é um numero nem '_'
+                        (*c < '0' || *c > '9') &&                               /// não é número
+                        (*c != '_' && *c != 'ã' && *c != 'é')){                 /// não é '_' nem 'ã' nem 'é'
                         break;                                                  /// termina este for
                     }
 
@@ -281,6 +313,7 @@ TokenRecord* getToken(void){
                 stringval[i+1] = '\0';                  /// finaliza a representação do identificador
                 token->val = (void *) stringval;        /// guarda o ponteiro do identificador
                 caracterAtual = c;                      /// não processa o caracter atual
+                palavrasReservadas(token);              /// verifica se o valor do token não é uma palavra reservada e troca o seu tipo
 
                 break;
 
@@ -340,12 +373,12 @@ TokenRecord* getToken(void){
                 break;
 
             case LOGICO:
-                    tokenAtual = NI;                    /// apenas para não deixar um statement vazio
+                    tokenAtual = NI;                    /// o token ainda não foi identificado
                     char *nextCharacter = getCaracter();
                     if (*c != *nextCharacter){          /// não são os mesmos caracteres: '||' ou '&&'
-                        caracterAtual = nextCharacter;
+                        caracterAtual = nextCharacter;  /// guarda o último caractere lido, o 'nextCharacter', pois o 'c' será processado pelo case 'NI'
                         tokenAtual = NI;                /// token não identificado
-                        goto recomputaSwitch;           /// cria um token de EOF
+                        goto recomputaSwitch;           /// cria um token de NI
                     }
 
                     finishToken = TRUE;
@@ -378,6 +411,7 @@ TokenRecord* getToken(void){
                 finishToken = TRUE;
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->tokenval = NAO_IDENTIFICADO;
+                token->val = (void *) c;
                 break;
         }
     }
@@ -385,13 +419,35 @@ TokenRecord* getToken(void){
     return token;
 }
 
-void print(TokenRecord *token){
+void printToken(TokenRecord *token){
         if (token->tokenval == ID)
             printf("(ID, %s)\n", (char *) token->val);
         else if (token->tokenval == NUM_I)
             printf("(NUM, %d)\n", *((int *) token->val));
         else if (token->tokenval == NUM_F)
             printf("(NUM, %f)\n", *((float *) token->val));
+        else if (token->tokenval == ATE)
+            printf("ATE\n");
+        else if (token->tokenval == ENTAO)
+            printf("ENTAO\n");
+        else if (token->tokenval == ESCREVA)
+            printf("ESCREVA\n");
+        else if (token->tokenval == FIM)
+            printf("FIM\n");
+        else if (token->tokenval == FLUTUANTE)
+            printf("FLUTUANTE\n");
+        else if (token->tokenval == INTEIRO)
+            printf("INTEIRO\n");
+        else if (token->tokenval == LEIA)
+            printf("LEIA\n");
+        else if (token->tokenval == REPITA)
+            printf("REPITA\n");
+        else if (token->tokenval == RETORNA)
+            printf("RETORNA\n");
+        else if (token->tokenval == SE)
+            printf("SE\n");
+        else if (token->tokenval == SENAO)
+            printf("SENAO\n");
         else if (token->tokenval == SOMA)
             printf("( + )\n");
         else if (token->tokenval == SUBTRACAO)
@@ -430,7 +486,6 @@ void print(TokenRecord *token){
             printf("( || )\n");
         else if (token->tokenval == DIFERENTE)
             printf("( <> )\n");
-        else if (token->tokenval == NI)
-            printf("( TOKEN NAO IDENTIFICADO )");
-        /// falta o >= <=
+        else if (token->tokenval == NAO_IDENTIFICADO)
+            printf("(NAO_IDENTIFICADO, %s)\n", (char *) token->val);
 }
