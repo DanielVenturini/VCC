@@ -1,14 +1,21 @@
 #include "varredura.h"
 
-char respVal = 0;               /// se respVal for 0, resp não está apontando para um endereço alocado. Se for 1, não precisa realocar em resp
+char respVal;                   /// se respVal for 0, resp não está apontando para um endereço alocado. Se for 1, não precisa realocar em resp
 char *resp = NULL;              /// o resultado do token - este será usado para guardar somente dos tokens id ou numero.
-unsigned short int posFile = 0; /// posição do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, então mudamos o ponteiro para trás. Permite arquivos com até 65.535 caracteres
+unsigned short int posFile;     /// posição do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, então mudamos o ponteiro para trás. Permite arquivos com até 65.535 caracteres
 FILE *leitorArquivo;            /// ponteiro para leitura do arquivo
-pthread_t *desalocador = NULL;  /// ponteiro da thread responsável por desalocar a memória
+char *c = NULL;                 /// variável onde todos os valores dos caracteres serão colocados
 
 /********************************************************************
 *                   IMPLEMENTAÇÃO DAS FUNÇÕES                       *
 ********************************************************************/
+/// inicializa algumas váriaveis necessárias
+void inicializaVariaveis(){
+    posFile = 0;
+    respVal = 0;
+    c = (char *) malloc(sizeof(char));
+}
+
 /// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
 /// o ponteiro do arquivo é guardado para ser lido caracter por caracter na função getCaracter
 char openFile(char *filename) {
@@ -19,6 +26,7 @@ char openFile(char *filename) {
         return '1';
     }
 
+    inicializaVariaveis();
     return '0';
 }
 
@@ -26,13 +34,16 @@ char openFile(char *filename) {
 /// ou retorna um caracter direto do arquivo
 char* getCaracter(){
 
-    char *c = malloc(sizeof(char));     /// aloca um espaço
+    // char *c = malloc(sizeof(char));     /// aloca um espaço
     *c = getc(leitorArquivo);           /// lê do arquivo
     posFile ++;                         /// incrementa a posição do arquivo
 
     return c;
 }
 
+/// volta um posição no ponteiro do arquivo
+/// assim não precisamos utilizar variáveis auxiliares para guardar o caracter não processado
+/// principalmente na função onde é obtido o número com notação cientifica, que precisa voltar até três caracteres
 void voltaCaracter(){
     posFile --;                                     /// decrementa a quantidade de caracteres lido
     char status = fseek(leitorArquivo, posFile, 0); /// desloca o ponteiro para, a partir do zero, uma posição atrás da atual
@@ -195,12 +206,11 @@ char getFlutuante(char *resp, char i, char size_max) {
 /// Então lê um '-' ou '+' seguido de um número
 char getNotacaoCientifica(char *resp, char i, char size_max, char *isFloat) {
 
-    //char *e = getCaracter();          /// este é 'e' ou 'E'
-    char *sinal_numero = getCaracter(); /// pode ser '-' ou '+' ou número
+    char sinal_numero = *getCaracter(); /// pode ser '-' ou '+' ou número
     char *numero = NULL;                /// este apontará para o número
 
-    if(*sinal_numero != '-' && *sinal_numero != '+') {  /// se não for sinal
-        if(*sinal_numero < '0' || *sinal_numero > '9') {/// e não for letra
+    if(sinal_numero != '-' && sinal_numero != '+') {    /// se não for sinal
+        if(sinal_numero < '0' || sinal_numero > '9') {  /// e não for letra
             voltaCaracter();                            /// volta este que não é sinal nem número
             voltaCaracter();                            /// volta o 'e'
 
@@ -225,7 +235,7 @@ char getNotacaoCientifica(char *resp, char i, char size_max, char *isFloat) {
     }
 
     resp[i++] = 'e';            /// 'e' ou 'E'
-    resp[i++] = *sinal_numero;  /// numero ou sinal
+    resp[i++] = sinal_numero;   /// numero ou sinal
     *isFloat = TRUE;            /// marca como float
 
     return getDecimal(resp, i, size_max, getCaracter());/// lê todo o resto de número
@@ -259,7 +269,6 @@ char verificaAFrente(TokenRecord *token, char proximoCaracter, TokenType tipo){
 
 TokenRecord* getToken(void){
 
-    char *c;                    /// cada caracter lido
     char *nextCharacter;        /// alguns tokens precisam ver o próximo para saber quem são: '>' '>='
     int finishToken = FALSE;    /// se terminou de ler o token
     int tokenAtual;             /// o token atual de processamento

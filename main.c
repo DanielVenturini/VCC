@@ -6,7 +6,7 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    if(openFile("teste2.tpp") == '1'){      /// erro ao abrir arquivo
+    if(openFile(argv[1]) == '1'){      /// erro ao abrir arquivo
         return 1;
     }
 
