@@ -193,25 +193,40 @@ char getFlutuante(char *resp, char i, char size_max) {
 
 /// o caracter atual é 'e' ou 'E'.
 /// Então lê um '-' ou '+' seguido de um número
-char getNotacaoCientifica(char *resp, char i, char size_max) {
+char getNotacaoCientifica(char *resp, char i, char size_max, char *isFloat) {
 
-    char *e = getCaracter();            /// este é 'e' ou 'E'
-    char *sinal_numero = getCaracter(); /// deve ser '-', '+' ou número
+    //char *e = getCaracter();          /// este é 'e' ou 'E'
+    char *sinal_numero = getCaracter(); /// pode ser '-' ou '+' ou número
+    char *numero = NULL;                /// este apontará para o número
 
-    if((*sinal_numero != '-' && *sinal_numero != '+') && (*sinal_numero < '0' || *sinal_numero > '9')){   /// não é '-' nem '+' nem número
+    if(*sinal_numero != '-' && *sinal_numero != '+') {  /// se não for sinal
+        if(*sinal_numero < '0' || *sinal_numero > '9') {/// e não for letra
+            voltaCaracter();                            /// volta este que não é sinal nem número
+            voltaCaracter();                            /// volta o 'e'
 
-        fseek(leitorArquivo, ftell(leitorArquivo)-1, 0);/// retorna o ponteiro para o caracter não processado
-        voltaCaracter();                                /// volta o 'e' ou 'E' para o arquivo
+            return i;
+        }
+        /// então é número
+    } else {                                /// 'sinal_numero' realmente tem um sinal
+        numero = getCaracter();             /// este DEVE ser número
+        if(*numero < '0' || *numero > '9') {/// se não for número
+            voltaCaracter();                /// volta este que não é número
+            voltaCaracter();                /// volta o que é sinal
+            voltaCaracter();                /// volta o 'e'
 
-        return i;
+            return i;
+        } else {                            /// se for número
+            voltaCaracter();                /// volta o número para depois re-ler
+        }
     }
 
     if(i % size_max == size_max-2){     /// se precisar realocar, realoca duas posições
         resp = realoca(resp, &i, &size_max);
     }
 
-    resp[i++] = *e;             /// 'e' ou 'E'
+    resp[i++] = 'e';            /// 'e' ou 'E'
     resp[i++] = *sinal_numero;  /// numero ou sinal
+    *isFloat = TRUE;            /// marca como float
 
     return getDecimal(resp, i, size_max, getCaracter());/// lê todo o resto de número
 }
@@ -302,12 +317,12 @@ TokenRecord* getToken(void){
                     voltaCaracter();                            /// se não for o '.', volta o caracter
                 }
 
-                char *caracterAtual = getCaracter();
+                c = getCaracter();
                 /// número com notação científica
-                if(*caracterAtual == 'e' || *caracterAtual == 'E'){
-                    i = getNotacaoCientifica(resp, i, size_num);
+                if(*c == 'e' || *c == 'E'){
+                    i = getNotacaoCientifica(resp, i, size_num, &isFloat);
                 } else {
-                    voltaCaracter();
+                    voltaCaracter();                            /// volta o caracter
                 }
 
                 finishToken = TRUE;                                 /// termina de ler
