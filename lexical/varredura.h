@@ -20,6 +20,7 @@ typedef enum {                  /// palavras reservadas e símbolos
 typedef struct {                /// tokens propriamente ditos
 
     TokenType tokenval;			/// tipo do token
+    unsigned short int numline;	/// numero da linha que este token está. Permite arquivos de 0 até 65,535 linhas
     void *val;					/// posiçãoo deste na memoria. Foi escolhido um ponteiro void para guardar o endereço de qualquer valor na memória
 
 } TokenRecord;
