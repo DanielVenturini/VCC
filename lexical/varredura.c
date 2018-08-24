@@ -1,10 +1,11 @@
 #include "varredura.h"
 
-char respVal;                   /// se respVal for 0, resp não está apontando para um endereço alocado. Se for 1, não precisa realocar em resp
+char respVal;                   /// se respVal for 0, resp não está apontando para um endereço alocado, então precisa alocar. Se for 1, não precisa alocar em resp
 char *resp = NULL;              /// o resultado do token - este será usado para guardar somente dos tokens id ou numero.
 unsigned short int posFile;     /// posição do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, então mudamos o ponteiro para trás. Permite arquivos com até 65.535 caracteres
 FILE *leitorArquivo;            /// ponteiro para leitura do arquivo
 char *c = NULL;                 /// variável onde todos os valores dos caracteres serão colocados
+unsigned short int numlines;    /// variável para contabilizar o número de linhas
 
 /********************************************************************
 *                   IMPLEMENTAÇÃO DAS FUNÇÕES                       *
@@ -14,6 +15,7 @@ void inicializaVariaveis(){
     posFile = 0;
     respVal = 0;
     c = (char *) malloc(sizeof(char));
+    numlines = 1;
 }
 
 /// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
@@ -34,7 +36,6 @@ char openFile(char *filename) {
 /// ou retorna um caracter direto do arquivo
 char* getCaracter(){
 
-    // char *c = malloc(sizeof(char));     /// aloca um espaço
     *c = getc(leitorArquivo);           /// lê do arquivo
     posFile ++;                         /// incrementa a posição do arquivo
 
@@ -292,6 +293,8 @@ TokenRecord* getToken(void){
                 || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')' || *c == ',' || *c == '!'){
             tokenAtual = UNICO;
         } else if (*c == ' ' || *c == 13 || *c == 10 || *c == '\t') {
+            if(*c == 13)
+                numlines ++;
                             /// espaço, nova linha, line feed ou tabulação
             goto inicial;   /// entao volta para o comeco do laco e le o proximo caracter
         } else if (*c == '{') {
@@ -460,6 +463,9 @@ TokenRecord* getToken(void){
                 char qtd = 1;           /// quantidade de fechas - '}' - que faltam
                 while(qtd){             /// só termina de processar o comentário quando tiver fechado todos os abre
                     c = getCaracter();
+                    if (*c == 13)       /// contabiliza o número de linhas
+                        numlines ++;
+
                     if (*c == '}')
                         qtd --;
                     else if (*c == '{')
@@ -472,6 +478,9 @@ TokenRecord* getToken(void){
                 finishToken = TRUE;
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->tokenval = EOF;
+                free(resp);             /// não vai mais usá-lo
+                fclose(leitorArquivo);  /// fecha o arquivo
+                leitorArquivo = NULL;
                 break;
 
             case NI:    /// NAO_IDENTIFICADO
@@ -479,81 +488,89 @@ TokenRecord* getToken(void){
                 token = (TokenRecord*) malloc(sizeof(TokenRecord));
                 token->tokenval = NAO_IDENTIFICADO;
                 token->val = (void *) c;
-                respVal = 1;            /// este endereço não pode ser reaproveitado
+                respVal = 0;            /// este endereço não pode ser reaproveitado
                 break;
         }
     }
 
+    token->numline = numlines;  /// guarda o número da linha que este token foi encontrado
     return token;
 }
 
-void printToken(TokenRecord *token){
+void printToken(TokenRecord *token, char printLines){
         if (token->tokenval == ID)
-            printf("(ID, %s)\n", (char *) token->val);
+            printf("(ID, %s)", (char *) token->val);
         else if (token->tokenval == NUM_I)
-            printf("(NUM, %d)\n", *((int *) token->val));
+            printf("(NUM, %d)", *((int *) token->val));
         else if (token->tokenval == NUM_F)
-            printf("(NUM, %f)\n", *((float *) token->val));
+            printf("(NUM, %f)", *((float *) token->val));
         else if (token->tokenval == ATE)
-            printf("ATE\n");
+            printf("ATE");
         else if (token->tokenval == ENTAO)
-            printf("ENTAO\n");
+            printf("ENTAO");
         else if (token->tokenval == ESCREVA)
-            printf("ESCREVA\n");
+            printf("ESCREVA");
         else if (token->tokenval == FIM)
-            printf("FIM\n");
+            printf("FIM");
         else if (token->tokenval == FLUTUANTE)
-            printf("FLUTUANTE\n");
+            printf("FLUTUANTE");
         else if (token->tokenval == INTEIRO)
-            printf("INTEIRO\n");
+            printf("INTEIRO");
         else if (token->tokenval == LEIA)
-            printf("LEIA\n");
+            printf("LEIA");
         else if (token->tokenval == REPITA)
-            printf("REPITA\n");
+            printf("REPITA");
         else if (token->tokenval == RETORNA)
-            printf("RETORNA\n");
+            printf("RETORNA");
         else if (token->tokenval == SE)
-            printf("SE\n");
+            printf("SE");
         else if (token->tokenval == SENAO)
-            printf("SENAO\n");
+            printf("SENAO");
         else if (token->tokenval == SOMA)
-            printf("( + )\n");
+            printf("( + )");
         else if (token->tokenval == SUBTRACAO)
-            printf("( - )\n");
+            printf("( - )");
         else if (token->tokenval == MULTIPLICACAO)
-            printf("( * )\n");
+            printf("( * )");
         else if (token->tokenval == DIVISAO)
-            printf("( / )\n");
+            printf("( / )");
         else if (token->tokenval == MAIOR)
-            printf("( > )\n");
+            printf("( > )");
         else if (token->tokenval == MENOR)
-            printf("( < )\n");
+            printf("( < )");
         else if (token->tokenval == MAIOR_IGUAL)
-            printf("( >= )\n");
+            printf("( >= )");
         else if (token->tokenval == MENOR_IGUAL)
-            printf("( <= )\n");
+            printf("( <= )");
         else if (token->tokenval == IGUALDADE)
-            printf("( = )\n");
+            printf("( = )");
         else if (token->tokenval == ABRE_COLCHETES)
-            printf("( [ )\n");
+            printf("( [ )");
         else if (token->tokenval == FECHA_COLCHETES)
-            printf("( ] )\n");
+            printf("( ] )");
         else if (token->tokenval == ABRE_PARENTESES)
-            printf("( ( )\n");
+            printf("( ( )");
         else if (token->tokenval == FECHA_PARENTESES)
-            printf("( ) )\n");
+            printf("( ) )");
         else if (token->tokenval == VIRGULA)
-            printf("( , )\n");
+            printf("( , )");
         else if (token->tokenval == DOIS_PONTOS)
-            printf("( : )\n");
+            printf("( : )");
         else if (token->tokenval == ATRIBUICAO)
-            printf("( := )\n");
+            printf("( := )");
         else if (token->tokenval == E_LOGICO)
-            printf("( && )\n");
+            printf("( && )");
         else if (token->tokenval == OU_LOGICO)
-            printf("( || )\n");
+            printf("( || )");
         else if (token->tokenval == DIFERENTE)
-            printf("( <> )\n");
+            printf("( <> )");
         else if (token->tokenval == NAO_IDENTIFICADO)
-            printf("(NAO_IDENTIFICADO, %s)\n", (char *) token->val);
+            printf("(NAO_IDENTIFICADO, %s)", (char *) token->val);
+        else if (token->tokenval == EOF)
+            return;
+
+        if(printLines)
+            printf("  %d.\n", token->numline);
+        else
+            printf("\n");
 }
