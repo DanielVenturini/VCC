@@ -11,21 +11,13 @@ int main(int argc, char *argv[]){
     }
 
     TokenRecord *token;
-    TokenRecord **tokenvetor = (TokenRecord**) malloc(48*sizeof(TokenRecord*));
     int i = 0;
     do {
 
-    	token = getToken();
-        printToken(token, 0);           /// se 0, não printar linha; se 1, printar
-        tokenvetor[i] = token;
+        token = getToken();
+        printToken(token, 1, 1);           /// se 0, não printar número da linha/caracter; se 1, printar
 
-        i ++;
-    } while (token->tokenval != EOF);
-
-    printf("------------------------------------------------");
-    for(i = 0; i < 48; i ++){
-        printToken(tokenvetor[i], 0);
-    }
+    } while (token->tokenval != EOFU);
 
     return 0;
 }

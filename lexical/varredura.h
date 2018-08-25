@@ -9,6 +9,8 @@
 #define SIZE_NUM 10				/// quantidade máxima - inicialmente - de digitos em um numero
 #define SIZE_IDENT 21			/// quantidade máxima - inicialmente - de caracteres em uma string
 
+#define EOFU 255				/// EOF Unsigned
+
 /********************************************************************
 *                   ESTRUTURAS NECESSÁRIAS                          *
 ********************************************************************/
@@ -21,6 +23,7 @@ typedef struct {                /// tokens propriamente ditos
 
     TokenType tokenval;			/// tipo do token
     unsigned short int numline;	/// número da linha que este token está. Permite arquivos de 0 até 65,535 linhas
+    unsigned char numcaracter;	/// número do caracter na linha especificada
     void *val;					/// posição deste na memoria. Foi escolhido um ponteiro void para guardar o endereço de qualquer valor na memória
 
 } TokenRecord;
@@ -32,4 +35,4 @@ typedef struct {                /// tokens propriamente ditos
 void *desaloca(void *ptr);		/// desaloca a 'ptr' memória usando uma thread
 char openFile(char *filename);	/// realiza as operações de abertura do arquivo
 TokenRecord* getToken(void);	/// retorna um token
-void printToken(TokenRecord *token, char printLines);	/// imprime o valor de um token
+void printToken(TokenRecord *token, char printLine, char printCaracter);	/// imprime o valor de um token
