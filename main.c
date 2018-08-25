@@ -11,7 +11,7 @@ int main(int argc, char *argv[]){
     }
 
     TokenRecord *token;
-    TokenRecord **tokenvetor = (TokenRecord**) malloc(51*sizeof(TokenRecord*));
+    TokenRecord **tokenvetor = (TokenRecord**) malloc(52*sizeof(TokenRecord*));
     int i = 0;
     do {
 
@@ -23,7 +23,7 @@ int main(int argc, char *argv[]){
     } while (token->tokenval != EOFU);
 
     printf("------------------------------------------------\n");
-    for(i = 0; i < 51; i ++){
+    for(i = 0; i < 52; i ++){
         printToken(tokenvetor[i], 1, 1);
     }
 

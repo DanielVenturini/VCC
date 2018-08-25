@@ -3,10 +3,11 @@
 	}
 }
 
+daniél
 inteiro: a, b
 inteiro principal()
 	inteiro: nome_de_variavel_grande
-	inteiro: daniélá  {identificador com acento}
+	inteiro: daniél  {identificador com acento}
 	a := 73
 	b := 1.973e+14
 	c := a + b
