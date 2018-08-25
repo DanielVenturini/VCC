@@ -20,8 +20,8 @@ typedef enum {                  /// palavras reservadas e símbolos
 typedef struct {                /// tokens propriamente ditos
 
     TokenType tokenval;			/// tipo do token
-    unsigned short int numline;	/// numero da linha que este token está. Permite arquivos de 0 até 65,535 linhas
-    void *val;					/// posiçãoo deste na memoria. Foi escolhido um ponteiro void para guardar o endereço de qualquer valor na memória
+    unsigned short int numline;	/// número da linha que este token está. Permite arquivos de 0 até 65,535 linhas
+    void *val;					/// posição deste na memoria. Foi escolhido um ponteiro void para guardar o endereço de qualquer valor na memória
 
 } TokenRecord;
 
@@ -29,7 +29,7 @@ typedef struct {                /// tokens propriamente ditos
 *                   	DEFINICAO DAS FUNÇÕES                       *
 ********************************************************************/
 /// estas são as que são usadas fora do arquivo varredura.c
-void *desaloca(void *ptr);								/// desaloca a 'ptr' memória usando uma thread
-char openFile(char *filename);							/// realiza as operações de abertura do arquivo
-TokenRecord* getToken(void);    						/// retorna um token
-void printToken(TokenRecord *token, char printLines);   /// imprime o valor de um token
+void *desaloca(void *ptr);		/// desaloca a 'ptr' memória usando uma thread
+char openFile(char *filename);	/// realiza as operações de abertura do arquivo
+TokenRecord* getToken(void);	/// retorna um token
+void printToken(TokenRecord *token, char printLines);	/// imprime o valor de um token
