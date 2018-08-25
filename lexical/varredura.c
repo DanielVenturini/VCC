@@ -4,8 +4,9 @@ char respVal;               /// se respVal for 0, resp não está apontando para u
 char *resp = NULL;          /// o resultado do token - este será usado para guardar somente dos tokens id ou numero.
 unsigned short int posFile; /// posição do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, então mudamos o ponteiro para trás. Permite arquivos com até 65.535 caracteres
 FILE *leitorArquivo;        /// ponteiro para leitura do arquivo
-char *c = NULL;             /// variável onde todos os valores dos caracteres serão colocados
+unsigned char *c = NULL;    /// variável onde todos os valores dos caracteres serão colocados
 unsigned short int numlines;/// variável para contabilizar o número de linhas
+unsigned char numcaracters; /// variável para contabilizar o número do caracter na linha
 
 /********************************************************************
 *                   IMPLEMENTAÇÃO DAS FUNÇÕES                       *
@@ -16,6 +17,7 @@ void inicializaVariaveis(){
     respVal = 0;
     c = (char *) malloc(sizeof(char));
     numlines = 1;
+    numcaracters = 0;
 }
 
 /// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
@@ -38,6 +40,7 @@ char* getCaracter(){
 
     *c = getc(leitorArquivo);   /// lê do arquivo
     posFile ++;                 /// incrementa a posição do arquivo
+    numcaracters ++;            /// incrementa o número de caracters da linha
 
     return c;
 }
@@ -47,6 +50,7 @@ char* getCaracter(){
 /// principalmente na função onde é obtido o número com notação cientifica, que precisa voltar até três caracteres
 void voltaCaracter(){
     posFile --;                                     /// decrementa a quantidade de caracteres lido
+    numcaracters --;                                /// decrementa a contagem de caracteres da linha
     char status = fseek(leitorArquivo, posFile, 0); /// desloca o ponteiro para, a partir do zero, uma posição atrás da atual
 
     if(status == -1) {                              /// se deu erro
@@ -72,31 +76,13 @@ char *realoca(char *c, char *i, char *size_max) {
 /// verifica se um identificador é igual á uma palavra reservada.
 /// se o for chegar até o final, quer dizer que cada caracter são iguais.
 /// vale também para identificadores acentuadpos: SENÃO, ENTÃO e ATÉ
+/// retorna '1' caso forem iguais ou '0' caso o contrário
 char iguais(char* identificador, char palavraReservada[]){
     char i;
     for(i = 0; (identificador[i] == palavraReservada[i]) && identificador[i] != '\0' && palavraReservada[i] != '\0'; i ++);
 
     return (identificador[i]==palavraReservada[i] && palavraReservada[i]=='\0')?'1':'0';
 }
-
-/// se o identificador tiver acento e não for palavra reservada
-/// então recupera até o acento, e volta os caracteres do acento para a frente
-void removeAcento(TokenRecord *token, char temAcento){
-    if(!temAcento)          /// não tem acento
-        return;
-
-    int i;
-    char *resp = (char *) token->val;
-    for(i = 0; resp[i] != 'ã' && resp[i] != 'é'; i ++);     /// enquanto não encontrar o acento
-
-    voltaCaracter();                /// volta o caracter acentuado
-    resp[i] = '\0';                 /// no lugar do acento coloca o '\0'
-    i ++;                           /// incrementa no i
-
-    for(; resp[i] != '\0'; i ++)    /// enquanto não chegar no fim da string inteira
-        voltaCaracter();            /// vai voltando os caracteres
-}
-
 
 /// verifica se o identificador é uma palavra reservada
 /// se for, não precisa ter seu valor alocado
@@ -105,22 +91,20 @@ void palavrasReservadas(TokenRecord *token, char temAcento){
     /// descobre qual é o caracter inicial do identificador, pois elimina mais da metade das palavras reservadas
     switch(((char *) token->val)[0]){
         case 'a':   /// pode ser o 'até'
-            if(iguais(token->val, "até\0") == '0') {            /// se forem diferentes
-                removeAcento(token, temAcento);
-                respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
-                return;                                         /// não faz nada
+            if(!temAcento || iguais(token->val, "até\0") == '0') {  /// se não tiver acento, nem verifica se são iguais
+                respVal = 0;                                        /// indica que na próxima vez precisa alocar novamente
+                return;                                             /// não faz nada
             }
 
             token->tokenval = ATE;
             break;
 
         case 'e':   /// pode ser o 'então' ou 'escreva'
-            if(iguais(token->val, "então\0") == '1')            /// é o então
-                token->tokenval = ENTAO;                        /// atualiza o token
-            else if (iguais(token->val, "escreva\0") == '1')
+            if(temAcento && iguais(token->val, "então\0") == '1')           /// se não tiver acento, nem verifica se são iguais; se forem iguais, já troca o valor de
+                token->tokenval = ENTAO;                                    /// atualiza o token
+            else if (!temAcento && iguais(token->val, "escreva\0") == '1')  /// se tiver acento, nem verifica se é igual
                 token->tokenval = ESCREVA;
             else {
-                removeAcento(token, temAcento);
                 respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
                 return;                                         /// retorna pra não desalocar o token->val
             }
@@ -128,22 +112,20 @@ void palavrasReservadas(TokenRecord *token, char temAcento){
             break;
 
         case 'i':   /// pode ser o 'inteiro'
-            if(iguais(token->val, "inteiro\0") == '0'){         /// se forem diferentes
-                removeAcento(token, temAcento);
-                respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
-                return;                                         /// não faz nada
+            if(temAcento || iguais(token->val, "inteiro\0") == '0'){/// se tiver acento, nem verifica se são iguais
+                respVal = 0;                                        /// indica que na próxima vez precisa alocar novamente
+                return;                                             /// não faz nada
             }
 
             token->tokenval = INTEIRO;
             break;
 
         case 'f':   /// pode ser 'fim' ou 'flutuante'
-            if(iguais(token->val, "fim\0") == '1')              /// é o fim
+            if(!temAcento && iguais(token->val, "fim\0") == '1')    /// se tiver acento nem verifica; se não, verifica com o fim
                 token->tokenval = FIM;                          /// atualiza o token
-            else if (iguais(token->val, "flutuante\0") == '1')
+            else if (!temAcento && iguais(token->val, "flutuante\0") == '1')
                 token->tokenval = FLUTUANTE;
             else {
-                removeAcento(token, temAcento);
                 respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
                 return;                                         /// retorna pra não desalocar o token->val
             }
@@ -151,22 +133,20 @@ void palavrasReservadas(TokenRecord *token, char temAcento){
             break;
 
         case 'l':   /// pode ser o 'leia'
-            if(iguais(token->val, "leia\0") == '0') {           /// se forem diferentes
-                removeAcento(token, temAcento);
-                respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
-                return;                                         /// não faz nada
+            if(temAcento || iguais(token->val, "leia\0") == '0') {  /// se tiver acento ou se forem diferentes
+                respVal = 0;                                        /// indica que na próxima vez precisa alocar novamente
+                return;                                             /// não faz nada
             }
 
             token->tokenval = LEIA;
             break;
 
         case 'r':   /// pode ser o 'repita' ou 'retorna'
-            if(iguais(token->val, "repita\0") == '1')           /// é o repita
-                token->tokenval = REPITA;                       /// atualiza o token
-            else if (iguais(token->val, "retorna\0") == '1')
+            if(!temAcento && iguais(token->val, "repita\0") == '1') /// se tiver acento nem verifica se é igual
+                token->tokenval = REPITA;                           /// atualiza o token
+            else if (!temAcento && iguais(token->val, "retorna\0") == '1')
                 token->tokenval = RETORNA;
             else {
-                removeAcento(token, temAcento);
                 respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
                 return;                                         /// retorna pra não desalocar o token->val
             }
@@ -174,12 +154,11 @@ void palavrasReservadas(TokenRecord *token, char temAcento){
             break;
 
         case 's':   /// pode ser o 'se' ou 'senão'
-            if(iguais(token->val, "se\0") == '1')               /// é o se
+            if(!temAcento && iguais(token->val, "se\0") == '1') /// se não tiver acento e for igual a 'se'
                 token->tokenval = SE;                           /// atualiza o token
-            else if (iguais(token->val, "senão\0") == '1')
+            else if (temAcento && iguais(token->val, "senão\0") == '1') /// se tiver acento e for igual a 'senão'
                 token->tokenval = SENAO;
             else {
-                removeAcento(token, temAcento);
                 respVal = 0;                                    /// indica que na próxima vez precisa alocar novamente
                 return;                                         /// retorna pra não desalocar o token->val
             }
@@ -187,7 +166,8 @@ void palavrasReservadas(TokenRecord *token, char temAcento){
             break;
 
         default:            /// outra palavra que não começa com estas letras
-            removeAcento(token, temAcento);
+                            /// se for um identificador, continuará como está
+                            /// se for um não identificado, também continuará como está
             respVal = 0;    /// indica que na próxima vez precisa alocar novamente
             return;         /// então retorna para não desalocar
     }
@@ -309,14 +289,14 @@ TokenRecord* getToken(void){
 
         c = getCaracter();      /// lê o caracter
 
-        if(*c == EOF){          /// se já chegou no fim do arquivo
-            tokenAtual = EOF;   /// retorna um token EOF
+        if(*c == EOFU){          /// se já chegou no fim do arquivo
+            tokenAtual = EOFU;   /// retorna um token EOFU
         }
 
         /// computa o token atual
         if (*c >= '0' && *c <= '9'){
             tokenAtual = NUMERO;
-        } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') ){
+        } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c >= 128 && *c <= 252)){
             tokenAtual = IDENTIFICADOR;
         } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '='
                 || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')' || *c == ',' || *c == '!'){
@@ -325,6 +305,9 @@ TokenRecord* getToken(void){
             /// espaço, nova linha, line feed ou tabulação
             if(*c == 13) {
                 numlines ++;        /// incrementa número da linha
+                numcaracters = 0;   /// volta a contagem de caracteres para 0;
+            } else if (*c == 10) {
+                numcaracters = 0;    /// line feed - '\n' - que move o ponteiro para a próxima linha sem apontar para o primeiro caracter
             }
 
             goto inicial;   /// entao volta para o comeco do laco e le o proximo caracter
@@ -332,8 +315,8 @@ TokenRecord* getToken(void){
             tokenAtual = COMENTARIO;
         } else if (*c == '&' || *c == '|'){
             tokenAtual = LOGICO;
-        } else if (*c == EOF){
-            tokenAtual = EOF;
+        } else if (*c == EOFU){
+            tokenAtual = EOFU;
         } else {    /// algum caracter não válido
             tokenAtual = NI;
         }
@@ -343,6 +326,7 @@ TokenRecord* getToken(void){
         switch(tokenAtual){
 
             case NUMERO:    /// este estado le ate o final do numero
+                token->numcaracter = numcaracters;
 
                 if(!respVal)/// se o valor for 0
                     resp = (char*) malloc(SIZE_NUM*sizeof(char)); /// aloca para guardar cada dígito do número
@@ -386,6 +370,8 @@ TokenRecord* getToken(void){
                 break;
 
             case IDENTIFICADOR:
+                token->numcaracter = numcaracters;
+
                 if(!respVal)                                                    /// se o valor for 0
                     resp = (char*) malloc(SIZE_IDENT*sizeof(char));             /// aloca para guardar letras até size_ident caracteres
 
@@ -400,12 +386,13 @@ TokenRecord* getToken(void){
 
                     if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao é uma letra
                         (*c < '0' || *c > '9') &&                               /// não é número
-                        (*c != '_' && *c != 'ã' && *c != 'é')){                 /// não é '_' nem 'ã' nem 'é'
+                        (*c != '_' && (*c < 128 || *c > 252))){                 /// não é '_' nem acentos
                         break;                                                  /// termina este for
                     }
 
-                    if(*c == 'ã' || *c == 'é'){                                 /// acento só pode em palavras reservadas
-                        temAcento = 1;                                          /// se não for reservada e tiver acento, tira
+                    if(*c >= 128 && *c <= 252){                                 /// acento só pode em palavras reservadas
+                        token->tokenval = NAO_IDENTIFICADO;                     /// troca para token não identificado
+                        temAcento = 1;                                          /// se não for reservada e tiver acento, não é reconhecido
                     }
 
                     if(i == size_ident-1){                                      /// se precisar realocar
@@ -422,6 +409,8 @@ TokenRecord* getToken(void){
                 break;
 
             case UNICO:     /// estes são: * + - / : < = > [ ] , !
+                token->numcaracter = numcaracters;
+
                 switch(*c){
                     case '+':
                         token->tokenval = SOMA;
@@ -475,6 +464,8 @@ TokenRecord* getToken(void){
                 break;
 
             case LOGICO:
+                token->numcaracter = numcaracters;
+
                 tokenAtual = NI;                    /// o token ainda não foi identificado
                 char atual = *c;                    /// o caracter lógico: | ou &
                 char *nextCharacter = getCaracter();/// o próximo
@@ -490,15 +481,16 @@ TokenRecord* getToken(void){
                 break;
 
             case COMENTARIO:
-                1;
+                token->numcaracter = numcaracters;
+
                 char qtd = 1;           /// quantidade de fechas - '}' - que faltam
                 while(qtd){             /// só termina de processar o comentário quando tiver fechado todos os abre
                     c = getCaracter();
                     if (*c == 13)       /// contabiliza o número de linhas
                         numlines ++;
 
-                    if(*c == EOF){      /// se não fechar o comentário
-                        tokenAtual = EOF;
+                    if(*c == EOFU){      /// se não fechar o comentário
+                        tokenAtual = EOFU;
                         goto recomputaSwitch;
                     }
 
@@ -510,15 +502,17 @@ TokenRecord* getToken(void){
 
                 goto inicial;           /// volta para estado inicial quando sair do while
 
-            case EOF:    /// EOF
+            case EOFU:    /// EOFU
                 finishToken = TRUE;
-                token->tokenval = EOF;
+                token->tokenval = EOFU;
                 free(resp);             /// não vai mais usá-lo
                 fclose(leitorArquivo);  /// fecha o arquivo
                 leitorArquivo = NULL;
                 break;
 
             case NI:    /// NAO_IDENTIFICADO
+                token->numcaracter = numcaracters;
+
                 finishToken = TRUE;
                 token->tokenval = NAO_IDENTIFICADO;
                 char *b = (char *) malloc(sizeof(char));
@@ -533,80 +527,82 @@ TokenRecord* getToken(void){
     return token;
 }
 
-void printToken(TokenRecord *token, char printLines){
+void printToken(TokenRecord *token, char printLine, char printCaracter){
         if (token->tokenval == ID)
-            printf("(ID, %s)", (char *) token->val);
+            printf("(ID, %s", (char *) token->val);
         else if (token->tokenval == NUM_I)
-            printf("(NUM, %d)", *((int *) token->val));
+            printf("(NUM, %d", *((int *) token->val));
         else if (token->tokenval == NUM_F)
-            printf("(NUM, %f)", *((float *) token->val));
+            printf("(NUM, %f", *((float *) token->val));
         else if (token->tokenval == ATE)
-            printf("ATE");
+            printf("(ATE");
         else if (token->tokenval == ENTAO)
-            printf("ENTAO");
+            printf("(ENTAO");
         else if (token->tokenval == ESCREVA)
-            printf("ESCREVA");
+            printf("(ESCREVA");
         else if (token->tokenval == FIM)
-            printf("FIM");
+            printf("(FIM");
         else if (token->tokenval == FLUTUANTE)
-            printf("FLUTUANTE");
+            printf("(FLUTUANTE");
         else if (token->tokenval == INTEIRO)
-            printf("INTEIRO");
+            printf("(INTEIRO");
         else if (token->tokenval == LEIA)
-            printf("LEIA");
+            printf("(LEIA");
         else if (token->tokenval == REPITA)
-            printf("REPITA");
+            printf("(REPITA");
         else if (token->tokenval == RETORNA)
-            printf("RETORNA");
+            printf("(RETORNA");
         else if (token->tokenval == SE)
-            printf("SE");
+            printf("(SE");
         else if (token->tokenval == SENAO)
-            printf("SENAO");
+            printf("(SENAO");
         else if (token->tokenval == SOMA)
-            printf("( + )");
+            printf("( + ");
         else if (token->tokenval == SUBTRACAO)
-            printf("( - )");
+            printf("( - ");
         else if (token->tokenval == MULTIPLICACAO)
-            printf("( * )");
+            printf("( * ");
         else if (token->tokenval == DIVISAO)
-            printf("( / )");
+            printf("( / ");
         else if (token->tokenval == MAIOR)
-            printf("( > )");
+            printf("( > ");
         else if (token->tokenval == MENOR)
-            printf("( < )");
+            printf("( < ");
         else if (token->tokenval == MAIOR_IGUAL)
-            printf("( >= )");
+            printf("( >= ");
         else if (token->tokenval == MENOR_IGUAL)
-            printf("( <= )");
+            printf("( <= ");
         else if (token->tokenval == IGUALDADE)
-            printf("( = )");
+            printf("( = ");
         else if (token->tokenval == ABRE_COLCHETES)
-            printf("( [ )");
+            printf("( [ ");
         else if (token->tokenval == FECHA_COLCHETES)
-            printf("( ] )");
+            printf("( ] ");
         else if (token->tokenval == ABRE_PARENTESES)
-            printf("( ( )");
+            printf("( ( ");
         else if (token->tokenval == FECHA_PARENTESES)
-            printf("( ) )");
+            printf("( ) ");
         else if (token->tokenval == VIRGULA)
-            printf("( , )");
+            printf("( , ");
         else if (token->tokenval == DOIS_PONTOS)
-            printf("( : )");
+            printf("( : ");
         else if (token->tokenval == ATRIBUICAO)
-            printf("( := )");
+            printf("( := ");
         else if (token->tokenval == E_LOGICO)
-            printf("( && )");
+            printf("( && ");
         else if (token->tokenval == OU_LOGICO)
-            printf("( || )");
+            printf("( || ");
         else if (token->tokenval == DIFERENTE)
-            printf("( <> )");
+            printf("( <> ");
         else if (token->tokenval == NAO_IDENTIFICADO)
-            printf("(NAO_IDENTIFICADO, %s)", (char *) token->val);
-        else if (token->tokenval == EOF)
+            printf("(NAO_IDENTIFICADO, %s", (char *) token->val);
+        else if (token->tokenval == EOFU)
             return;
 
-        if(printLines)
-            printf("  %d\n", token->numline);
-        else
-            printf("  \n");
+        if(printLine)
+            printf(", %d", token->numline);
+        if(printCaracter)
+            printf(", %d", token->numcaracter);
+
+        printf(")\n");
 }
