@@ -1,17 +1,17 @@
 #include "varredura.h"
 
-char respVal;               /// se respVal for 0, resp n„o est· apontando para um endereÁo alocado, ent„o precisa alocar. Se for 1, n„o precisa alocar em resp
-char *resp = NULL;          /// o resultado do token - este ser· usado para guardar somente dos tokens id ou numero.
-unsigned short int posFile; /// posiÁ„o do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, ent„o mudamos o ponteiro para tr·s. Permite arquivos com atÈ 65.535 caracteres
+char respVal;               /// se respVal for 0, resp n√£o est√° apontando para um endere√ßo alocado, ent√£o precisa alocar. Se for 1, n√£o precisa alocar em resp
+char *resp = NULL;          /// o resultado do token - este ser√° usado para guardar somente dos tokens id ou numero.
+unsigned short int posFile; /// posi√ß√£o do ponteiro do arquivo. Usamos quando precisamos 'voltar' um ou dois caracteres no arquivo, ent√£o mudamos o ponteiro para tr√°s. Permite arquivos com at√© 65.535 caracteres
 FILE *leitorArquivo;        /// ponteiro para leitura do arquivo
-unsigned char *c = NULL;    /// vari·vel onde todos os valores dos caracteres ser„o colocados
-unsigned short int numlines;/// vari·vel para contabilizar o n˙mero de linhas
-unsigned char numcaracters; /// vari·vel para contabilizar o n˙mero do caracter na linha
+unsigned char *c = NULL;    /// vari√°vel onde todos os valores dos caracteres ser√£o colocados
+unsigned short int numlines;/// vari√°vel para contabilizar o n√∫mero de linhas
+unsigned char numcaracters; /// vari√°vel para contabilizar o n√∫mero do caracter na linha
 
 /********************************************************************
-*                   IMPLEMENTA«√O DAS FUN«’ES                       *
+*                   IMPLEMENTA√á√ÉO DAS FUN√á√ïES                       *
 ********************************************************************/
-/// inicializa algumas v·riaveis necess·rias
+/// inicializa algumas v√°riaveis necess√°rias
 void inicializaVariaveis(){
     posFile = 0;
     respVal = 0;
@@ -20,8 +20,8 @@ void inicializaVariaveis(){
     numcaracters = 0;
 }
 
-/// chamado diretamente da main, esta funÁ„o retorna 0 se existir o arquivo ou 1 se n„o existir
-/// o ponteiro do arquivo È guardado para ser lido caracter por caracter na funÁ„o getCaracter
+/// chamado diretamente da main, esta fun√ß√£o retorna 0 se existir o arquivo ou 1 se n√£o existir
+/// o ponteiro do arquivo √© guardado para ser lido caracter por caracter na fun√ß√£o getCaracter
 char openFile(char *filename) {
     leitorArquivo = fopen(filename, "r");
 
@@ -34,24 +34,24 @@ char openFile(char *filename) {
     return '0';
 }
 
-/// retorna um caracter que ainda n„o tenha sido processado
+/// retorna um caracter que ainda n√£o tenha sido processado
 /// ou retorna um caracter direto do arquivo
 char* getCaracter(){
 
-    *c = getc(leitorArquivo);   /// lÍ do arquivo
-    posFile ++;                 /// incrementa a posiÁ„o do arquivo
-    numcaracters ++;            /// incrementa o n˙mero de caracters da linha
+    *c = getc(leitorArquivo);   /// l√™ do arquivo
+    posFile ++;                 /// incrementa a posi√ß√£o do arquivo
+    numcaracters ++;            /// incrementa o n√∫mero de caracters da linha
 
     return c;
 }
 
-/// volta um posiÁ„o no ponteiro do arquivo
-/// assim n„o precisamos utilizar vari·veis auxiliares para guardar o caracter n„o processado
-/// principalmente na funÁ„o onde È obtido o n˙mero com notaÁ„o cientifica, que precisa voltar atÈ trÍs caracteres
+/// volta um posi√ß√£o no ponteiro do arquivo
+/// assim n√£oprecisamos utilizar vari√°veis auxiliares para guardar o caracter n√£oprocessado
+/// principalmente na fun√ß√£o onde √© obtido o n√∫mero com nota√ß√£o cientifica, que precisa voltar at√© tr√™s caracteres
 void voltaCaracter(){
     posFile --;                                     /// decrementa a quantidade de caracteres lido
     numcaracters --;                                /// decrementa a contagem de caracteres da linha
-    char status = fseek(leitorArquivo, posFile, 0); /// desloca o ponteiro para, a partir do zero, uma posiÁ„o atr·s da atual
+    char status = fseek(leitorArquivo, posFile, 0); /// desloca o ponteiro para, a partir do zero, uma posi√ß√£o atr√°s da atual
 
     if(status == -1) {                              /// se deu erro
         printf("ERRO AO VOLTAR CARACTER NO ARQUIVO\n");
@@ -59,24 +59,24 @@ void voltaCaracter(){
 }
 
 /// apenas desaloca a memoria alocada neste ponteiro
-/// como È usado por uma thread, tem que ser void *
+/// como √© usado por uma thread, tem que ser void *
 void *desaloca(void *ptr){
     free(ptr);
 }
 
-/// funÁ„o usada para realocar memÛria se a letra ou o n˙mero tiver muitos caracteres.
+/// fun√ß√£o usada para realocar mem√≥ria se a letra ou o n√∫mero tiver muitos caracteres.
 /// para evitar realocar sempre, somente sera realocado
-/// c È o ponteiro para o vetor a alocar; i È o tamanho total; size_max È o tamanho total deste dado: SIZE_NUM|SIZE_ID
+/// c √© o ponteiro para o vetor a alocar; i √© o tamanho total; size_max √© o tamanho total deste dado: SIZE_NUM|SIZE_ID
 char *realoca(char *c, char *i, char *size_max) {
-    *size_max = (char) *i + *size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho m·ximo inicial menos 1
+    *size_max = (char) *i + *size_max-1;            /// novo tamanho sera o tamanho atual mais o tamanho m√≠nimo inicial menos 1
     c = (char *) realloc(c, *size_max*sizeof(char));/// realoca
     return c;
 }
 
-/// verifica se um identificador È igual · uma palavra reservada.
-/// se o for chegar atÈ o final, quer dizer que cada caracter s„o iguais.
-/// vale tambÈm para identificadores acentuadpos: SEN√O, ENT√O e AT…
-/// retorna '1' caso forem iguais ou '0' caso o contr·rio
+/// verifica se um identificador √© igual a uma palavra reservada.
+/// se o for chegar at√© o final, quer dizer que cada caracter s√£o iguais.
+/// vale tamb√©m para identificadores acentuados: SEN√ÉO, ENT√ÉO e AT√â
+/// retorna '1' caso forem iguais ou '0' caso o contr√°rio
 char iguais(char* identificador, char palavraReservada[]){
     char i;
     for(i = 0; (identificador[i] == palavraReservada[i]) && identificador[i] != '\0' && palavraReservada[i] != '\0'; i ++);
@@ -84,163 +84,163 @@ char iguais(char* identificador, char palavraReservada[]){
     return (identificador[i]==palavraReservada[i] && palavraReservada[i]=='\0')?'1':'0';
 }
 
-/// verifica se o identificador È uma palavra reservada
-/// se for, n„o precisa ter seu valor alocado
+/// verifica se o identificador √© uma palavra reservada
+/// se for, n√£o precisa ter seu valor alocado
 void palavrasReservadas(TokenRecord *token, char temAcento){
 
-    /// descobre qual È o caracter inicial do identificador, pois elimina mais da metade das palavras reservadas
+    /// descobre qual √© o caracter inicial do identificador, pois elimina mais da metade das palavras reservadas
     switch(((char *) token->val)[0]){
-        case 'a':   /// pode ser o 'atÈ'
-            if(!temAcento || iguais(token->val, "atÈ\0") == '0') {  /// se n„o tiver acento, nem verifica se s„o iguais
-                respVal = 0;                                        /// indica que na prÛxima vez precisa alocar novamente
-                return;                                             /// n„o faz nada
+        case 'a':   /// pode ser o 'at√©
+            if(!temAcento || iguais(token->val, "at√©\0") == '0') {  /// se n√£o tiver acento, nem verifica se s√£o iguais
+                respVal = 0;                                        /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                             /// n√£o faz nada
             }
 
             token->tokenval = ATE;
             break;
 
-        case 'e':   /// pode ser o 'ent„o' ou 'escreva'
-            if(temAcento && iguais(token->val, "ent„o\0") == '1')           /// se n„o tiver acento, nem verifica se s„o iguais; se forem iguais, j· troca o valor de
+        case 'e':   /// pode ser o 'ent√£o' ou 'escreva'
+            if(temAcento && iguais(token->val, "ent√£o\0") == '1')           /// se n√£o tiver acento, nem verifica se s√£o iguais; se forem iguais, j√° troca o valor de token->tokenval
                 token->tokenval = ENTAO;                                    /// atualiza o token
-            else if (!temAcento && iguais(token->val, "escreva\0") == '1')  /// se tiver acento, nem verifica se È igual
+            else if (!temAcento && iguais(token->val, "escreva\0") == '1')  /// se tiver acento, nem verifica se √© igual
                 token->tokenval = ESCREVA;
             else {
-                respVal = 0;                                    /// indica que na prÛxima vez precisa alocar novamente
-                return;                                         /// retorna pra n„o desalocar o token->val
+                respVal = 0;                                    /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                         /// retorna pra n√£o desalocar o token->val
             }
 
             break;
 
         case 'i':   /// pode ser o 'inteiro'
-            if(temAcento || iguais(token->val, "inteiro\0") == '0'){/// se tiver acento, nem verifica se s„o iguais
-                respVal = 0;                                        /// indica que na prÛxima vez precisa alocar novamente
-                return;                                             /// n„o faz nada
+            if(temAcento || iguais(token->val, "inteiro\0") == '0'){/// se tiver acento, nem verifica se s√£o iguais
+                respVal = 0;                                        /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                             /// n√£o faz nada
             }
 
             token->tokenval = INTEIRO;
             break;
 
         case 'f':   /// pode ser 'fim' ou 'flutuante'
-            if(!temAcento && iguais(token->val, "fim\0") == '1')    /// se tiver acento nem verifica; se n„o, verifica com o fim
-                token->tokenval = FIM;                          /// atualiza o token
+            if(!temAcento && iguais(token->val, "fim\0") == '1')    /// se tiver acento nem verifica; se n√£o, verifica com o fim
+                token->tokenval = FIM;                              /// atualiza o token
             else if (!temAcento && iguais(token->val, "flutuante\0") == '1')
                 token->tokenval = FLUTUANTE;
             else {
-                respVal = 0;                                    /// indica que na prÛxima vez precisa alocar novamente
-                return;                                         /// retorna pra n„o desalocar o token->val
+                respVal = 0;                                    /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                         /// retorna pra n√£o desalocar o token->val
             }
 
             break;
 
         case 'l':   /// pode ser o 'leia'
             if(temAcento || iguais(token->val, "leia\0") == '0') {  /// se tiver acento ou se forem diferentes
-                respVal = 0;                                        /// indica que na prÛxima vez precisa alocar novamente
-                return;                                             /// n„o faz nada
+                respVal = 0;                                        /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                             /// n√£o faz nada
             }
 
             token->tokenval = LEIA;
             break;
 
         case 'r':   /// pode ser o 'repita' ou 'retorna'
-            if(!temAcento && iguais(token->val, "repita\0") == '1') /// se tiver acento nem verifica se È igual
+            if(!temAcento && iguais(token->val, "repita\0") == '1') /// se tiver acento nem verifica se √© igual
                 token->tokenval = REPITA;                           /// atualiza o token
             else if (!temAcento && iguais(token->val, "retorna\0") == '1')
                 token->tokenval = RETORNA;
             else {
-                respVal = 0;                                    /// indica que na prÛxima vez precisa alocar novamente
-                return;                                         /// retorna pra n„o desalocar o token->val
+                respVal = 0;                                    /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                         /// retorna pra n√£o desalocar o token->val
             }
 
             break;
 
-        case 's':   /// pode ser o 'se' ou 'sen„o'
-            if(!temAcento && iguais(token->val, "se\0") == '1') /// se n„o tiver acento e for igual a 'se'
-                token->tokenval = SE;                           /// atualiza o token
-            else if (temAcento && iguais(token->val, "sen„o\0") == '1') /// se tiver acento e for igual a 'sen„o'
+        case 's':   /// pode ser o 'se' ou 'sen√£o'
+            if(!temAcento && iguais(token->val, "se\0") == '1')         /// se n√£o tiver acento e for igual a 'se'
+                token->tokenval = SE;                                   /// atualiza o token
+            else if (temAcento && iguais(token->val, "sen√£o\0") == '1') /// se tiver acento e for igual a 'sen√£o'
                 token->tokenval = SENAO;
             else {
-                respVal = 0;                                    /// indica que na prÛxima vez precisa alocar novamente
-                return;                                         /// retorna pra n„o desalocar o token->val
+                respVal = 0;                                    /// indica que na pr√≥xima vez precisa alocar novamente
+                return;                                         /// retorna pra n√£o desalocar o token->val
             }
 
             break;
 
-        default:            /// outra palavra que n„o comeÁa com estas letras
-                            /// se for um identificador, continuar· como est·
-                            /// se for um n„o identificado, tambÈm continuar· como est·
-            respVal = 0;    /// indica que na prÛxima vez precisa alocar novamente
-            return;         /// ent„o retorna para n„o desalocar
+        default:            /// outra palavra que n√£o come√ßa com estas letras
+                            /// se for um identificador, continuar√° como est√°
+                            /// se for um n√£o identificado, tamb√©m continuar√° como est√°
+            respVal = 0;    /// indica que na pr√≥xima vez precisa alocar novamente
+            return;         /// ent√£o retorna para n√£o desalocar
     }
 
-    /// n„o precisa desalocar, apenas precisa setar a variavel 'respVal' como 1
-    /// pois indicamos que ela tem espaÁo que pode ser sobrescrito
+    /// n√£o precisa desalocar, apenas precisa setar a variavel 'respVal' como 1
+    /// pois indicamos que ela tem espa√ßo que pode ser sobrescrito
     respVal = 1;
 }
 
-/// lÍ toda a sequÍncia de digitos e guarda em 'resp'.
-/// como pode ser chamada de outras funÁıes, por exemplo, 'getFlutuante',
-/// ir· comeÁar a concatenar a partir de 'i'.
-/// 'size_max' È o tamanho m·ximo que pode ser lido sem precisar de usar um 'realloc'
-/// 'c' È o dÌgito que ainda n„o foi processado
+/// l√™ toda a sequ√™cia de digitos e guarda em 'resp'.
+/// como pode ser chamada de outras fun√ß√µes, por exemplo, 'getFlutuante',
+/// ir√° come√ßar a concatenar a partir de 'i'.
+/// 'size_max' √© o tamanho m√≠nimo que pode ser lido sem precisar de usar um 'realloc'
+/// 'c' √© o d√≠gito que ainda n√£o foi processado
 char getDecimal(char *resp, char i, char size_max, char *c) {
 
-    while(TRUE){                            /// fica lendo atÈ parar de ler dÌgitos
+    while(TRUE){                            /// fica lendo at√© parar de ler d√≠gitos
 
-        if(*c < '0' || *c > '9'){           /// n„o È um digito
+        if(*c < '0' || *c > '9'){           /// n√£o √© um digito
             voltaCaracter();                /// volta o caracter no arquivo
-            return i;                       /// retorna a prÛxima posiÁ„o vazia do array
+            return i;                       /// retorna a pr√≥xima posi√ß√£o vazia do array
         }
 
         if(i % size_max == size_max-1){     /// se precisar realocar
             resp = realoca(resp, &i, &size_max);
         }
 
-        resp[i] = *c;                       /// adiciona o digito na resposta
-        c = getCaracter();                  /// le o proximo
+        resp[i] = *c;                       /// adiciona o d√≠gito na resposta
+        c = getCaracter();                  /// l√™ o proximo
 
         i ++;
     }
 }
 
-/// lÍ toda a sequÍncia de n˙meros a e guarda em 'resp'.
-/// 'c' deve ser o '.' que trousse a esta funÁ„o.
+/// l√™ toda a sequ√™cia de n√∫meros a e guarda em 'resp'.
+/// 'c' deve ser o '.' que trouxe a esta fun√ß√£o.
 char getFlutuante(char *resp, char i, char size_max) {
 
     resp[i] = '.';              /// consome o caractere
-    char *c = getCaracter();    /// pega o prÛximo
+    char *c = getCaracter();    /// pega o pr√≥ximo
 
-    return getDecimal(resp, i+1, size_max, c);   /// lÍ todo o resto de n˙mero
+    return getDecimal(resp, i+1, size_max, c);   /// l√™ todo o resto de n√∫mero
 }
 
-/// o caracter atual È 'e' ou 'E'.
-/// Ent„o lÍ um '-' ou '+' seguido de um n˙mero
+/// o caracter atual √© 'e' ou 'E'.
+/// Ent√£o l√™ um '-' ou '+' seguido de um n√∫mero
 char getNotacaoCientifica(char *resp, char i, char size_max, char *isFloat) {
 
-    char sinal_numero = *getCaracter(); /// pode ser '-' ou '+' ou n˙mero
-    char *numero = NULL;                /// este apontar· para o n˙mero
+    char sinal_numero = *getCaracter(); /// pode ser '-' ou '+' ou n√∫mero
+    char *numero = NULL;                /// este apontar√° para o n√∫mero
 
-    if(sinal_numero != '-' && sinal_numero != '+') {    /// se n„o for sinal
-        if(sinal_numero < '0' || sinal_numero > '9') {  /// e n„o for letra
-            voltaCaracter();                            /// volta este que n„o È sinal nem n˙mero
+    if(sinal_numero != '-' && sinal_numero != '+') {    /// se n√£o for sinal
+        if(sinal_numero < '0' || sinal_numero > '9') {  /// e n√£o for letra
+            voltaCaracter();                            /// volta este que n√£o √© sinal nem n√∫mero
             voltaCaracter();                            /// volta o 'e'
 
             return i;
         }
-        /// ent„o È n˙mero
+        /// ent√£o √© n√∫mero
     } else {                                /// 'sinal_numero' realmente tem um sinal
-        numero = getCaracter();             /// este DEVE ser n˙mero
-        if(*numero < '0' || *numero > '9') {/// se n„o for n˙mero
-            voltaCaracter();                /// volta este que n„o È n˙mero
-            voltaCaracter();                /// volta o que È sinal
+        numero = getCaracter();             /// este DEVE ser n√∫mero
+        if(*numero < '0' || *numero > '9') {/// se n√£o for n√∫mero
+            voltaCaracter();                /// volta este que n√£o √© n√∫mero
+            voltaCaracter();                /// volta o que √© sinal
             voltaCaracter();                /// volta o 'e'
 
             return i;
-        } else {                            /// se for n˙mero
-            voltaCaracter();                /// volta o n˙mero para depois re-ler
+        } else {                            /// se for n√∫mero
+            voltaCaracter();                /// volta o n√∫mero para depois re-ler
         }
     }
 
-    if(i % size_max == size_max-2){     /// se precisar realocar, realoca duas posiÁıes
+    if(i % size_max == size_max-2){     /// se precisar realocar, realoca duas posi√ß√µes
         resp = realoca(resp, &i, &size_max);
     }
 
@@ -248,48 +248,48 @@ char getNotacaoCientifica(char *resp, char i, char size_max, char *isFloat) {
     resp[i++] = sinal_numero;   /// numero ou sinal
     *isFloat = TRUE;            /// marca como float
 
-    return getDecimal(resp, i, size_max, getCaracter());/// lÍ todo o resto de n˙mero
+    return getDecimal(resp, i, size_max, getCaracter());/// l√™ todo o resto de n√∫mero
 }
 
-/// alguns tokens podem mudar dependendo do prÛximo caracter: >, >=
-/// esta funÁ„o verifica se o prÛximo caracter È igual ao 'proximoCaracter'.
+/// alguns tokens podem mudar dependendo do pr√≥ximo caracter: >, >=
+/// esta fun√ß√£o verifica se o pr√≥ximo caracter √© igual ao 'proximoCaracter'.
 /// se for, troca o tipo atual do token para o 'tipo'
 char verificaAFrente(TokenRecord *token, char proximoCaracter, TokenType tipo){
     char *caracter = getCaracter();
 
     if(*caracter != proximoCaracter){   /// se o caracter lido for diferente do esperado
-        voltaCaracter();                /// guarda o caracter n„o processado
-        return '0';                     /// retorna que n„o foi trocado, pois o '<' pode ser '<=' e '<>'
+        voltaCaracter();                /// guarda o caracter n√£o processado
+        return '0';                     /// retorna que n√£o foi trocado, pois o '<' pode ser '<=' e '<>'
     }
 
     token->tokenval = tipo;             /// troca o tipo;
     return '1';
 }
 
-/// estes s„o os possÌveis tokens para processar
-/// eles s„o usados no estado inicial para saber qual ser· o token a processar
+/// estes s√£o os poss√≠veis tokens para processar
+/// eles s√£o usados no estado in√≠cial para saber qual ser√° o token a processar
 #define INICIAL 0
 #define ESPACO 1        /// ' '
 #define NUMERO 2        /// '123.213'
-#define IDENTIFICADOR 3 /// 'string' pode ser uma variavel ou palavra reservada
-#define UNICO 4         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' ',' estes sao unicos e seus valores sao seus significados
+#define IDENTIFICADOR 3 /// 'string' pode ser uma vari√°vel ou palavra reservada
+#define UNICO 4         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' ',' estes s√£o unicos e seus valores s√£o seus significados
 #define LOGICO 5        /// && e ||
 #define COMENTARIO 6    /// { }
-#define NI 7            /// caracter n„o identificado
+#define NI 7            /// caracter n√£o identificado
 
 TokenRecord* getToken(void){
 
-    char *nextCharacter;        /// alguns tokens precisam ver o prÛximo para saber quem s„o: '>' '>='
+    char *nextCharacter;        /// alguns tokens precisam ver o pr√≥ximo para saber quem s√£o: '>' '>='
     int finishToken = FALSE;    /// se terminou de ler o token
     int tokenAtual;             /// o token atual de processamento
     TokenRecord *token = (TokenRecord*) malloc(sizeof(TokenRecord));/// cria o token
 
     while(!finishToken){
-        inicial:                /// label para depois do coment·rio, voltar e recomputar o novo token
+        inicial:                /// label para depois do coment√°rio, voltar e recomputar o novo token
 
-        c = getCaracter();      /// lÍ o caracter
+        c = getCaracter();      /// l√™ o caracter
 
-        if(*c == EOFU){          /// se j· chegou no fim do arquivo
+        if(*c == EOFU){          /// se j√° chegou no fim do arquivo
             tokenAtual = EOFU;   /// retorna um token EOFU
         }
 
@@ -302,60 +302,60 @@ TokenRecord* getToken(void){
                 || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')' || *c == ',' || *c == '!'){
             tokenAtual = UNICO;
         } else if (*c == ' ' || *c == 13 || *c == 10 || *c == '\t') {
-            /// espaÁo, nova linha, line feed ou tabulaÁ„o
+            /// espa√ßo, nova linha, line feed ou tabula√ß√£o
             if(*c == 13) {
-                numlines ++;        /// incrementa n˙mero da linha
                 numcaracters = 0;   /// volta a contagem de caracteres para 0;
-            } else if (*c == 10) {
-                numcaracters = 0;    /// line feed - '\n' - que move o ponteiro para a prÛxima linha sem apontar para o primeiro caracter
+            } else if (*c == 10){
+                numlines ++;        /// incrementa n√∫mero da linha
+                numcaracters = 0;
             }
 
-            goto inicial;   /// entao volta para o comeco do laco e le o proximo caracter
+            goto inicial;   /// entao volta para o comeco do la√ßo e l√™ o pr√≥ximo caracter
         } else if (*c == '{') {
             tokenAtual = COMENTARIO;
         } else if (*c == '&' || *c == '|'){
             tokenAtual = LOGICO;
         } else if (*c == EOFU){
             tokenAtual = EOFU;
-        } else {    /// algum caracter n„o v·lido
+        } else {    /// algum caracter n√£o v√°lido
             tokenAtual = NI;
         }
 
-        char i;                             /// usado nos cases de tokens de n˙meros e identificadores
-        recomputaSwitch:                    /// label do goto para nao precisar ler caracter novamente
+        char i;                             /// usado nos cases de tokens de n√∫meros e identificadores
+        recomputaSwitch:                    /// label do goto para n√£o precisar ler caracter novamente
         switch(tokenAtual){
 
-            case NUMERO:    /// este estado le ate o final do numero
+            case NUMERO:    /// este estado l√™ at√© o final do numero
                 token->numcaracter = numcaracters;
 
                 if(!respVal)/// se o valor for 0
-                    resp = (char*) malloc(SIZE_NUM*sizeof(char)); /// aloca para guardar cada dÌgito do n˙mero
+                    resp = (char*) malloc(SIZE_NUM*sizeof(char)); /// aloca para guardar cada d√≠gito do n√∫mero
 
                 char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
                 char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
-                i = getDecimal(resp, (char) 0, size_num, c);    /// lÍ todo o n˙mero e retorna a ˙ltima posiÁ„o do array
+                i = getDecimal(resp, (char) 0, size_num, c);    /// l√™ todo o n√∫mero e retorna a √∫ltima posi√ß√£o do array
 
-                if(*getCaracter() == '.'){                      /// se for igual h· um ponto, lÍ o ponto e o n˙mero depois do ponto
-                    i = getFlutuante(resp, i, size_num);        /// lÍ todo o restante de n˙meros depois da vÌrgula
+                if(*getCaracter() == '.'){                      /// se for igual h√° um ponto, l√™ o ponto e o n√∫mero depois do ponto
+                    i = getFlutuante(resp, i, size_num);        /// l√™ todo o restante de n√∫meros depois da v√≠rgula
                     isFloat = TRUE;
                 } else {
-                    voltaCaracter();                            /// se n„o for o '.', volta o caracter
+                    voltaCaracter();                            /// se n√£o for o '.', volta o caracter
                 }
 
                 c = getCaracter();
-                /// n˙mero com notaÁ„o cientÌfica
+                /// n√∫mero com nota?o cient?ica
                 if(*c == 'e' || *c == 'E'){
                     i = getNotacaoCientifica(resp, i, size_num, &isFloat);
                 } else {
-                    voltaCaracter();                            /// volta o caracter
+                    voltaCaracter();                                /// volta o caracter
                 }
 
                 finishToken = TRUE;                                 /// termina de ler
-                resp[i] = '\0';                                     /// finaliza a representacao do numero no resposta
+                resp[i] = '\0';                                     /// finaliza a representa√£oo do n√∫mero na resposta
 
-                /// transformacao do numero
-                token->tokenval = isFloat ? NUM_F:NUM_I;            /// marca se È numero inteiro ou float
+                /// transforma√ß√£o do numero
+                token->tokenval = isFloat ? NUM_F:NUM_I;            /// marca se √© numero inteiro ou float
                 if(isFloat) {
                     float *numval = (float *) malloc(sizeof(float));
                     *numval = atof(resp);
@@ -373,42 +373,42 @@ TokenRecord* getToken(void){
                 token->numcaracter = numcaracters;
 
                 if(!respVal)                                                    /// se o valor for 0
-                    resp = (char*) malloc(SIZE_IDENT*sizeof(char));             /// aloca para guardar letras atÈ size_ident caracteres
+                    resp = (char*) malloc(SIZE_IDENT*sizeof(char));             /// aloca para guardar letras at?size_ident caracteres
 
-                token->tokenval = ID;                                           /// diz que ele È identificador, POR…M PODE SER ALTERADO SE FOR UMA PALAVRA RESERVADA
+                token->tokenval = ID;                                           /// diz que ele √© identificador, POR√âM PODE SER ALTERADO SE FOR UMA PALAVRA RESERVADA
                 char size_ident = SIZE_IDENT;
                 char temAcento = 0;                                             /// para indicar se o identificador tem acento
 
-                for(i = 0; TRUE; i ++){                                         /// lÍ enquanto tiver caracteres para ler
+                for(i = 0; TRUE; i ++){                                         /// l√™ enquanto tiver caracteres para ler
 
                     resp[i] = *c;                                               /// adiciona o caracter na resposta
-                    c = getCaracter();                                          /// le o proximo
+                    c = getCaracter();                                          /// l√™ o proximo
 
-                    if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao È uma letra
-                        (*c < '0' || *c > '9') &&                               /// n„o È n˙mero
-                        (*c != '_' && (*c < 128 || *c > 252))){                 /// n„o È '_' nem acentos
+                    if( ((*c < 'A' || *c > 'Z') && (*c < 'a' || *c > 'z')) &&   /// nao √© uma letra
+                        (*c < '0' || *c > '9') &&                               /// n√£o √© n√∫mero
+                        (*c != '_' && (*c < 128 || *c > 252))){                 /// n√£o √© '_' nem acentos
                         break;                                                  /// termina este for
                     }
 
-                    if(*c >= 128 && *c <= 252){                                 /// acento sÛ pode em palavras reservadas
-                        token->tokenval = NAO_IDENTIFICADO;                     /// troca para token n„o identificado
-                        temAcento = 1;                                          /// se n„o for reservada e tiver acento, n„o È reconhecido
+                    if(*c >= 128 && *c <= 252){                                 /// acento s√≥ pode em palavras reservadas
+                        token->tokenval = NAO_IDENTIFICADO;                     /// troca para token n√£o identificado
+                        temAcento = 1;                                          /// se n√£o for reservada e tiver acento, n√£o √© reconhecido
                     }
 
                     if(i == size_ident-1){                                      /// se precisar realocar
-                        resp = realoca(resp, &i, &size_ident);        /// realoca e devolve o novo ponteiro para resp
+                        resp = realoca(resp, &i, &size_ident);                  /// realoca e devolve o novo ponteiro para resp
                     }
                 }
 
                 finishToken = TRUE;         /// termina de ler
-                resp[i+1] = '\0';           /// finaliza a representaÁ„o do identificador
+                resp[i+1] = '\0';           /// finaliza a representa√ß√£o do identificador
                 token->val = (void *) resp; /// guarda o ponteiro do identificador
-                voltaCaracter();            /// n„o processa o caracter atual
-                palavrasReservadas(token, temAcento);   /// verifica se o valor do token n„o È uma palavra reservada e troca o seu tipo
+                voltaCaracter();            /// n√£o processa o caracter atual
+                palavrasReservadas(token, temAcento);   /// verifica se o valor do token n√£o √© uma palavra reservada e troca o seu tipo
 
                 break;
 
-            case UNICO:     /// estes s„o: * + - / : < = > [ ] , !
+            case UNICO:     /// estes s√£o: * + - / : < = > [ ] , !
                 token->numcaracter = numcaracters;
 
                 switch(*c){
@@ -451,11 +451,11 @@ TokenRecord* getToken(void){
                         break;
                     case '<':   /// pode ser '<' ou '<=' ou '<>'
                         token->tokenval = MENOR;
-                        if(verificaAFrente(token, '=', MENOR_IGUAL) != '1') /// se n„o for '<='
-                            verificaAFrente(token, '>', DIFERENTE);         /// teste se È '<>'
+                        if(verificaAFrente(token, '=', MENOR_IGUAL) != '1') /// se n√£o for '<='
+                            verificaAFrente(token, '>', DIFERENTE);         /// teste se √©'<>'
                         break;
                     case ':':   /// pode ser ': ou ':='
-                        token->tokenval = DOIS_PONTOS;          /// a principio s„o dois pontos
+                        token->tokenval = DOIS_PONTOS;          /// a principio s√£o dois pontos
                         verificaAFrente(token, '=', ATRIBUICAO);
                         break;
                 }
@@ -466,12 +466,12 @@ TokenRecord* getToken(void){
             case LOGICO:
                 token->numcaracter = numcaracters;
 
-                tokenAtual = NI;                    /// o token ainda n„o foi identificado
-                char atual = *c;                    /// o caracter lÛgico: | ou &
-                char *nextCharacter = getCaracter();/// o prÛximo
-                if (atual != *nextCharacter){       /// n„o s„o os mesmos caracteres: '||' ou '&&'
-                    *c = atual;                     /// salva para o NI ler como n„o identificado
-                    voltaCaracter();                /// volta o que n„o È igual ao '|' ou '&'
+                tokenAtual = NI;                    /// o token ainda n√£o foi identificado
+                char atual = *c;                    /// o caracter l√≥gico: | ou &
+                char *nextCharacter = getCaracter();/// o pr√≥ximo
+                if (atual != *nextCharacter){       /// n√£o s√£o os mesmos caracteres: '||' ou '&&'
+                    *c = atual;                     /// salva para o NI ler como n√£oidentificado
+                    voltaCaracter();                /// volta o que n√£o √© igual ao '|' ou '&'
                     goto recomputaSwitch;           /// cria um token de NI
                 }
 
@@ -484,12 +484,12 @@ TokenRecord* getToken(void){
                 token->numcaracter = numcaracters;
 
                 char qtd = 1;           /// quantidade de fechas - '}' - que faltam
-                while(qtd){             /// sÛ termina de processar o coment·rio quando tiver fechado todos os abre
+                while(qtd){             /// s√≥ termina de processar o coment√°rio quando tiver fechado todos os abre
                     c = getCaracter();
-                    if (*c == 13)       /// contabiliza o n˙mero de linhas
+                    if (*c == 13)       /// contabiliza o n√∫mero de linhas
                         numlines ++;
 
-                    if(*c == EOFU){      /// se n„o fechar o coment·rio
+                    if(*c == EOFU){      /// se n√£o fechar o coment√°rio
                         tokenAtual = EOFU;
                         goto recomputaSwitch;
                     }
@@ -505,7 +505,7 @@ TokenRecord* getToken(void){
             case EOFU:    /// EOFU
                 finishToken = TRUE;
                 token->tokenval = EOFU;
-                free(resp);             /// n„o vai mais us·-lo
+                free(resp);             /// n√£o vai mais us√°-lo
                 fclose(leitorArquivo);  /// fecha o arquivo
                 leitorArquivo = NULL;
                 break;
@@ -518,12 +518,12 @@ TokenRecord* getToken(void){
                 char *b = (char *) malloc(sizeof(char));
                 *b = *c;
                 token->val = (void *) b;
-                respVal = 0;            /// este endereÁo n„o pode ser reaproveitado
+                respVal = 0;            /// este endere√ßo n√£o pode ser reaproveitado
                 break;
         }
     }
 
-    token->numline = numlines;  /// guarda o n˙mero da linha que este token foi encontrado
+    token->numline = numlines;  /// guarda o n√∫mero da linha que este token foi encontrado
     return token;
 }
 
@@ -535,9 +535,9 @@ void printToken(TokenRecord *token, char printLine, char printCaracter){
         else if (token->tokenval == NUM_F)
             printf("(NUM, %f", *((float *) token->val));
         else if (token->tokenval == ATE)
-            printf("(ATE");
+            printf("(AT√â");
         else if (token->tokenval == ENTAO)
-            printf("(ENTAO");
+            printf("(ENT√ÉO");
         else if (token->tokenval == ESCREVA)
             printf("(ESCREVA");
         else if (token->tokenval == FIM)
@@ -555,7 +555,7 @@ void printToken(TokenRecord *token, char printLine, char printCaracter){
         else if (token->tokenval == SE)
             printf("(SE");
         else if (token->tokenval == SENAO)
-            printf("(SENAO");
+            printf("(SEN√ÉO");
         else if (token->tokenval == SOMA)
             printf("( + ");
         else if (token->tokenval == SUBTRACAO)
@@ -595,7 +595,7 @@ void printToken(TokenRecord *token, char printLine, char printCaracter){
         else if (token->tokenval == DIFERENTE)
             printf("( <> ");
         else if (token->tokenval == NAO_IDENTIFICADO)
-            printf("(NAO_IDENTIFICADO, %s", (char *) token->val);
+            printf("(N√ÉO_IDENTIFICADO, %s", (char *) token->val);
         else if (token->tokenval == EOFU)
             return;
 

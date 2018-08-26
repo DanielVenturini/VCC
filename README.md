@@ -16,4 +16,3 @@ ou
 ```
 ./vcc teste.cpp
 ```
-Para compilar algum arquivo, este DEVE ser codificado em ISO-8859-1.

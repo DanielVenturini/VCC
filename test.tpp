@@ -1,21 +1,21 @@
-{Implementação de teste
+{ImplementaÃ§Ã£o de teste
 	{programa para primeira parte do projeto
 	}
 }
 
-daniél
+daniÃ©l
 inteiro: a, b
 inteiro principal()
 	inteiro: nome_de_variavel_grande
-	inteiro: daniél  {identificador com acento}
+	inteiro: daniÃ©l  {identificador com acento}
 	a := 73
 	b := 1.973e+14
 	c := a + b
 	nome_de_variavel_grande := 10
 
-	se(c <> 2) então
+	se(c <> 2) entÃ£o
 		escreva(c)
-	senão
+	senÃ£o
 		escreva(b)
 	fim
 	retorna(0)
