@@ -590,6 +590,8 @@ void printToken(TokenRecord *token, char printLine, char printCaracter){
             printf("( := ");
         else if (token->tokenval == E_LOGICO)
             printf("( && ");
+        else if (token->tokenval == NEGACAO)
+            printf("( ! ");
         else if (token->tokenval == OU_LOGICO)
             printf("( || ");
         else if (token->tokenval == DIFERENTE)
