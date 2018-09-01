@@ -30,20 +30,20 @@ void insere_filho(TreeNode *pai, TreeNode *filho){
 
 	while (pai->filhos[i]) {		// enquanto tiver filhos já alocado
 
+		i ++;
+
 		if(pai->max_filhos == i)	// se o pai não tiver mais espaço para filhos
 			realocaFilhos(pai);		// realoca o número de filhos
-
-		printf("%c ", pai->filhos[i]->letra);
-		i ++;
 	}
 
-	printf("\n");
 	pai->filhos[i] = filho;		// insere o filho
 }
 
 void getArvoreRecursiva(TreeNode *pai, FILE *treedot) {
 	if(!pai)
 		return;
+
+	fprintf(treedot, "    %c;\n", pai->letra);	//se tiver somente o pai, ele tem que aparecer
 
 	char i;
 	for(i = 0; pai->filhos[i]; i ++)	// adiciona 'pai -> filho' para cada filho
@@ -62,25 +62,4 @@ void printArvore(TreeNode *raiz){
 	fprintf(treedot, "}");
 	fclose(treedot);						// fecha o arquivo
 	system("xdot tree.dot");				// printa a arvore com o xdot - graphviz
-}
-
-int main(){
-
-	TreeNode *t = novo_node('A');
-	insere_filho(t, novo_node('B'));
-	insere_filho(t, novo_node('C'));
-	insere_filho(t->filhos[0], novo_node('D'));
-	insere_filho(t, novo_node('E'));
-	insere_filho(t, NULL);
-	insere_filho(t->filhos[0], novo_node('F'));
-	insere_filho(t, novo_node('G'));
-	insere_filho(t->filhos[0], novo_node('H'));
-	insere_filho(t, novo_node('I'));
-	insere_filho(t, novo_node('J'));
-	insere_filho(t->filhos[1], novo_node('L'));
-	insere_filho(t->filhos[1], novo_node('M'));
-	insere_filho(t->filhos[3], novo_node('N'));
-
-	printArvore(t);
-	return 0;
 }

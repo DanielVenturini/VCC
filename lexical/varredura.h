@@ -1,3 +1,6 @@
+#ifndef _VARREDURA_H_
+#define _VARREDURA_H_
+
 #include <pthread.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -36,3 +39,5 @@ void *desaloca(void *ptr);		/// desaloca a 'ptr' memória usando uma thread
 char openFile(char *filename);	/// realiza as operações de abertura do arquivo
 TokenRecord* getToken(void);	/// retorna um token
 void printToken(TokenRecord *token, char printLine, char printCaracter);	/// imprime o valor de um token
+
+#endif

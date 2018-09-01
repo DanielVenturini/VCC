@@ -2,7 +2,8 @@ vcc
 main
 tree
 test.tpp
-test2.tpp
+teste2.tpp
+syntactic/parse
 
 # Prerequisites
 *.d
