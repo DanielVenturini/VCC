@@ -1,5 +1,8 @@
 vcc
 main
+tree
+test.tpp
+test2.tpp
 
 # Prerequisites
 *.d
