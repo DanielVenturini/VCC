@@ -21,8 +21,8 @@ int main(int argc, char *argv[]){
         return 1;
     }
 
-    //TreeNode *raiz = parse();           /// recupera a árvore chamando o getToken()
-
+    TreeNode *raiz = parse();           /// recupera a árvore chamando o getToken()
+    /*
     int *n = (int *) malloc(sizeof(int));
     int *n1 = (int *) malloc(sizeof(int));
     *n = 10;
@@ -37,11 +37,12 @@ int main(int argc, char *argv[]){
 
     insere_filho(attr, id);
     insere_filho(attr, soma);
-    //insere_filho(soma, id2);
+    insere_filho(soma, id2);
     insere_filho(soma, num1);
     insere_filho(soma, num2);
-
     printArvore(attr);
+    */
+    printArvore(raiz);
 
     return 0;
 }
