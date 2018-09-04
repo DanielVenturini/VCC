@@ -53,12 +53,10 @@ void getArvoreRecursiva(TreeNode *pai, FILE *treedot) {
 	if(!pai)
 		return;
 
-	printf("getArvoreRecursiva.\n");
 	printFile(pai->token, treedot, 1, 0, 1);	// token, identacao, seta, final - este último parametro como 1 para colocar o ';\n'
 
 	char i;
 	for(i = 0; pai->filhos[i]; i ++){			// adiciona 'pai -> filho' para cada filho
-		printf("-------------------\n");
 		printFile(pai->token, treedot, 1, 1, 0);
 		printFile(pai->filhos[i]->token, treedot, 0, 0, 1);
 	}
