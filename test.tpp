@@ -1,7 +1,7 @@
 {Implementação de teste
 	{programa para primeira parte do projeto
 	}
-}
+
 
 inteiro: a, b
 inteiro principal()
@@ -18,4 +18,6 @@ inteiro principal()
 		escreva(b)
 	fim
 	retorna(0)
-fim
+fim}
+
+a := 10

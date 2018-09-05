@@ -38,6 +38,9 @@ char openFile(char *filename) {
 /// ou retorna um caracter direto do arquivo
 char* getCaracter(){
 
+    if(!leitorArquivo)          /// se não tem nada o que ler
+        return NULL;
+
     *c = getc(leitorArquivo);   /// lê do arquivo
     posFile ++;                 /// incrementa a posição do arquivo
     numcaracters ++;            /// incrementa o número de caracters da linha
@@ -289,8 +292,9 @@ TokenRecord* getToken(void){
 
         c = getCaracter();      /// lê o caracter
 
-        if(*c == EOFU){          /// se já chegou no fim do arquivo
+        if(!leitorArquivo || *c == EOFU) {  /// se já chegou no fim do arquivo, esta ou alguma outra vez
             tokenAtual = EOFU;   /// retorna um token EOFU
+            goto recomputaSwitch;
         }
 
         /// computa o token atual
@@ -505,6 +509,10 @@ TokenRecord* getToken(void){
             case EOFU:    /// EOFU
                 finishToken = TRUE;
                 token->tokenval = EOFU;
+
+                if(!leitorArquivo)      /// já não ha o que dar no fclose
+                    break;
+
                 free(resp);             /// não vai mais usá-lo
                 fclose(leitorArquivo);  /// fecha o arquivo
                 leitorArquivo = NULL;
