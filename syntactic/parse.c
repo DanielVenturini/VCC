@@ -14,7 +14,6 @@ TreeNode *declaracao_funcao();
 TreeNode *lista_parametros();
 TreeNode *expressao_unaria();
 TreeNode *lista_argumentos();
-TreeNode *lista_variaveis();
 TreeNode *operador_logico();
 TreeNode *chamada_funcao();
 TreeNode *operador_soma();
@@ -26,7 +25,6 @@ TreeNode *expressao();
 TreeNode *escreva();
 TreeNode *retorna();
 TreeNode *repita();
-TreeNode *indice();
 TreeNode *numero();
 TreeNode *corpo();
 TreeNode *fator();
@@ -35,6 +33,20 @@ TreeNode *tipo();
 TreeNode *acao();
 TreeNode *var();
 TreeNode *se();
+
+// recursivas à esquerda
+void lista_declaracao(TreeNode *raiz);
+void lista_variaveis(TreeNode *raiz);
+void indice(TreeNode *raiz);
+
+
+// apenas cria um nó que será o nó programa
+TreeNode *criaPrograma() {
+	TokenRecord *programa = (TokenRecord *) malloc(sizeof(TokenRecord));
+	programa->tokenval = -2;			// programa
+
+	return novo_node(programa);
+}
 
 // esta função recupera o próximo token
 // porém não substitui pelo token atual, apenas recupera e retorna
@@ -229,7 +241,7 @@ TreeNode *expressao_logica() {
 
 // expressao_logica | atribuicao
 TreeNode *expressao() {
-
+	return novo_node(atual());
 }
 
 // RETORNA "(" expressao ")"
@@ -317,29 +329,53 @@ TreeNode *tipo() {
 }
 
 // indice "["  expressao "]" | "[" expressao "]"
-TreeNode *indice() {
+void indice(TreeNode *raiz) {
 
+	if(verProximo()->tokenval != ABRE_COLCHETES)
+		return;
 
+	proximo();
+	if(verProximo()->tokenval != NUM_I)
+		return;
+
+	proximo();
+	TreeNode *exp = expressao();
+
+	if(verProximo()->tokenval != FECHA_COLCHETES)
+		return;
+
+	proximo();
+	insere_filho(raiz, exp);
+	indice(raiz);
 }
 
-// D | ID indice
+// ID | ID indice
 TreeNode *var() {
-	switch(tokenAtual->tokenval){
-		case ID:
-		
-			break;
 
-		default:
-			printf("Err no var\n");
+	if (atual()->tokenval != ID){
+		printf("Err var.\n");
+		return NULL;
 	}
 
-	return NULL;
+	TreeNode *id = novo_node(atual());	// cria o nó ID
+
+	if (verProximo()->tokenval == ABRE_COLCHETES)
+		indice(id);
+
+	return id;
 }
 
 // lista_variaveis "," var | var
-TreeNode *lista_variaveis() {
+void lista_variaveis(TreeNode *raiz) {
 
+	proximo();								// avança para o ID
+	insere_filho(raiz, var());				// recupera a primeira var
 
+	if(proximo()->tokenval != VIRGULA)		// não tem mais nada na gramática para lista_variaveis
+		return;
+
+	// se o próximo é uma virgula
+	lista_variaveis(raiz);
 }
 
 // atribuicao
@@ -350,36 +386,75 @@ TreeNode *inicializacao_variaveis() {
 // tipo ":" lista_variaveis
 TreeNode *declaracao_variaveis() {
 
+	// tipo
+	TreeNode *raiz = novo_node(atual());		// recupera o token que trouxe até aqui INTEIRO | FLUTUANTE
+
+	if(proximo()->tokenval != DOIS_PONTOS) {	// esta verificação provavelmente é redundante
+		printf("Err declaracao_variaveis.\n");
+		return NULL;
+	}
+
+	lista_variaveis(raiz);
+	return raiz;
 }
 
 // declaracao_variaveis | inicializacao_variaveis | declaracao_funcao
 TreeNode *declaracao() {
 
+    TreeNode *decl;
+
+    switch(atual()->tokenval){
+
+    	// declaracao -> declaracao_variaveis | declaracao_funcao
+    	// declaracao_variaveis -> tipo ":" lista_variaveis
+    	// declaracao_funcao -> tipo cabecalho | cabecalho
+    	// pode ser tanto uma declaracao_variaveis ou declaracao_funcao
+    	// ambas começam com TIPO, mas declaracao_funcao pode começar com um cabecalho também
+    	case INTEIRO:
+    	case FLUTUANTE:
+    		// em declaracao_variaveis o próximo token será ":"
+    		// já em declaracao_funcao será um IDENTIFICADOR
+    		if(verProximo()->tokenval == DOIS_PONTOS){
+    			decl = declaracao_variaveis();					// se o token próximo é ":", então é declaração_variaveis
+    		} else if (verProximo()->tokenval == ID){
+    			decl = declaracao_funcao();						// em declaracao_funcao, a regra que começa com um tipo, é seguida de um ID
+    		}
+
+    		break;
+
+    	// declaracao_funcao -> tipo cabecalho | cabecalho
+    	// cabecalho -> ID ...
+    	// se não começar com inteiro mas começar com um ID, então é uma declaração_função
+    	case ID:
+    		// make something
+    		break;
+
+    	default:
+    		// wrong token
+    		break;
+    }
+
+    return decl;
 }
 
 // lista_declaracao declaracao | declaracao
-TreeNode *lista_declaracao() {
-	TreeNode *raiz = novo_node((TokenRecord *) malloc(sizeof(TokenRecord)));
+void lista_declaracao(TreeNode *raiz) {
 
-	while(tokenAtual->tokenval != EOFU){
-		TreeNode *filho;
-		switch(tokenAtual->tokenval){
-			case SE:
-				printf("chegou no se\n");
-				insere_filho(raiz, se());
-				break;
-		}
+	insere_filho(raiz, declaracao());
 
-		insere_filho(raiz, filho);
+	if(atual()->tokenval == EOFU){
+		return;
 	}
+
+	lista_declaracao(raiz);
 }
 
 TreeNode *parse() {
 	tokenProximo = NULL;
-	tokenAtual = getToken();			// atualiza o token
-	printToken(tokenAtual, 0, 0);
 
-	TreeNode *raiz = lista_declaracao();// recupera o programa
+	TreeNode *raiz = criaPrograma();
+	proximo();				// avança para o primeiro token
+	lista_declaracao(raiz);	// recupera o programa
 
 	return raiz;
 }
