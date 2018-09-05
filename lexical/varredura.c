@@ -513,7 +513,7 @@ TokenRecord* getToken(void){
                 if(!leitorArquivo)      /// já não ha o que dar no fclose
                     break;
 
-                free(resp);             /// não vai mais usá-lo
+                //free(resp);             /// não vai mais usá-lo, porém, posso estar desalocando um ID
                 fclose(leitorArquivo);  /// fecha o arquivo
                 leitorArquivo = NULL;
                 break;
