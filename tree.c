@@ -1,7 +1,8 @@
 #include "tree.h"
 
-void printFile1(TreeNode *node, FILE *treedot, char identacao, char seta, char final);
-void printFile2(TokenRecord *token, FILE *treedot, char identacao, char seta, char final);
+void printLabel1(TreeNode *node, FILE *treedot);
+void printLabel2(TreeNode *node, FILE *treedot);
+void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot);
 
 void nullPosicoes(TreeNode *node, char inicial, char final){
 	char i;
@@ -55,12 +56,12 @@ void getArvoreRecursiva(TreeNode *pai, FILE *treedot) {
 	if(!pai)
 		return;
 
-	printFile1(pai, treedot, 1, 0, 1);	// token, identacao, seta, final - este último parametro como 1 para colocar o ';\n'
+	printLabel1(pai, treedot);                       // printa o pai
 
 	char i;
-	for(i = 0; pai->filhos[i]; i ++){			// adiciona 'pai -> filho' para cada filho
-		printFile1(pai, treedot, 1, 1, 0);
-		printFile1(pai->filhos[i], treedot, 0, 0, 1);
+	for(i = 0; pai->filhos[i]; i ++){	             // adiciona 'pai -- filho' para cada filho
+		printLabel1(pai->filhos[i], treedot);        // printa o filho no arquivo
+        printAresta(pai, pai->filhos[i], treedot);   // printa a aresta 'pai -- filho'
 	}
 
 	for(i = 0; pai->filhos[i]; i ++)			// chama para cada filho também
@@ -72,180 +73,209 @@ void printArvore(TreeNode *raiz){
         return;
 
 	FILE *treedot = fopen("tree.dot", "w");	// abrindo o arquivo
-	fprintf(treedot, "digraph G {\n");		// imprime cabeçalho
+	fprintf(treedot, "strict graph G {\n"); // imprime cabeçalho
+    printf("strict graph G {\n");
 
 	getArvoreRecursiva(raiz, treedot);		// recursivamente vai adicionando no arquivo
 
-	fprintf(treedot, "}");					// finaliza o digrafo com o '}'
+    fprintf(treedot, "}");                  // finaliza o digrafo com o '}'
+	printf("}");					// finaliza o digrafo com o '}'
 	fclose(treedot);						// fecha o arquivo
 	system("xdot tree.dot");				// printa a arvore com o xdot - graphviz
 }
 
+void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot){
+    printf("    %i -- %i;\n", pai, filho);
+    fprintf(treedot, "    %i -- %i;\n", pai, filho);
+}
+
 // printa no arquivos os nós intermediários
-void printFile1(TreeNode *node, FILE *treedot, char identacao, char seta, char final){
+void printLabel1(TreeNode *node, FILE *treedot){
+    printf("    %i [label=\"", node);
+    fprintf(treedot, "    %i [label=\"", node); // printa o id do nó e o 'label="'
+
     if(node->token) {      // se tiver um token, então é uma folha
-        printFile2(node->token, treedot, identacao, seta, final);
+        printLabel2(node, treedot);
         return;
     }
 
-    if(identacao)           // apenas para identar
-        fprintf(treedot, "    ");
-
-    if (node->bnfval == PROGRAMA)
-        fprintf(treedot, "\"PROGRAMA\"");
-    else if (node->bnfval == LISTA_DECLARACOES)
-        fprintf(treedot, "\"LISTA_DECLARACOES\"");
-    else if (node->bnfval == DECLARACAO)
-        fprintf(treedot, "\"DECLARACAO\"");
-    else if (node->bnfval == DECLARACAO_VARIAVEIS)
-        fprintf(treedot, "\"DECLARACAO_VARIAVEIS\"");
-    else if (node->bnfval == INICIALIZACAO_VARIAVEIS)
-        fprintf(treedot, "\"INICIALIZACAO_VARIAVEIS\"");
-    else if (node->bnfval == LISTA_VARIAVEIS)
-        fprintf(treedot, "\"LISTA_VARAIVEIS\"");
-    else if (node->bnfval == VAR)
-        fprintf(treedot, "\"VAR\"");
-    else if (node->bnfval == INDICE)
-        fprintf(treedot, "\"INDICE\"");
-    else if (node->bnfval == TIPO)
-        fprintf(treedot, "\"TIPO\"");
+    if (node->bnfval == PROGRAMA) {
+        printf("PROGRAMA");
+        fprintf(treedot, "PROGRAMA");
+    }
+    else if (node->bnfval == LISTA_DECLARACOES) {
+        printf("LISTA_DECLARACOES");
+        fprintf(treedot, "LISTA_DECLARACOES");
+    }
+    else if (node->bnfval == DECLARACAO) {
+        printf("DECLARACAO");
+        fprintf(treedot, "DECLARACAO");
+    }
+    else if (node->bnfval == DECLARACAO_VARIAVEIS) {
+        printf("DECLARACAO_VARIAVEIS");
+        fprintf(treedot, "DECLARACAO_VARIAVEIS");
+    }
+    else if (node->bnfval == INICIALIZACAO_VARIAVEIS) {
+        printf("INICIALIZACAO_VARIAVEIS");
+        fprintf(treedot, "INICIALIZACAO_VARIAVEIS");
+    }
+    else if (node->bnfval == LISTA_VARIAVEIS) {
+        printf("LISTA_VARIAVEIS");
+        fprintf(treedot, "LISTA_VARIAVEIS");
+    }
+    else if (node->bnfval == VAR) {
+        printf("VAR");
+        fprintf(treedot, "VAR");
+    }
+    else if (node->bnfval == INDICE) {
+        printf("INDICE");
+        fprintf(treedot, "INDICE");
+    }
+    else if (node->bnfval == TIPO) {
+        printf("TIPO");
+        fprintf(treedot, "TIPO");
+    }
     else if (node->bnfval == DECLARACAO_FUNCAO)
-        fprintf(treedot, "\"DECLARACAO_FUNCAO\"");
+        fprintf(treedot, "DECLARACAO_FUNCAO");
     else if (node->bnfval == CABECALHO)
-        fprintf(treedot, "\"CABECALHO\"");
+        fprintf(treedot, "CABECALHO");
     else if (node->bnfval == LISTA_PARAMETROS)
-        fprintf(treedot, "\"LISTA_PARAMETROS\"");
+        fprintf(treedot, "LISTA_PARAMETROS");
     else if (node->bnfval == PARAMETRO)
-        fprintf(treedot, "\"PARAMETRO\"");
+        fprintf(treedot, "PARAMETRO");
     else if (node->bnfval == CORPO)
-        fprintf(treedot, "\"CORPO\"");
+        fprintf(treedot, "CORPO");
     else if (node->bnfval == ACAO)
-        fprintf(treedot, "\"ACAO\"");
+        fprintf(treedot, "ACAO");
     else if (node->bnfval == B_SE)
-        fprintf(treedot, "\"SE\"");
+        fprintf(treedot, "SE");
     else if (node->bnfval == B_REPITA)
-        fprintf(treedot, "\"REPITA\"");
+        fprintf(treedot, "REPITA");
     else if (node->bnfval == B_LEIA)
-        fprintf(treedot, "\"LEIA\"");
+        fprintf(treedot, "LEIA");
     else if (node->bnfval == B_ESCREVA)
-        fprintf(treedot, "\"ESCREVA\"");
+        fprintf(treedot, "ESCREVA");
     else if (node->bnfval == B_RETORNA)
-        fprintf(treedot, "\"RETORNA\"");
+        fprintf(treedot, "RETORNA");
     else if (node->bnfval == EXPRESSAO)
-        fprintf(treedot, "\"EXPRESSAO\"");
+        fprintf(treedot, "EXPRESSAO");
     else if (node->bnfval == EXPRESSAO_LOGICA)
-        fprintf(treedot, "\"EXPRESSAO_LOGICA\"");
+        fprintf(treedot, "EXPRESSAO_LOGICA");
     else if (node->bnfval == EXPRESSAO_SIMPLES)
-        fprintf(treedot, "\"EXPRESSAO_SIMPLES\"");
+        fprintf(treedot, "EXPRESSAO_SIMPLES");
     else if (node->bnfval == EXPRESSAO_ADITIVA)
-        fprintf(treedot, "\"EXPRESSAO_ADITIVA\"");
+        fprintf(treedot, "EXPRESSAO_ADITIVA");
     else if (node->bnfval == EXPRESSAO_MULTIPLICATIVA)
-        fprintf(treedot, "\"EXPRESSAO_MULTIPLICATIVA\"");
+        fprintf(treedot, "EXPRESSAO_MULTIPLICATIVA");
     else if (node->bnfval == EXPRESSAO_UNARIA)
-        fprintf(treedot, "\"EXPRESSAO_UNARIA\"");
+        fprintf(treedot, "EXPRESSAO_UNARIA");
     else if (node->bnfval == OPERADOR_RELACIONAL)
-        fprintf(treedot, "\"OPERADOR_RELACIONAL\"");
+        fprintf(treedot, "OPERADOR_RELACIONAL");
     else if (node->bnfval == OPERADOR_SOMA)
-        fprintf(treedot, "\"OPERADOR_SOMA\"");
+        fprintf(treedot, "OPERADOR_SOMA");
     else if (node->bnfval == OPERADOR_LOGICO)
-        fprintf(treedot, "\"OPERADOR_LOGICO\"");
+        fprintf(treedot, "OPERADOR_LOGICO");
     else if (node->bnfval == OPERADOR_MULTIPLICACAO)
-        fprintf(treedot, "\"OPERADOR_MULTIPLICACAO\"");
+        fprintf(treedot, "OPERADOR_MULTIPLICACAO");
     else if (node->bnfval == FATOR)
-        fprintf(treedot, "\"FATOR\"");
+        fprintf(treedot, "FATOR");
     else if (node->bnfval == NUMERO)
-        fprintf(treedot, "\"NUMERO\"");
+        fprintf(treedot, "NUMERO");
     else if (node->bnfval == CHAMADA_FUNCAO)
-        fprintf(treedot, "\"CHAMADA_FUNCAO\"");
+        fprintf(treedot, "CHAMADA_FUNCAO");
     else if (node->bnfval == LISTA_ARGUMENTOS)
-        fprintf(treedot, "\"LISTA_ARGUMENTOS\"");
+        fprintf(treedot, "LISTA_ARGUMENTOS");
 
-    if(seta)        // antes do filho
-        fprintf(treedot, " -> ");
-
-    if(final)       // apenas para finalizar com o ';\n'
-        fprintf(treedot, ";\n");
+    fprintf(treedot, "\"];\n");     // finalizando a linha
+    printf("\"];\n");     // finalizando a linha
 }
 
 // printa no arquivos as folhas
-void printFile2(TokenRecord *token, FILE *treedot, char identacao, char seta, char final) {
-	if(identacao)			// apenas para identar
-		fprintf(treedot, "    ");
+void printLabel2(TreeNode *node, FILE *treedot) {
 
-	if (token->tokenval == ID)
-        fprintf(treedot, "\"ID-%s, %d:%d\"", (char *) token->val, token->numline, token->numcaracter);
-    else if (token->tokenval == NUM_I)
-        fprintf(treedot, "\"NUM-%d, %d:%d\"", *(int *) token->val, token->numline, token->numcaracter);
-    else if (token->tokenval == NUM_F)
-        fprintf(treedot, "\"NUM-%f, %d:%d\"", *((float *) token->val), token->numline, token->numcaracter);
-    else if (token->tokenval == ATE)
-        fprintf(treedot, "\"ATÉ, %d-%d", token->numline, token->numcaracter);
-    else if (token->tokenval == ENTAO)
-        fprintf(treedot, "\"ENTÃO, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == ESCREVA)
-        fprintf(treedot, "\"ESCREVA, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == FIM)
-        fprintf(treedot, "\"FIM, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == FLUTUANTE)
-        fprintf(treedot, "\"FLUTUANTE, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == INTEIRO)
-        fprintf(treedot, "\"INTEIRO, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == LEIA)
-        fprintf(treedot, "\"LEIA, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == REPITA)
-        fprintf(treedot, "\"REPITA, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == RETORNA)
-        fprintf(treedot, "\"RETORNA, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == SE)
-        fprintf(treedot, "\"SE, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == SENAO)
-        fprintf(treedot, "\"SENÃO, %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == SOMA)
-        fprintf(treedot, "\"+ , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == SUBTRACAO)
-        fprintf(treedot, "\"- , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == MULTIPLICACAO)
-        fprintf(treedot, "\"* , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == DIVISAO)
-        fprintf(treedot, "\"/ , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == MAIOR)
-        fprintf(treedot, "\"> , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == MENOR)
-        fprintf(treedot, "\"< , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == MAIOR_IGUAL)
-        fprintf(treedot, "\">= , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == MENOR_IGUAL)
-        fprintf(treedot, "\"<= , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == IGUALDADE)
-        fprintf(treedot, "\"= , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == ABRE_COLCHETES)
-        fprintf(treedot, "\"[ , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == FECHA_COLCHETES)
-        fprintf(treedot, "\"] , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == ABRE_PARENTESES)
-        fprintf(treedot, "\"( , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == FECHA_PARENTESES)
-        fprintf(treedot, "\") , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == VIRGULA)
-        fprintf(treedot, "\", , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == DOIS_PONTOS)
-        fprintf(treedot, "\": , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == ATRIBUICAO)
-        fprintf(treedot, "\":= , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == E_LOGICO)
-        fprintf(treedot, "\"&& , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == NEGACAO)
-        fprintf(treedot, "\"! , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == OU_LOGICO)
-        fprintf(treedot, "\"|| , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == DIFERENTE)
-        fprintf(treedot, "\"<> , %d:%d\"", token->numline, token->numcaracter);
-    else if (token->tokenval == NAO_IDENTIFICADO)
-        fprintf(treedot, "\"NÃO_IDENTIFICADO-%s, %d:%d\"", (char *) token->val, token->numline, token->numcaracter);
+	if (node->token->tokenval == ID) {
+        printf("ID-%s", (char *) node->token->val);
+        fprintf(treedot, "%s", (char *) node->token->val);
+    }
+    else if (node->token->tokenval == NUM_I) {
+        printf("NUMERO-%d", *(int *) node->token->val);
+        fprintf(treedot, "%d", *(int *) node->token->val);
+    }
+    else if (node->token->tokenval == NUM_F)
+        fprintf(treedot, "NUMERO-%f", *((float *) node->token->val));
+    else if (node->token->tokenval == ATE)
+        fprintf(treedot, "ATÉ");
+    else if (node->token->tokenval == ENTAO)
+        fprintf(treedot, "ENTÃO");
+    else if (node->token->tokenval == ESCREVA)
+        fprintf(treedot, "ESCREVA");
+    else if (node->token->tokenval == FIM)
+        fprintf(treedot, "FIM");
+    else if (node->token->tokenval == FLUTUANTE) {
+        printf("FLUTUANTE");
+        fprintf(treedot, "FLUTUANTE");
+    }
+    else if (node->token->tokenval == INTEIRO) {
+        printf("INTEIRO");
+        fprintf(treedot, "INTEIRO");
+    }
+    else if (node->token->tokenval == LEIA)
+        fprintf(treedot, "LEIA");
+    else if (node->token->tokenval == REPITA)
+        fprintf(treedot, "REPITA");
+    else if (node->token->tokenval == RETORNA)
+        fprintf(treedot, "RETORNA");
+    else if (node->token->tokenval == SE)
+        fprintf(treedot, "SE");
+    else if (node->token->tokenval == SENAO)
+        fprintf(treedot, "SENÃO");
+    else if (node->token->tokenval == SOMA)
+        fprintf(treedot, "+");
+    else if (node->token->tokenval == SUBTRACAO)
+        fprintf(treedot, "-");
+    else if (node->token->tokenval == MULTIPLICACAO)
+        fprintf(treedot, "*");
+    else if (node->token->tokenval == DIVISAO)
+        fprintf(treedot, "/");
+    else if (node->token->tokenval == MAIOR)
+        fprintf(treedot, ">");
+    else if (node->token->tokenval == MENOR)
+        fprintf(treedot, "<");
+    else if (node->token->tokenval == MAIOR_IGUAL)
+        fprintf(treedot, ">=");
+    else if (node->token->tokenval == MENOR_IGUAL)
+        fprintf(treedot, "<=");
+    else if (node->token->tokenval == IGUALDADE)
+        fprintf(treedot, "=");
+    else if (node->token->tokenval == ABRE_COLCHETES)
+        fprintf(treedot, "[");
+    else if (node->token->tokenval == FECHA_COLCHETES)
+        fprintf(treedot, "]");
+    else if (node->token->tokenval == ABRE_PARENTESES)
+        fprintf(treedot, "(");
+    else if (node->token->tokenval == FECHA_PARENTESES)
+        fprintf(treedot, ")");
+    else if (node->token->tokenval == VIRGULA) {
+        printf(",");
+        fprintf(treedot, ",");
+    }
+    else if (node->token->tokenval == DOIS_PONTOS) {
+        printf(":");
+        fprintf(treedot, ":");
+    }
+    else if (node->token->tokenval == ATRIBUICAO)
+        fprintf(treedot, ":=");
+    else if (node->token->tokenval == E_LOGICO)
+        fprintf(treedot, "&&");
+    else if (node->token->tokenval == NEGACAO)
+        fprintf(treedot, "!");
+    else if (node->token->tokenval == OU_LOGICO)
+        fprintf(treedot, "||");
+    else if (node->token->tokenval == DIFERENTE)
+        fprintf(treedot, "<>");
+    else if (node->token->tokenval == NAO_IDENTIFICADO)
+        fprintf(treedot, "NÃO_IDENTIFICADO-%s", (char *) node->token->val);
 
-    if(seta)		// antes do filho
-    	fprintf(treedot, " -> ");
-
-    if(final)		// apenas para finalizar com o ';\n'
-    	fprintf(treedot, ";\n");
+    fprintf(treedot, "\"];\n");     // finalizando a linha
+    printf("\"];\n");     // finalizando a linha
 }

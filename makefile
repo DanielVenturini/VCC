@@ -8,7 +8,7 @@ varredura:
 	gcc -c lexical/varredura.c -o lexical/varredura.o
 
 arvore:
-	gcc -c tree.c -o tree.o
+	gcc -c tree.c -o tree.o -Wformat=0	# a árvore contém conversões de tipos que não devem ser mostradas
 
 parse: arvore
 	gcc -c syntactic/parse.c -o syntactic/parse.o
@@ -23,3 +23,6 @@ clean:
 
 print:
 	echo "USE: make teste"
+
+parse2: main
+	./vcc testeparse.tpp

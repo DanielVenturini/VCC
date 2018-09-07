@@ -568,83 +568,84 @@ TokenRecord* getToken(void){
 }
 
 void printToken(TokenRecord *token, char printLine, char printCaracter){
-        if (token->tokenval == ID)
-            printf("(ID, %s", (char *) token->val);
-        else if (token->tokenval == NUM_I)
-            printf("(NUM, %d", *((int *) token->val));
-        else if (token->tokenval == NUM_F)
-            printf("(NUM, %f", *((float *) token->val));
-        else if (token->tokenval == ATE)
-            printf("(ATÉ");
-        else if (token->tokenval == ENTAO)
-            printf("(ENTÃO");
-        else if (token->tokenval == ESCREVA)
-            printf("(ESCREVA");
-        else if (token->tokenval == FIM)
-            printf("(FIM");
-        else if (token->tokenval == FLUTUANTE)
-            printf("(FLUTUANTE");
-        else if (token->tokenval == INTEIRO)
-            printf("(INTEIRO");
-        else if (token->tokenval == LEIA)
-            printf("(LEIA");
-        else if (token->tokenval == REPITA)
-            printf("(REPITA");
-        else if (token->tokenval == RETORNA)
-            printf("(RETORNA");
-        else if (token->tokenval == SE)
-            printf("(SE");
-        else if (token->tokenval == SENAO)
-            printf("(SENÃO");
-        else if (token->tokenval == SOMA)
-            printf("( + ");
-        else if (token->tokenval == SUBTRACAO)
-            printf("( - ");
-        else if (token->tokenval == MULTIPLICACAO)
-            printf("( * ");
-        else if (token->tokenval == DIVISAO)
-            printf("( / ");
-        else if (token->tokenval == MAIOR)
-            printf("( > ");
-        else if (token->tokenval == MENOR)
-            printf("( < ");
-        else if (token->tokenval == MAIOR_IGUAL)
-            printf("( >= ");
-        else if (token->tokenval == MENOR_IGUAL)
-            printf("( <= ");
-        else if (token->tokenval == IGUALDADE)
-            printf("( = ");
-        else if (token->tokenval == ABRE_COLCHETES)
-            printf("( [ ");
-        else if (token->tokenval == FECHA_COLCHETES)
-            printf("( ] ");
-        else if (token->tokenval == ABRE_PARENTESES)
-            printf("( ( ");
-        else if (token->tokenval == FECHA_PARENTESES)
-            printf("( ) ");
-        else if (token->tokenval == VIRGULA)
-            printf("( , ");
-        else if (token->tokenval == DOIS_PONTOS)
-            printf("( : ");
-        else if (token->tokenval == ATRIBUICAO)
-            printf("( := ");
-        else if (token->tokenval == E_LOGICO)
-            printf("( && ");
-        else if (token->tokenval == NEGACAO)
-            printf("( ! ");
-        else if (token->tokenval == OU_LOGICO)
-            printf("( || ");
-        else if (token->tokenval == DIFERENTE)
-            printf("( <> ");
-        else if (token->tokenval == NAO_IDENTIFICADO)
-            printf("(NÃO_IDENTIFICADO, %s", (char *) token->val);
-        else if (token->tokenval == EOFU)
-            return;
 
-        if(printLine)
-            printf(", %d", token->numline);
-        if(printCaracter)
-            printf(", %d", token->numcaracter);
+    if (token->tokenval == ID)
+        printf("(ID, %s", (char *) token->val);
+    else if (token->tokenval == NUM_I)
+        printf("(NUM, %d", *((int *) token->val));
+    else if (token->tokenval == NUM_F)
+        printf("(NUM, %f", *((float *) token->val));
+    else if (token->tokenval == ATE)
+        printf("(ATÉ");
+    else if (token->tokenval == ENTAO)
+        printf("(ENTÃO");
+    else if (token->tokenval == ESCREVA)
+        printf("(ESCREVA");
+    else if (token->tokenval == FIM)
+        printf("(FIM");
+    else if (token->tokenval == FLUTUANTE)
+        printf("(FLUTUANTE");
+    else if (token->tokenval == INTEIRO)
+        printf("(INTEIRO");
+    else if (token->tokenval == LEIA)
+        printf("(LEIA");
+    else if (token->tokenval == REPITA)
+        printf("(REPITA");
+    else if (token->tokenval == RETORNA)
+        printf("(RETORNA");
+    else if (token->tokenval == SE)
+        printf("(SE");
+    else if (token->tokenval == SENAO)
+        printf("(SENÃO");
+    else if (token->tokenval == SOMA)
+        printf("( + ");
+    else if (token->tokenval == SUBTRACAO)
+        printf("( - ");
+    else if (token->tokenval == MULTIPLICACAO)
+        printf("( * ");
+    else if (token->tokenval == DIVISAO)
+        printf("( / ");
+    else if (token->tokenval == MAIOR)
+        printf("( > ");
+    else if (token->tokenval == MENOR)
+        printf("( < ");
+    else if (token->tokenval == MAIOR_IGUAL)
+        printf("( >= ");
+    else if (token->tokenval == MENOR_IGUAL)
+        printf("( <= ");
+    else if (token->tokenval == IGUALDADE)
+        printf("( = ");
+    else if (token->tokenval == ABRE_COLCHETES)
+        printf("( [ ");
+    else if (token->tokenval == FECHA_COLCHETES)
+        printf("( ] ");
+    else if (token->tokenval == ABRE_PARENTESES)
+        printf("( ( ");
+    else if (token->tokenval == FECHA_PARENTESES)
+        printf("( ) ");
+    else if (token->tokenval == VIRGULA)
+        printf("( , ");
+    else if (token->tokenval == DOIS_PONTOS)
+        printf("( : ");
+    else if (token->tokenval == ATRIBUICAO)
+        printf("( := ");
+    else if (token->tokenval == E_LOGICO)
+        printf("( && ");
+    else if (token->tokenval == NEGACAO)
+        printf("( ! ");
+    else if (token->tokenval == OU_LOGICO)
+        printf("( || ");
+    else if (token->tokenval == DIFERENTE)
+        printf("( <> ");
+    else if (token->tokenval == NAO_IDENTIFICADO)
+        printf("(NÃO_IDENTIFICADO, %s", (char *) token->val);
+    else if (token->tokenval == EOFU)
+        return;
 
-        printf(")\n");
+    if(printLine)
+        printf(", %d", token->numline);
+    if(printCaracter)
+        printf(", %d", token->numcaracter);
+
+    printf(")\n");
 }
