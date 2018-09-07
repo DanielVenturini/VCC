@@ -7,6 +7,8 @@ FILE *leitorArquivo;        /// ponteiro para leitura do arquivo
 unsigned char *c = NULL;    /// variável onde todos os valores dos caracteres serão colocados
 unsigned short int numlines;/// variável para contabilizar o número de linhas
 unsigned char numcaracters; /// variável para contabilizar o número do caracter na linha
+unsigned char temSinal;     /// diz se o sinal é referente ao número ou somente o token sinal
+TokenType ultimoToken;      /// diz qual foi o último token retornado
 
 /********************************************************************
 *                   IMPLEMENTAÇÃO DAS FUNÇÕES                       *
@@ -18,6 +20,8 @@ void inicializaVariaveis(){
     c = (char *) malloc(sizeof(char));
     numlines = 1;
     numcaracters = 0;
+    temSinal = FALSE;
+    ultimoToken = NAO_IDENTIFICADO;
 }
 
 /// chamado diretamente da main, esta função retorna 0 se existir o arquivo ou 1 se não existir
@@ -275,10 +279,11 @@ char verificaAFrente(TokenRecord *token, char proximoCaracter, TokenType tipo){
 #define ESPACO 1        /// ' '
 #define NUMERO 2        /// '123.213'
 #define IDENTIFICADOR 3 /// 'string' pode ser uma variável ou palavra reservada
-#define UNICO 4         /// '+' '-' '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' ',' estes são unicos e seus valores são seus significados
-#define LOGICO 5        /// && e ||
-#define COMENTARIO 6    /// { }
-#define NI 7            /// caracter não identificado
+#define SINAL 4
+#define UNICO 5         /// '*' '/' '[' ']' '<' '=' '>' '[' ']' '(' ')' ',' estes são unicos e seus valores são seus significados
+#define LOGICO 6        /// && e ||
+#define COMENTARIO 7    /// { }
+#define NI 8            /// caracter não identificado
 
 TokenRecord* getToken(void){
 
@@ -302,7 +307,9 @@ TokenRecord* getToken(void){
             tokenAtual = NUMERO;
         } else if ( (*c >= 'A' && *c <= 'Z') || (*c >= 'a' && *c <= 'z') || (*c >= 128 && *c <= 252)){
             tokenAtual = IDENTIFICADOR;
-        } else if (*c == '*' || *c == '+' || *c == '-' || *c == '/' || *c == ':' || *c == '<' || *c == '='
+        } else if (*c == '+' || *c == '-'){
+            tokenAtual = SINAL;
+        } else if (*c == '*' || *c == '/' || *c == ':' || *c == '<' || *c == '='
                 || *c == '>' || *c == '[' || *c == ']' || *c == '(' || *c == ')' || *c == ',' || *c == '!'){
             tokenAtual = UNICO;
         } else if (*c == ' ' || *c == 13 || *c == 10 || *c == '\t') {
@@ -330,15 +337,23 @@ TokenRecord* getToken(void){
         switch(tokenAtual){
 
             case NUMERO:    /// este estado lê até o final do numero
-                token->numcaracter = numcaracters;
 
                 if(!respVal)/// se o valor for 0
                     resp = (char*) malloc(SIZE_NUM*sizeof(char)); /// aloca para guardar cada dígito do número
 
+                if(temSinal){
+                    resp[0] = (token->tokenval==SOMA) ? '+' : '-';  /// adiciona o sinal
+                    i = 1;                                          /// na variavel de posicao já diz que o número deve começar com 1
+                    temSinal = FALSE;                               /// limpa a variável temSinal
+                } else {
+                    token->numcaracter = numcaracters;
+                    i = 0;
+                }
+
                 char size_num = SIZE_NUM;                       /// se precisar realocar mais espaco, sera incrementado o size_num
                 char isFloat = FALSE;                           /// se ira transformar em numero com o atof() ou atoi()
 
-                i = getDecimal(resp, (char) 0, size_num, c);    /// lê todo o número e retorna a última posição do array
+                i = getDecimal(resp, i, size_num, c);           /// lê todo o número e retorna a última posição do array
 
                 if(*getCaracter() == '.'){                      /// se for igual há um ponto, lê o ponto e o número depois do ponto
                     i = getFlutuante(resp, i, size_num);        /// lê todo o restante de números depois da vírgula
@@ -412,16 +427,33 @@ TokenRecord* getToken(void){
 
                 break;
 
-            case UNICO:     /// estes são: * + - / : < = > [ ] , !
+            case SINAL:     /// estes são: + -
+                token->numcaracter = numcaracters;
+                token->tokenval = (*c=='+') ? SOMA : SUBTRACAO;
+
+                /// pode ser um número: '(-1)' 'b := +5'
+                if(ultimoToken == ABRE_PARENTESES || ultimoToken == ATRIBUICAO || ultimoToken == NAO_IDENTIFICADO){
+
+                    getCaracter();                  /// se o próximo caracter for número, então este sinal pertence a este número
+                    while(*c == ' '){               /// enquanto estiver lendo somente espaços
+                        getCaracter();
+                    }
+
+                    if(*c >= '0' && *c <= '9'){
+                        temSinal = TRUE;
+                        tokenAtual = NUMERO;
+                        goto recomputaSwitch;
+                    }
+
+                }
+
+                finishToken = TRUE;
+                break;
+
+            case UNICO:     /// estes são: * / : < = > [ ] , !
                 token->numcaracter = numcaracters;
 
                 switch(*c){
-                    case '+':
-                        token->tokenval = SOMA;
-                        break;
-                    case '-':
-                        token->tokenval = SUBTRACAO;
-                        break;
                     case '*':
                         token->tokenval = MULTIPLICACAO;
                         break;
@@ -531,6 +563,7 @@ TokenRecord* getToken(void){
         }
     }
 
+    ultimoToken = token->tokenval;
     token->numline = numlines;  /// guarda o número da linha que este token foi encontrado
     return token;
 }
