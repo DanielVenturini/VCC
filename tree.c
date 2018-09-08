@@ -157,6 +157,8 @@ void printLabel1(TreeNode *node, FILE *treedot){
         fprintf(treedot, "ESCREVA");
     else if (node->bnfval == B_RETORNA)
         fprintf(treedot, "RETORNA");
+    else if (node->bnfval == B_ATRIBUICAO)
+        fprintf(treedot, "ATRIBUICAO");
     else if (node->bnfval == EXPRESSAO)
         fprintf(treedot, "EXPRESSAO");
     else if (node->bnfval == EXPRESSAO_LOGICA)
