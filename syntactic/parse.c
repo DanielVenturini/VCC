@@ -254,9 +254,17 @@ TreeNode *expressao_logica() {
 
 // expressao_logica | atribuicao
 TreeNode *expressao() {
+
 	TreeNode *expressao = novo_node(NULL, EXPRESSAO);
-	insere_filho(expressao, novo_node(atual(), -1));
-	proximo();
+
+	// se o próximo for ":="
+	if(verificaEAvanca(ATRIBUICAO, FALSE))
+		insere_filho(expressao, atribuicao());
+	else {
+		//insere_filho(expressao, expressao_logica());
+		insere_filho(expressao, novo_node(atual(), -1));
+		proximo();
+	}
 
 	return expressao;
 }
@@ -418,7 +426,7 @@ TreeNode *parametro() {
 	proximo();											// avança para o próximo token
 
 	// parametro "[" "]"
-	if(atual()->tokenval == ABRE_COLCHETES && verProximo()->tokenval == FECHA_COLCHETES){
+	while(atual()->tokenval == ABRE_COLCHETES && verProximo()->tokenval == FECHA_COLCHETES){
 		insere_filho(parametro, novo_node(atual(), -1));	// insere o "["
 		insere_filho(parametro, novo_node(proximo(), -1));	// insere o "]"
 

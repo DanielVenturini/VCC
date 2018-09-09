@@ -431,7 +431,7 @@ TokenRecord* getToken(void){
                 token->numcaracter = numcaracters;
                 token->tokenval = (*c=='+') ? SOMA : SUBTRACAO;
 
-                if(ultimoToken != NUMERO && ultimoToken != FECHA_PARENTESES){
+                if(ultimoToken != NUMERO && ultimoToken != FECHA_PARENTESES && ultimoToken != FECHA_COLCHETES) {
 
                     getCaracter();                  /// se o próximo caracter for número, então este sinal pertence a este número
                     while(*c == ' '){               /// enquanto estiver lendo somente espaços
