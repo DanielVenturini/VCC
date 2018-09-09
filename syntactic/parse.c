@@ -275,6 +275,31 @@ TreeNode *escreva() {
 // LEIA "(" var ")"
 TreeNode *leia() {
 
+	if(atual()->tokenval != LEIA){
+		printf("Err leia\n");
+		return NULL;
+	}
+
+	TreeNode *leia = novo_node(NULL, B_LEIA);
+
+	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
+		printf("Err leia.\n");
+		return NULL;
+	}
+
+	insere_filho(leia, novo_node(atual(), -1));	// inserindo o filho "("
+	proximo();									// avança para o próximo token
+	insere_filho(leia, var());					// inserindo uma variavel
+
+	if(atual()->tokenval != FECHA_PARENTESES){
+		printf("Err leia..\n");
+		return NULL;
+	}
+
+	insere_filho(leia, novo_node(atual(), -1));	// insere o filho ")"
+	proximo();									// avança para o próximo token
+
+	return leia;
 }
 
 // var ":=" expressao
@@ -292,7 +317,6 @@ TreeNode *atribuicao() {
 	proximo();
 	insere_filho(atribuicao, expressao());
 
-	printf("retornando atribuicao.\n");
 	return atribuicao;
 }
 
@@ -319,6 +343,49 @@ TreeNode *corpo() {
 
 	while(atual()->tokenval != FIM){
 
+		switch(atual()->tokenval){
+
+			case INTEIRO:
+			case FLUTUANTE:
+				insere_filho(corpo, declaracao_variaveis());
+				break;
+
+			case SE:
+				insere_filho(corpo, se());
+				break;
+
+			case REPITA:
+				insere_filho(corpo, repita());
+				break;
+
+			case LEIA:
+				insere_filho(corpo, leia());
+				break;
+
+			case ESCREVA:
+				insere_filho(corpo, escreva());
+				break;
+
+			case RETORNA:
+				insere_filho(corpo, retorna());
+				break;
+
+			// todos estes são o First do expressão
+			case ID:
+			case ABRE_PARENTESES:
+			case NUM_F:
+			case NUM_I:
+			case SOMA:
+			case SUBTRACAO:
+				insere_filho(corpo, expressao());
+				break;
+
+			default:
+				printf("Err corpo: ");
+				printToken(atual(), 0, 0);
+				return NULL;
+			break;
+		}
 	}
 
 	return corpo;
