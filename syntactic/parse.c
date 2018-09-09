@@ -254,8 +254,8 @@ TreeNode *expressao_logica() {
 
 // expressao_logica | atribuicao
 TreeNode *expressao() {
-	//printToken(atual(), 0, 0);
-	TreeNode *expressao = novo_node(atual(), -1);
+	TreeNode *expressao = novo_node(NULL, EXPRESSAO);
+	insere_filho(expressao, novo_node(atual(), -1));
 	proximo();
 
 	return expressao;
@@ -314,33 +314,49 @@ TreeNode *acao() {
 
 // corpo acao | vazio
 TreeNode *corpo() {
-	//printToken(proximo(), 0, 0);
-	return NULL;
+
+	TreeNode *corpo = novo_node(NULL, CORPO);
+
+	while(atual()->tokenval != FIM){
+
+	}
+
+	return corpo;
 }
 
 // tipo ":" ID | parametro "[" "]"
 TreeNode *parametro() {
 
+	if(atual()->tokenval != INTEIRO && atual()->tokenval != FLUTUANTE){
+		printf("Err parametro\n");
+		return NULL;
+	}
+
 	TreeNode *parametro = novo_node(NULL, PARAMETRO);
+	insere_filho(parametro, tipo());					// adiciona o tipo como filho
 
-	//while(TRUE){
+	if(atual()->tokenval != DOIS_PONTOS) {				// se não for ":"
+		printf("Err parametro.\n");
+		return parametro;
+	}
 
-		if(atual()->tokenval != INTEIRO | atual()->tokenval != FLUTUANTE){
-			printf("Err parametro\n");
-			return NULL;
-		}
+	insere_filho(parametro, novo_node(atual(), -1));	// insere o ":"
 
-		insere_filho(parametro, tipo());					// adiciona o tipo como filho
+	if(!verificaEAvanca(ID, TRUE)){
+		printf("Err parametro..\n");
+		return parametro;
+	}
 
-		if(verProximo()->tokenval != DOIS_PONTOS){
-			printf("Err parametro.\n");
-			return parametro;
-		}
+	insere_filho(parametro, novo_node(atual(), -1));	// insere o ID
+	proximo();											// avança para o próximo token
 
-		insere_filho(parametro, novo_node(proximo(), -1));	// avança para o ":"
-		proximo();											// avança para recupear a variável
-		insere_filho(parametro, var());
-	//}
+	// parametro "[" "]"
+	if(atual()->tokenval == ABRE_COLCHETES && verProximo()->tokenval == FECHA_COLCHETES){
+		insere_filho(parametro, novo_node(atual(), -1));	// insere o "["
+		insere_filho(parametro, novo_node(proximo(), -1));	// insere o "]"
+
+		proximo();											// avança para o próximo token
+	}
 
 	return parametro;
 }
@@ -349,11 +365,22 @@ TreeNode *parametro() {
 TreeNode *lista_parametros() {
 
 	TreeNode *lista_parametros = novo_node(NULL, LISTA_PARAMETROS);
-	insere_filho(lista_parametros, parametro());
 
-	proximo();
+	while(TRUE) {
 
-	return NULL;
+		if(atual()->tokenval == FECHA_PARENTESES){				// pode ser vazio ou chegar no final
+			return lista_parametros;
+		}
+
+		insere_filho(lista_parametros, parametro());
+
+		if(atual()->tokenval != VIRGULA){
+			return lista_parametros;
+		}
+
+		insere_filho(lista_parametros, novo_node(atual(), -1));	// insere o ","
+		proximo();
+	}
 }
 
 // ID "(" lista_parametros ")" corpo FIM
@@ -367,22 +394,31 @@ TreeNode *cabecalho() {
 	TreeNode *cabecalho = novo_node(NULL, CABECALHO);
 	insere_filho(cabecalho, novo_node(atual(), -1));	// insere o filho ID
 
-	if(verProximo()->tokenval != ABRE_PARENTESES) {
+	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)) {
 		printf("Err cabecalho.\n");
 		return NULL;
 	}
 
-	insere_filho(cabecalho, novo_node(proximo(), -1));	// insere como filho o "("
-	insere_filho(cabecalho, lista_parametros());		// insere como filho a lista_parametros
-	proximo();											// avança para o próximo token
-	insere_filho(cabecalho, corpo());					// insere como filho o corpo
+	insere_filho(cabecalho, novo_node(atual(), -1));// insere como filho o "("
+	proximo();										// avanca para o próximo token
+	insere_filho(cabecalho, lista_parametros());	// insere como filho a lista_parametros
 
-	if(proximo()->tokenval != FIM){
+	if(atual()->tokenval != FECHA_PARENTESES){
 		printf("Err cabecalho..\n");
-		return cabecalho;
+		return NULL;
 	}
 
-	insere_filho(cabecalho, novo_node(atual(), -1));	// insere como filho o FIM
+	insere_filho(cabecalho, novo_node(atual(), -1));// insere como filho o ")"
+	proximo();										// avança para o próximo token
+	insere_filho(cabecalho, corpo());				// insere como filho o corpo
+
+	if(atual()->tokenval != FIM){
+		printf("Err cabecalho...\n");
+		return NULL;
+	}
+
+	insere_filho(cabecalho, novo_node(atual(), -1));// insere como filho o FIM
+	proximo();										// vai para o próximo token
 
 	return cabecalho;
 }
@@ -394,7 +430,6 @@ TreeNode *declaracao_funcao() {
 
 	if(atual()->tokenval == INTEIRO || atual()->tokenval == FLUTUANTE){
 		insere_filho(declaracao_funcao, tipo());	// recupera o tipo
-		proximo();									// avança o token
 	}
 
 	insere_filho(declaracao_funcao, cabecalho());
