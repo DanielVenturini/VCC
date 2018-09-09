@@ -272,12 +272,54 @@ TreeNode *expressao() {
 // RETORNA "(" expressao ")"
 TreeNode *retorna() {
 
+	TreeNode *retorna = novo_node(NULL, B_RETORNA);
+	insere_filho(retorna, novo_node(atual(), -1));	// adicionando o RETORNA
+
+	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
+		printf("Err retorna\n");
+		return NULL;
+	}
+
+	insere_filho(retorna, novo_node(atual(), -1));	// adicionando o "("
+	proximo();
+	insere_filho(retorna, expressao());
+
+	if(atual()->tokenval != FECHA_PARENTESES){
+		printf("Err retorna.\n");
+		return NULL;
+	}
+
+	insere_filho(retorna, novo_node(atual(), -1));	// adicionando o ")"
+	proximo();
+
+	return retorna;
 }
 
 // ESCREVA "(" expressao ")"
 TreeNode *escreva() {
 
+	TreeNode *escreva = novo_node(NULL, B_ESCREVA);
+	insere_filho(escreva, novo_node(atual(), -1));
 
+	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
+		printf("Err escreva\n");
+		return NULL;
+	}
+
+	insere_filho(escreva, novo_node(atual(), -1));	// insere como filho o "("
+	proximo();
+
+	insere_filho(escreva, expressao());				// insere como filho a expressao
+
+	if(atual()->tokenval != FECHA_PARENTESES){
+		printf("Err escreva.\n");
+		return NULL;
+	}
+
+	insere_filho(escreva, novo_node(atual(), -1));	// insere como filho o ")"
+	proximo();
+
+	return escreva;
 }
 
 // LEIA "(" var ")"
@@ -289,6 +331,7 @@ TreeNode *leia() {
 	}
 
 	TreeNode *leia = novo_node(NULL, B_LEIA);
+	insere_filho(leia, novo_node(atual(), -1));
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
 		printf("Err leia.\n");
@@ -331,17 +374,113 @@ TreeNode *atribuicao() {
 // REPITA corpo ATE expressao
 TreeNode *repita() {
 
+	TreeNode *repita = novo_node(NULL, B_REPITA);
+	insere_filho(repita, novo_node(atual(), -1));	// adicionando o REPITA
 
+	proximo();
+	insere_filho(repita, corpo());					// adiciona o corpo
+
+	if(atual()->tokenval != ATE){
+		printf("Err repita\n");
+		return NULL;
+	}
+
+	insere_filho(repita, novo_node(atual(), -1));	// adiciona o ATE
+	proximo();
+
+	insere_filho(repita, expressao());				// insere a expressão
+
+	return repita;
 }
 
 // SE expressao ENTAO corpo FIM | SE expressao ENTAO corpo SENAO corpo FIM
 TreeNode *se() {
 
+	TreeNode *se = novo_node(NULL, B_SE);
+	insere_filho(se, novo_node(atual(), -1));	// insere como filho o SE
+	proximo();									// avança para o próximo token
+
+	insere_filho(se, expressao());				// adiciona a expressao como filho
+
+	if(atual()->tokenval != ENTAO){
+		printf("Err se\n");
+		return NULL;
+	}
+
+	insere_filho(se, novo_node(atual(), -1));	// insere como filho o ENTAO
+	proximo();									// avança para o próximo token
+
+	insere_filho(se, corpo());					// adiciona como filho o corpo
+
+	// parte opcional
+	if(atual()->tokenval == SENAO){
+		insere_filho(se, novo_node(atual(), -1));	// adiciona o SENÃO
+		proximo();
+		insere_filho(se, corpo());					// insere o corpo do SENÃO
+	}
+
+	if(atual()->tokenval != FIM){
+		printf("Err se.\n");
+		return NULL;
+	}
+
+	insere_filho(se, novo_node(atual(), -1));	// adiciona como filho o FIM
+	proximo();
+
+	return se;
 }
 
 // expressao | declaracao_variaveis | se | repita | leia | escreva | retorna | erro
 TreeNode *acao() {
 
+	TreeNode *acao = novo_node(NULL, ACAO);
+
+	switch(atual()->tokenval){
+
+		case INTEIRO:
+		case FLUTUANTE:
+			insere_filho(acao, declaracao_variaveis());
+			break;
+
+		case SE:
+			insere_filho(acao, se());
+			break;
+
+		case REPITA:
+			insere_filho(acao, repita());
+			break;
+
+		case LEIA:
+			insere_filho(acao, leia());
+			break;
+
+		case ESCREVA:
+			insere_filho(acao, escreva());
+			break;
+
+		case RETORNA:
+			insere_filho(acao, retorna());
+			break;
+
+		// todos estes são o First do expressão
+		case ID:
+		case ABRE_PARENTESES:
+		case NUM_F:
+		case NUM_I:
+		case SOMA:
+		case SUBTRACAO:
+			insere_filho(acao, expressao());
+			break;
+
+		// no caso do SENÃO, ATÉ
+		default:
+			printf("Err acao: ");
+			printToken(atual(), 0, 0);
+			return acao;
+		break;
+	}
+
+	return acao;
 }
 
 // corpo acao | vazio
@@ -349,51 +488,8 @@ TreeNode *corpo() {
 
 	TreeNode *corpo = novo_node(NULL, CORPO);
 
-	while(atual()->tokenval != FIM){
-
-		switch(atual()->tokenval){
-
-			case INTEIRO:
-			case FLUTUANTE:
-				insere_filho(corpo, declaracao_variaveis());
-				break;
-
-			case SE:
-				insere_filho(corpo, se());
-				break;
-
-			case REPITA:
-				insere_filho(corpo, repita());
-				break;
-
-			case LEIA:
-				insere_filho(corpo, leia());
-				break;
-
-			case ESCREVA:
-				insere_filho(corpo, escreva());
-				break;
-
-			case RETORNA:
-				insere_filho(corpo, retorna());
-				break;
-
-			// todos estes são o First do expressão
-			case ID:
-			case ABRE_PARENTESES:
-			case NUM_F:
-			case NUM_I:
-			case SOMA:
-			case SUBTRACAO:
-				insere_filho(corpo, expressao());
-				break;
-
-			default:
-				printf("Err corpo: ");
-				printToken(atual(), 0, 0);
-				return NULL;
-			break;
-		}
+	while(atual()->tokenval != FIM && atual()->tokenval != ATE && atual()->tokenval != SENAO){
+		insere_filho(corpo, acao());
 	}
 
 	return corpo;

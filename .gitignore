@@ -4,6 +4,7 @@ tree
 test.tpp
 teste2.tpp
 syntactic/parse
+tree.dot
 
 # Prerequisites
 *.d
