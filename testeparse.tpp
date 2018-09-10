@@ -1,35 +1,19 @@
-{flutuante: daniel, douglas[0], var
-inteiro: dia, mes, ano
-flutuante : matriz[3][3]
-inteiro: b[-12], t
+flutuante: brasil, kvalo
 
-daniel(inteiro: dan, flutuante: marcola[])
-fim}
-
-inteiro teste(inteiro: var1[])
-	{flutuante: var, var3[2]
-	leia(var3[0])
-	leia(var3[1])
-	leia(var3[2])
-	k := +10
-
-	se -10 então
-		leia(k)
+inteiro daniel(inteiro: b[], flutuante: tio, flutuante: marcos[][])
+	se 1 então
+		leia(b)
+		b := 2
 	senão
-		leia(var3[-1])
-	fim
-
-	inteiro: b, q
-	repita
-		leia(var[0])
-		a := 10
+		escreva(DANIEL)
 		repita
-			leia(var3[1])
-			leia(var3[2])
-			escreva(-21)
-		até -1
-	até -1}
-
-	a := 2
-	retorna(-1)
+			b := -98
+			inteiro: brasil, daniel
+			leia(b)
+			escreva(DANIELZIN)
+			se 1 então
+				retorna(1)
+			fim
+		até 1
+	fim
 fim
