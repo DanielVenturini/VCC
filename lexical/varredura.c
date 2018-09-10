@@ -521,7 +521,7 @@ TokenRecord* getToken(void){
                 char qtd = 1;           /// quantidade de fechas - '}' - que faltam
                 while(qtd){             /// só termina de processar o comentário quando tiver fechado todos os abre
                     c = getCaracter();
-                    if (*c == 13)       /// contabiliza o número de linhas
+                    if (*c == 13 || *c == 10)   /// contabiliza o número de linhas
                         numlines ++;
 
                     if(*c == EOFU){      /// se não fechar o comentário
