@@ -37,7 +37,6 @@ TreeNode *acao();
 TreeNode *var();
 TreeNode *se();
 
-
 // esta função recupera o próximo token
 // porém não substitui pelo token atual, apenas recupera e retorna
 TokenRecord *verProximo() {
@@ -284,6 +283,7 @@ TreeNode *retorna() {
 	insere_filho(retorna, novo_node(atual(), -1));			// adicionando o RETORNA
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
+		erro(nomeArquivo, verProximo(), "Token esperado '('.");
 		printf("Err retorna\n");
 		return NULL;
 	}
@@ -292,6 +292,7 @@ TreeNode *retorna() {
 	insere_filho(retorna, expressao());
 
 	if(atual()->tokenval != FECHA_PARENTESES){
+		erro(nomeArquivo, atual(), "Token esperado ')'.");
 		printf("Err retorna.\n");
 		return NULL;
 	}
@@ -308,6 +309,7 @@ TreeNode *escreva() {
 	insere_filho(escreva, novo_node(atual(), -1));
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
+		erro(nomeArquivo, verProximo(), "Token esperado '('.");
 		printf("Err escreva\n");
 		return NULL;
 	}
@@ -316,6 +318,7 @@ TreeNode *escreva() {
 	insere_filho(escreva, expressao());						// insere como filho a expressao
 
 	if(atual()->tokenval != FECHA_PARENTESES){
+		erro(nomeArquivo, atual(), "Token esperado ')'.");
 		printf("Err escreva.\n");
 		return NULL;
 	}
@@ -332,6 +335,7 @@ TreeNode *leia() {
 	insere_filho(leia, novo_node(atual(), -1));
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
+		erro(nomeArquivo, verProximo(), "Token esperado '('.");
 		printf("Err leia.\n");
 		return NULL;
 	}
@@ -340,6 +344,7 @@ TreeNode *leia() {
 	insere_filho(leia, var());							// inserindo uma variavel
 
 	if(atual()->tokenval != FECHA_PARENTESES){
+		erro(nomeArquivo, atual(), "Token esperado ')'.");
 		printf("Err leia..\n");
 		return NULL;
 	}
@@ -453,6 +458,7 @@ TreeNode *acao() {
 
 		// no caso do SENÃO, ATÉ
 		default:
+			erro(nomeArquivo, atual(), "Token inesperado.");
 			printf("Err acao: ");
 			printToken(atual(), 0, 0);
 			return acao;
@@ -482,6 +488,7 @@ TreeNode *parametro() {
 	insere_filho(parametro, tipo());					// adiciona o tipo como filho
 
 	if(atual()->tokenval != DOIS_PONTOS) {				// se não for ":"
+		erro(nomeArquivo, atual(), "Token esperado ':'.");
 		printf("Err parametro\n");
 		return parametro;
 	}
@@ -489,6 +496,7 @@ TreeNode *parametro() {
 	insere_filho(parametro, novo_node(atual(), -1));	// insere o ":"
 
 	if(!verificaEAvanca(ID, TRUE)){
+		erro(nomeArquivo, verProximo(), "Token esperado 'ID'.");
 		printf("Err parametro.\n");
 		return parametro;
 	}
@@ -516,6 +524,7 @@ TreeNode *lista_parametros() {
 	while(TRUE) {
 
 		if(atual()->tokenval != INTEIRO && atual()->tokenval != FLUTUANTE){
+			erro(nomeArquivo, atual(), "Token esperado: 'INTEIRO' ou 'FLUTUANTE'.");
 			printf("Err lista_parametros\n");
 			exit(1);
 			return NULL;
@@ -528,7 +537,9 @@ TreeNode *lista_parametros() {
 		}
 
 		if(atual()->tokenval != VIRGULA) {
+			erro(nomeArquivo, atual(), "token esperado: ','.");
 			printf("Err lista_parametros.\n");
+			exit(1);
 			return NULL;
 		}
 
@@ -636,6 +647,7 @@ TreeNode *lista_variaveis() {
 
 		// se houver um token "," e não houver após um ID
 		if(!verificaEAvanca(ID, FALSE)){
+			erro(nomeArquivo, verProximo(), "Token esperado 'ID'.");
 			printf("Err lista_variaveis\n");
 			return NULL;
 		}
@@ -679,6 +691,7 @@ TreeNode *declaracao_variaveis() {
 	insere_filho(declaracao_variaveis, novo_node(atual(), -1));				// insere o ":" como filho de declaracao_variaveis
 
 	if(!verificaEAvanca(ID, TRUE)){
+		erro(nomeArquivo, verProximo(), "esperando token 'ID'.");
 		printf("Err declaracao_variaveis.\n");
 		return NULL;
 	}
@@ -705,6 +718,8 @@ TreeNode *declaracao() {
     		} else if (verificaEAvanca(ID, FALSE)) {
     			insere_filho(declaracao, declaracao_funcao());		// em declaracao_funcao, a regra que começa com um tipo, é seguida de um ID
     		} else {
+    			printToken(atual(), 1, 1);
+    			erro(nomeArquivo, verProximo(), "esperando token ':' ou 'ID'.");
     			printf("Err declaracao\n");
     		}
 
@@ -746,8 +761,9 @@ TreeNode *lista_declaracoes() {
 	return lista_declaracao;
 }
 
-TreeNode *parse() {
+TreeNode *parse(char *arquivo) {
 	tokenProximo = NULL;
+	nomeArquivo = arquivo;						// quando houver algum erro/warning, este arquivo será reaberto
 
 	TreeNode *programa = criaPrograma();		// cria o nó programa
 	insere_filho(programa, lista_declaracoes());// recupera o programa
