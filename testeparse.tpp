@@ -1,6 +1,6 @@
 flutuante: brasil, kvalo
 
-inteiro daniel(inteiro: b[], flutuante: tio, flutuante: marcos[][])
+inteiro daniel(inteiro: b[] flutuante: tio, flutuante: marcos[][])
 	se 1 então
 		leia(b)
 		b := 2
