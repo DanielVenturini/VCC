@@ -316,7 +316,7 @@ TokenRecord* getToken(void){
             /// espaço, nova linha, line feed ou tabulação
             if(*c == 13) {
                 numcaracters = 0;   /// volta a contagem de caracteres para 0;
-            } else if (*c == 10){
+            } else if (*c == '\n'){
                 numlines ++;        /// incrementa número da linha
                 numcaracters = 0;
             }
@@ -521,7 +521,7 @@ TokenRecord* getToken(void){
                 char qtd = 1;           /// quantidade de fechas - '}' - que faltam
                 while(qtd){             /// só termina de processar o comentário quando tiver fechado todos os abre
                     c = getCaracter();
-                    if (*c == 13 || *c == 10)   /// contabiliza o número de linhas
+                    if (*c == '\n')     /// contabiliza o número de linhas
                         numlines ++;
 
                     if(*c == EOFU){      /// se não fechar o comentário
