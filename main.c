@@ -16,7 +16,7 @@ int main(int argc, char *argv[]){
         }
 
         TreeNode *programa = parse(argv[i]);/// recupera a árvore chamando o getToken()
-        //printArvore(programa);
+        printArvore(programa);
 
         i ++;
     }
