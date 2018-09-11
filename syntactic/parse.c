@@ -354,7 +354,6 @@ TreeNode *expressao_logica() {
 	TreeNode *exp_logica = novo_node(NULL, EXPRESSAO_LOGICA);
 	insere_filho(exp_logica, expressao_simples());	// insere o filho expressao_simples()
 
-	printToken(atual(), 1, 1);
 	// se for um destes, é a recursão à esquerda
 	if(atual()->tokenval != OU_LOGICO && atual()->tokenval != E_LOGICO) {
 		return exp_logica;
@@ -840,7 +839,6 @@ TreeNode *declaracao() {
     		} else if (verificaEAvanca(ID, FALSE)) {
     			insere_filho(declaracao, declaracao_funcao());		// em declaracao_funcao, a regra que começa com um tipo, é seguida de um ID
     		} else {
-    			printToken(atual(), 1, 1);
     			printf("Err declaracao\n");
     			erro(nomeArquivo, verProximo(), "Token esperado: ':' ou 'ID'.");
     		}
