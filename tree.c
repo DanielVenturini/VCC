@@ -74,24 +74,20 @@ void printArvore(TreeNode *raiz){
 
 	FILE *treedot = fopen("tree.dot", "w");	// abrindo o arquivo
 	fprintf(treedot, "strict graph G {\n"); // imprime cabeçalho
-    printf("strict graph G {\n");
 
 	getArvoreRecursiva(raiz, treedot);		// recursivamente vai adicionando no arquivo
 
     fprintf(treedot, "}");                  // finaliza o digrafo com o '}'
-	printf("}");					// finaliza o digrafo com o '}'
 	fclose(treedot);						// fecha o arquivo
 	system("xdot tree.dot");				// printa a arvore com o xdot - graphviz
 }
 
 void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot){
-    printf("    %i -- %i;\n", pai, filho);
     fprintf(treedot, "    %i -- %i;\n", pai, filho);
 }
 
 // printa no arquivos os nós intermediários
 void printLabel1(TreeNode *node, FILE *treedot){
-    printf("    %i [label=\"", node);
     fprintf(treedot, "    %i [label=\"", node); // printa o id do nó e o 'label="'
 
     if(node->token) {      // se tiver um token, então é uma folha
@@ -99,42 +95,24 @@ void printLabel1(TreeNode *node, FILE *treedot){
         return;
     }
 
-    if (node->bnfval == PROGRAMA) {
-        printf("PROGRAMA");
+    if (node->bnfval == PROGRAMA)
         fprintf(treedot, "PROGRAMA");
-    }
-    else if (node->bnfval == LISTA_DECLARACOES) {
-        printf("LISTA_DECLARACOES");
+    else if (node->bnfval == LISTA_DECLARACOES)
         fprintf(treedot, "LISTA_DECLARACOES");
-    }
-    else if (node->bnfval == DECLARACAO) {
-        printf("DECLARACAO");
+    else if (node->bnfval == DECLARACAO)
         fprintf(treedot, "DECLARACAO");
-    }
-    else if (node->bnfval == DECLARACAO_VARIAVEIS) {
-        printf("DECLARACAO_VARIAVEIS");
+    else if (node->bnfval == DECLARACAO_VARIAVEIS)
         fprintf(treedot, "DECLARACAO_VARIAVEIS");
-    }
-    else if (node->bnfval == INICIALIZACAO_VARIAVEIS) {
-        printf("INICIALIZACAO_VARIAVEIS");
+    else if (node->bnfval == INICIALIZACAO_VARIAVEIS)
         fprintf(treedot, "INICIALIZACAO_VARIAVEIS");
-    }
-    else if (node->bnfval == LISTA_VARIAVEIS) {
-        printf("LISTA_VARIAVEIS");
+    else if (node->bnfval == LISTA_VARIAVEIS)
         fprintf(treedot, "LISTA_VARIAVEIS");
-    }
-    else if (node->bnfval == VAR) {
-        printf("VAR");
+    else if (node->bnfval == VAR)
         fprintf(treedot, "VAR");
-    }
-    else if (node->bnfval == INDICE) {
-        printf("INDICE");
+    else if (node->bnfval == INDICE)
         fprintf(treedot, "INDICE");
-    }
-    else if (node->bnfval == TIPO) {
-        printf("TIPO");
+    else if (node->bnfval == TIPO)
         fprintf(treedot, "TIPO");
-    }
     else if (node->bnfval == DECLARACAO_FUNCAO)
         fprintf(treedot, "DECLARACAO_FUNCAO");
     else if (node->bnfval == CABECALHO)
@@ -189,20 +167,15 @@ void printLabel1(TreeNode *node, FILE *treedot){
         fprintf(treedot, "LISTA_ARGUMENTOS");
 
     fprintf(treedot, "\"];\n");     // finalizando a linha
-    printf("\"];\n");     // finalizando a linha
 }
 
 // printa no arquivos as folhas
 void printLabel2(TreeNode *node, FILE *treedot) {
 
-	if (node->token->tokenval == ID) {
-        printf("ID-%s", (char *) node->token->val);
+	if (node->token->tokenval == ID)
         fprintf(treedot, "%s", (char *) node->token->val);
-    }
-    else if (node->token->tokenval == NUM_I) {
-        printf("NUMERO-%d", *(int *) node->token->val);
+    else if (node->token->tokenval == NUM_I)
         fprintf(treedot, "%d", *(int *) node->token->val);
-    }
     else if (node->token->tokenval == NUM_F)
         fprintf(treedot, "NUMERO-%f", *((float *) node->token->val));
     else if (node->token->tokenval == ATE)
@@ -213,14 +186,10 @@ void printLabel2(TreeNode *node, FILE *treedot) {
         fprintf(treedot, "ESCREVA");
     else if (node->token->tokenval == FIM)
         fprintf(treedot, "FIM");
-    else if (node->token->tokenval == FLUTUANTE) {
-        printf("FLUTUANTE");
+    else if (node->token->tokenval == FLUTUANTE)
         fprintf(treedot, "FLUTUANTE");
-    }
-    else if (node->token->tokenval == INTEIRO) {
-        printf("INTEIRO");
+    else if (node->token->tokenval == INTEIRO)
         fprintf(treedot, "INTEIRO");
-    }
     else if (node->token->tokenval == LEIA)
         fprintf(treedot, "LEIA");
     else if (node->token->tokenval == REPITA)
@@ -257,14 +226,10 @@ void printLabel2(TreeNode *node, FILE *treedot) {
         fprintf(treedot, "(");
     else if (node->token->tokenval == FECHA_PARENTESES)
         fprintf(treedot, ")");
-    else if (node->token->tokenval == VIRGULA) {
-        printf(",");
+    else if (node->token->tokenval == VIRGULA)
         fprintf(treedot, ",");
-    }
-    else if (node->token->tokenval == DOIS_PONTOS) {
-        printf(":");
+    else if (node->token->tokenval == DOIS_PONTOS)
         fprintf(treedot, ":");
-    }
     else if (node->token->tokenval == ATRIBUICAO)
         fprintf(treedot, ":=");
     else if (node->token->tokenval == E_LOGICO)
@@ -279,5 +244,4 @@ void printLabel2(TreeNode *node, FILE *treedot) {
         fprintf(treedot, "NÃO_IDENTIFICADO-%s", (char *) node->token->val);
 
     fprintf(treedot, "\"];\n");     // finalizando a linha
-    printf("\"];\n");     // finalizando a linha
 }

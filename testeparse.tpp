@@ -1,8 +1,11 @@
-{flutuante: brasil, kvalo}
+flutuante: brasil, kvalo
 
-inteiro daniel({inteiro: b[], flutuante: tio, flutuante: marcos[][]})
-	b := (-3)
-	{se 1 então
+inteiro daniel(inteiro: b[], flutuante: tio, flutuante: marcos[][])
+	se(3 < 12 && b > 12 && 1)então
+		leia(b)
+	fim{
+	
+	se 1 então
 		leia(b)
 		b := 2
 	senão
