@@ -442,6 +442,8 @@ TokenRecord* getToken(void){
                         temSinal = TRUE;
                         tokenAtual = NUMERO;
                         goto recomputaSwitch;
+                    } else {
+                        voltaCaracter(1);           /// retrocede este caracter que não é número
                     }
 
                 }

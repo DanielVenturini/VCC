@@ -105,7 +105,6 @@ int main(int argc, char *argv[]) {
         switch(*flagsType[i]){
             case TREE:
             case TOKENS:
-                printf("Chegou aqui: %d", *flagsType[i]);
                 executaParaFlags(*flagsType[i]);
                 break;
 
