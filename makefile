@@ -29,4 +29,4 @@ print:
 	echo "USE: make teste"
 
 parse2: main
-	./vcc testeparse.tpp
+	./vcc testeparse.tpp -tr

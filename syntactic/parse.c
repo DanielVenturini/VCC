@@ -102,13 +102,47 @@ TreeNode *criaPrograma() {
 // lista_argumentos "," expressao | expressao | vazio
 TreeNode *lista_argumentos() {
 
+	TreeNode *lista_argumentos = novo_node(NULL, LISTA_ARGUMENTOS);
+
+	// vazio
+	if(atual()->tokenval == FECHA_PARENTESES){
+		return lista_argumentos;
+	}
+
+	while(TRUE){
+
+		insere_filho(lista_argumentos, expressao());	// insere o filho expressao
+
+		if(atual()->tokenval != VIRGULA){
+			return lista_argumentos;
+		}
+
+		insere_filho(lista_argumentos, novo_node(atualEAvanca(), -1));	// insere o filho ","
+	}
+
+
+	return lista_argumentos;
 }
 
 // ID "(" lista_argumentos ")"
 TreeNode *chamada_funcao() {
 
+	TreeNode *chamada_funcao = novo_node(NULL, CHAMADA_FUNCAO);
+	insere_filho(chamada_funcao, novo_node(atualEAvanca(), -1));	// adiciona o filho "ID"
+	insere_filho(chamada_funcao, novo_node(atualEAvanca(), -1));	// adiciona o filho "("
+	insere_filho(chamada_funcao, lista_argumentos());				// adiciona o filho lista_argumentos
 
+	if(atual()->tokenval != FECHA_PARENTESES){
+		printf("Err chamada_funcao\n");
+		erro(nomeArquivo, atual(), "Token esperado: ')'.");
+		return NULL;
+	}
+
+	insere_filho(chamada_funcao, novo_node(atualEAvanca(), -1));	// adiciona o filho ")"
+
+	return chamada_funcao;
 }
+
 // NUM_INTEIRO | NUM_PONTO_FLUTUANTE | NUM_NOTACAO_CIENTIFICA
 TreeNode *numero() {
 
@@ -373,6 +407,7 @@ TreeNode *expressao() {
 		atual()->tokenval != NUM_I && atual()->tokenval != SOMA && atual()->tokenval != SUBTRACAO &&
 		atual()->tokenval != DIFERENTE){
 
+		printf("Err expressao\n");
 		erro(nomeArquivo, atual(), "Token esperado: '(', 'ID', 'NUMERO', '+', '-' ou '!'.");
 		return NULL;
 	}
@@ -671,7 +706,7 @@ TreeNode *cabecalho() {
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)) {
 		printf("Err cabecalho\n");
-		erro(nomeArquivo, verProximo(), "Token esperado: '['.");
+		erro(nomeArquivo, verProximo(), "Token esperado: '('.");
 		return NULL;
 	}
 

@@ -62,12 +62,16 @@ void printLine(unsigned short int numline, unsigned char posLine) {
 
 	printf("\e[38;5;255m");				// cor branco
 	printLinhaAnterior(numline);
-	while((c = getc(leitor)) != '\n'){	// imprime a linha
+	c = getc(leitor);
+
+	while(c != '\n' && c != EOF){	// imprime a linha
 		if(c == '	') {
 			qtdTab ++;
 			printf("    ");				// se for tab -|, printa direto os quatro espaços
 		} else
 			printf("%c", c);
+
+		c = getc(leitor);
 	}
 
 	printf("\n");
