@@ -1,8 +1,12 @@
 #include "tree.h"
 
-void printLabel1(TreeNode *node, FILE *treedot);
-void printLabel2(TreeNode *node, FILE *treedot);
-void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot);
+void printLabel1X(TreeNode *node, FILE *treedot);
+void printLabel2X(TreeNode *node, FILE *treedot);
+void printArestaX(TreeNode *pai, TreeNode *filho, FILE *treedot);
+
+void printLabel1T(TreeNode *node);
+void printLabel2T(TreeNode *node);
+void printArestaT(TreeNode *pai, TreeNode *filho);
 
 void nullPosicoes(TreeNode *node, char inicial, char final){
 	char i;
@@ -56,19 +60,19 @@ void getArvoreRecursiva(TreeNode *pai, FILE *treedot) {
 	if(!pai)
 		return;
 
-	printLabel1(pai, treedot);                       // printa o pai
+	printLabel1X(pai, treedot);                       // printa o pai
 
 	char i;
 	for(i = 0; pai->filhos[i]; i ++){	             // adiciona 'pai -- filho' para cada filho
-		printLabel1(pai->filhos[i], treedot);        // printa o filho no arquivo
-        printAresta(pai, pai->filhos[i], treedot);   // printa a aresta 'pai -- filho'
+		printLabel1X(pai->filhos[i], treedot);        // printa o filho no arquivo
+        printArestaX(pai, pai->filhos[i], treedot);   // printa a aresta 'pai -- filho'
 	}
 
 	for(i = 0; pai->filhos[i]; i ++)			// chama para cada filho também
 		getArvoreRecursiva(pai->filhos[i], treedot);
 }
 
-void printArvore(TreeNode *raiz){
+void printArvoreX(TreeNode *raiz){
     if(!raiz)
         return;
 
@@ -82,16 +86,16 @@ void printArvore(TreeNode *raiz){
 	system("xdot tree.dot");				// printa a arvore com o xdot - graphviz
 }
 
-void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot){
+void printArestaX(TreeNode *pai, TreeNode *filho, FILE *treedot){
     fprintf(treedot, "    %i -- %i;\n", pai, filho);
 }
 
 // printa no arquivos os nós intermediários
-void printLabel1(TreeNode *node, FILE *treedot){
+void printLabel1X(TreeNode *node, FILE *treedot){
     fprintf(treedot, "    %i [label=\"", node); // printa o id do nó e o 'label="'
 
     if(node->token) {      // se tiver um token, então é uma folha
-        printLabel2(node, treedot);
+        printLabel2X(node, treedot);
         return;
     }
 
@@ -170,7 +174,7 @@ void printLabel1(TreeNode *node, FILE *treedot){
 }
 
 // printa no arquivos as folhas
-void printLabel2(TreeNode *node, FILE *treedot) {
+void printLabel2X(TreeNode *node, FILE *treedot) {
 
 	if (node->token->tokenval == ID)
         fprintf(treedot, "%s", (char *) node->token->val);
@@ -244,4 +248,190 @@ void printLabel2(TreeNode *node, FILE *treedot) {
         fprintf(treedot, "NÃO_IDENTIFICADO-%s", (char *) node->token->val);
 
     fprintf(treedot, "\"];\n");     // finalizando a linha
+}
+
+void printIdentacao(unsigned short int identacao){
+    unsigned short int i;
+    for(i = 0; i < identacao; i ++)
+        printf("..");
+}
+void printArvoreT(TreeNode *raiz, unsigned short int identacao){
+    if(!raiz)
+        return;
+
+    printIdentacao(identacao);
+    identacao ++;
+    printLabel1T(raiz);                         // printa o pai
+
+    char i;
+    for(i = 0; raiz->filhos[i]; i ++) {         // adiciona 'pai -- filho' para cada filho
+        printIdentacao(identacao);
+        printLabel1T(raiz->filhos[i]);          // printa o filho no arquivo
+    }
+
+    for(i = 0; raiz->filhos[i]; i ++)           // chama para cada filho também
+        printArvoreT(raiz->filhos[i], identacao+1);
+}
+
+void printArestaT(TreeNode *raiz, TreeNode *filho){
+    printf("    %i -- %i;\n", raiz, filho);
+}
+
+// printa no arquivos os nós intermediários
+void printLabel1T(TreeNode *node){
+
+    if(node->token) {      // se tiver um token, então é uma folha
+        printLabel2T(node);
+        return;
+    }
+
+    if (node->bnfval == PROGRAMA)
+        printf("PROGRAMA");
+    else if (node->bnfval == LISTA_DECLARACOES)
+        printf("LISTA_DECLARACOES");
+    else if (node->bnfval == DECLARACAO)
+        printf("DECLARACAO");
+    else if (node->bnfval == DECLARACAO_VARIAVEIS)
+        printf("DECLARACAO_VARIAVEIS");
+    else if (node->bnfval == INICIALIZACAO_VARIAVEIS)
+        printf("INICIALIZACAO_VARIAVEIS");
+    else if (node->bnfval == LISTA_VARIAVEIS)
+        printf("LISTA_VARIAVEIS");
+    else if (node->bnfval == VAR)
+        printf("VAR");
+    else if (node->bnfval == INDICE)
+        printf("INDICE");
+    else if (node->bnfval == TIPO)
+        printf("TIPO");
+    else if (node->bnfval == DECLARACAO_FUNCAO)
+        printf("DECLARACAO_FUNCAO");
+    else if (node->bnfval == CABECALHO)
+        printf("CABECALHO");
+    else if (node->bnfval == LISTA_PARAMETROS)
+        printf("LISTA_PARAMETROS");
+    else if (node->bnfval == PARAMETRO)
+        printf("PARAMETRO");
+    else if (node->bnfval == CORPO)
+        printf("CORPO");
+    else if (node->bnfval == ACAO)
+        printf("ACAO");
+    else if (node->bnfval == B_SE)
+        printf("SE");
+    else if (node->bnfval == B_REPITA)
+        printf("REPITA");
+    else if (node->bnfval == B_LEIA)
+        printf("LEIA");
+    else if (node->bnfval == B_ESCREVA)
+        printf("ESCREVA");
+    else if (node->bnfval == B_RETORNA)
+        printf("RETORNA");
+    else if (node->bnfval == B_ATRIBUICAO)
+        printf("ATRIBUICAO");
+    else if (node->bnfval == EXPRESSAO)
+        printf("EXPRESSAO");
+    else if (node->bnfval == EXPRESSAO_LOGICA)
+        printf("EXPRESSAO_LOGICA");
+    else if (node->bnfval == EXPRESSAO_SIMPLES)
+        printf("EXPRESSAO_SIMPLES");
+    else if (node->bnfval == EXPRESSAO_ADITIVA)
+        printf("EXPRESSAO_ADITIVA");
+    else if (node->bnfval == EXPRESSAO_MULTIPLICATIVA)
+        printf("EXPRESSAO_MULTIPLICATIVA");
+    else if (node->bnfval == EXPRESSAO_UNARIA)
+        printf("EXPRESSAO_UNARIA");
+    else if (node->bnfval == OPERADOR_RELACIONAL)
+        printf("OPERADOR_RELACIONAL");
+    else if (node->bnfval == OPERADOR_SOMA)
+        printf("OPERADOR_SOMA");
+    else if (node->bnfval == OPERADOR_LOGICO)
+        printf("OPERADOR_LOGICO");
+    else if (node->bnfval == OPERADOR_MULTIPLICACAO)
+        printf("OPERADOR_MULTIPLICACAO");
+    else if (node->bnfval == FATOR)
+        printf("FATOR");
+    else if (node->bnfval == NUMERO)
+        printf("NUMERO");
+    else if (node->bnfval == CHAMADA_FUNCAO)
+        printf("CHAMADA_FUNCAO");
+    else if (node->bnfval == LISTA_ARGUMENTOS)
+        printf("LISTA_ARGUMENTOS");
+
+    printf("\n");     // finalizando a linha
+}
+
+// printa no arquivos as folhas
+void printLabel2T(TreeNode *node) {
+
+    if (node->token->tokenval == ID)
+        printf("%s", (char *) node->token->val);
+    else if (node->token->tokenval == NUM_I)
+        printf("%d", *(int *) node->token->val);
+    else if (node->token->tokenval == NUM_F)
+        printf("NUMERO-%f", *((float *) node->token->val));
+    else if (node->token->tokenval == ATE)
+        printf("ATÉ");
+    else if (node->token->tokenval == ENTAO)
+        printf("ENTÃO");
+    else if (node->token->tokenval == ESCREVA)
+        printf("ESCREVA");
+    else if (node->token->tokenval == FIM)
+        printf("FIM");
+    else if (node->token->tokenval == FLUTUANTE)
+        printf("FLUTUANTE");
+    else if (node->token->tokenval == INTEIRO)
+        printf("INTEIRO");
+    else if (node->token->tokenval == LEIA)
+        printf("LEIA");
+    else if (node->token->tokenval == REPITA)
+        printf("REPITA");
+    else if (node->token->tokenval == RETORNA)
+        printf("RETORNA");
+    else if (node->token->tokenval == SE)
+        printf("SE");
+    else if (node->token->tokenval == SENAO)
+        printf("SENÃO");
+    else if (node->token->tokenval == SOMA)
+        printf("+");
+    else if (node->token->tokenval == SUBTRACAO)
+        printf("-");
+    else if (node->token->tokenval == MULTIPLICACAO)
+        printf("*");
+    else if (node->token->tokenval == DIVISAO)
+        printf("/");
+    else if (node->token->tokenval == MAIOR)
+        printf(">");
+    else if (node->token->tokenval == MENOR)
+        printf("<");
+    else if (node->token->tokenval == MAIOR_IGUAL)
+        printf(">=");
+    else if (node->token->tokenval == MENOR_IGUAL)
+        printf("<=");
+    else if (node->token->tokenval == IGUALDADE)
+        printf("=");
+    else if (node->token->tokenval == ABRE_COLCHETES)
+        printf("[");
+    else if (node->token->tokenval == FECHA_COLCHETES)
+        printf("]");
+    else if (node->token->tokenval == ABRE_PARENTESES)
+        printf("(");
+    else if (node->token->tokenval == FECHA_PARENTESES)
+        printf(")");
+    else if (node->token->tokenval == VIRGULA)
+        printf(",");
+    else if (node->token->tokenval == DOIS_PONTOS)
+        printf(":");
+    else if (node->token->tokenval == ATRIBUICAO)
+        printf(":=");
+    else if (node->token->tokenval == E_LOGICO)
+        printf("&&");
+    else if (node->token->tokenval == NEGACAO)
+        printf("!");
+    else if (node->token->tokenval == OU_LOGICO)
+        printf("||");
+    else if (node->token->tokenval == DIFERENTE)
+        printf("<>");
+    else if (node->token->tokenval == NAO_IDENTIFICADO)
+        printf("NÃO_IDENTIFICADO-%s", (char *) node->token->val);
+
+    printf("\n");     // finalizando a linha
 }

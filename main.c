@@ -2,7 +2,7 @@
 #include "syntactic/parse.h"
 
 typedef enum {      // os tipos de flags reconhecidas
-    TOKENS, TREE, HELP, DESCONHECIDA
+    TOKENS, TREEX, TREET, HELP, DESCONHECIDA
 } FlagType;
 
 char **arquivos;        // este ponteiro conterá todos os arquivo passados por parâmetros
@@ -14,8 +14,10 @@ FlagType *qualFlag(char *flag, char f) {
 
     if(flag[1] == 't' && flag[2] == 'k' && flag[3] == '\0')
         *flagType = TOKENS;
-    else if(flag[1] == 't' && flag[2] == 'r' && flag[3] == '\0')
-        *flagType = TREE;
+    else if(flag[1] == 't' && flag[2] == 'r' && flag[3] == 'x' && flag[4] == '\0')
+        *flagType = TREEX;
+    else if(flag[1] == 't' && flag[2] == 'r' && flag[3] == 't' && flag[4] == '\0')
+        *flagType = TREET;
     else if(flag[1] == 'h' && flag[2] == '\0')
         *flagType = HELP;
     else
@@ -59,8 +61,14 @@ void executaParaFlags(FlagType tipo) {
 
         switch(tipo) {
 
-            case TREE:
-                printArvore(parse(arquivos[i]));/// recupera a árvore chamando o getToken()
+            // printa a árvore no XDOT
+            case TREEX:
+                printArvoreX(parse(arquivos[i]));   /// recupera a árvore chamando o getToken()
+                break;
+
+            // printa a árvore no TERMINAL
+            case TREET:
+                printArvoreT(parse(arquivos[i]), 0);
                 break;
 
             case TOKENS:
@@ -103,21 +111,23 @@ int main(int argc, char *argv[]) {
     i = 0;
     while(flagsType[i]){
         switch(*flagsType[i]){
-            case TREE:
+            case TREEX:
+            case TREET:
             case TOKENS:
                 executaParaFlags(*flagsType[i]);
                 break;
 
             case HELP:
-                printf("|___________________________________________________________________________|\n");
-                printf("| V C C      -       Venturini Compiler  Compiler      -       B R A S I L  |\n");
-                printf("|___________________________________________________________________________|\n");
-                printf("|./vcc [flags] arquivo        ----------------------------------------------|\n");
-                printf("|Flags:                       ----------------------------------------------|\n");
-                printf("|    -h                       exibe ajuda-----------------------------------|\n");
-                printf("|    -tk                      exibe as árvores sintáticas de cada arquivo---|\n");
-                printf("|    -tr                      exibe os tokens de cada arquivo---------------|\n");
-                printf("|___________________________________________________________________________|\n");
+                printf("|_____________________________________________________________________________________|\n");
+                printf("| V C C      -       Venturini Compiler  Compiler      -       B R A S I L            |\n");
+                printf("|_____________________________________________________________________________________|\n");
+                printf("|./vcc [flags] arquivo        --------------------------------------------------------|\n");
+                printf("|Flags:                       --------------------------------------------------------|\n");
+                printf("|    -h                       exibe ajuda---------------------------------------------|\n");
+                printf("|    -trx                     exibe as árvores sintáticas de cada arquivo com xdot ---|\n");
+                printf("|    -trt                     exibe as árvores sintáticas de cada arquivo no terminal-|\n");
+                printf("|    -tk                      exibe os tokens de cada arquivo-------------------------|\n");
+                printf("|_____________________________________________________________________________________|\n");
                 break;
 
             default:
