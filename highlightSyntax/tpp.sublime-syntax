@@ -1,0 +1,40 @@
+%YAML 1.2
+---
+# Para instalar, copie este arquivo para a pasta: ~/.config/sublime-text-3/Packages/User/
+# e reinicie o Sublime-Text3
+
+name: TPP
+file_extensions: tpp
+scope: text.tpp
+
+contexts:
+  main:
+    - match: \b(se|então|senão|fim|repita|flutuante|retorna|até|leia|escreva|inteiro|principal)\b
+      scope: keyword.control.c
+
+    - match: \b([+|-]?[\d]+([e|E]+[+|-]?[\d]*)?)\b
+      scope: constant.numeric
+
+    - match: \{(.)*\}
+      scope: comment
+
+    - match: '>|<|<=|>=|<>'
+      scope: punctuation.definition.tag.end.js
+
+    - match: ':'
+      scope: punctuation.definition.tag.doublequotes.js
+
+    - match: '\+|\-'
+      scope: punctuation.definition.tag.plus.js
+
+    - match: '\*|\/'
+      scope: punctuation.definition.tag.multiplication.js
+
+    - match: '\!'
+      scope: punctuation.definition.tag.diference.js
+
+    - match: '(\|\|)|(\&\&)'
+      scope: punctuation.definition.tag.logical.js
+
+    - match: '='
+      scope: punctuation.definition.tag.equal.js
