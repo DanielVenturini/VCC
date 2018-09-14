@@ -157,7 +157,7 @@ TreeNode *fator() {
 
 	TreeNode *fator = novo_node(NULL, FATOR);
 
-	switch(tokenAtual->tokenval){
+	switch(atual()->tokenval){
 		case ABRE_PARENTESES:									// "(" expressao ")"
 			insere_filho(fator, novo_node(atualEAvanca(), -1));	// insere o filho "("
 			insere_filho(fator, expressao());					// recupera a expressão
@@ -332,13 +332,11 @@ TreeNode *expressao_multiplicativa() {
 	TreeNode *exp_multiplicativa = novo_node(NULL, EXPRESSAO_MULTIPLICATIVA);
 	insere_filho(exp_multiplicativa, expressao_unaria());	// insere o filho expressao_unaria()
 
-	if(atual()->tokenval != MULTIPLICACAO && atual()->tokenval != DIVISAO) {
-		return exp_multiplicativa;
+	while(atual()->tokenval == MULTIPLICACAO || atual()->tokenval == DIVISAO) {
+		insere_filho(exp_multiplicativa, operador_multiplicacao());		// insere como filho o operador
+		insere_filho(exp_multiplicativa, expressao_unaria());			// insere como filho o operador
 	}
 
-	//insere_filho(exp_multiplicativa, expressao_multiplicativa());	// recursão à esquerda
-	insere_filho(exp_multiplicativa, operador_multiplicacao());		// insere como filho o operador
-	insere_filho(exp_multiplicativa, expressao_unaria());			// insere como filho o operador
 
 	return exp_multiplicativa;
 }
@@ -350,14 +348,10 @@ TreeNode *expressao_aditiva() {
 	insere_filho(exp_aditiva, expressao_multiplicativa());	// insere o filho expressao_multiplicativa()
 
 	// se for um destes, é a recursão à esquerda
-	if(atual()->tokenval != SOMA && atual()->tokenval != SUBTRACAO) {
-
-		return exp_aditiva;
+	while(atual()->tokenval == SOMA || atual()->tokenval == SUBTRACAO) {
+		insere_filho(exp_aditiva, operador_soma());				// insere como filho o operador
+		insere_filho(exp_aditiva, expressao_multiplicativa());	// insere como filho o operador
 	}
-
-	//insere_filho(exp_aditiva, expressao_aditiva());			// recursão à esquerda
-	insere_filho(exp_aditiva, operador_soma());				// insere como filho o operador
-	insere_filho(exp_aditiva, expressao_multiplicativa());	// insere como filho o operador
 
 	return exp_aditiva;
 }
@@ -369,15 +363,12 @@ TreeNode *expressao_simples() {
 	insere_filho(exp_simples, expressao_aditiva());	// insere o filho expressao_aditiva()
 
 	// se não for uma expressao_relacional
-	if(atual()->tokenval != MENOR && atual()->tokenval != MAIOR && atual()->tokenval != MENOR_IGUAL &&
-		atual()->tokenval != MAIOR_IGUAL && atual()->tokenval != IGUALDADE && atual()->tokenval != DIFERENTE) {
+	while(atual()->tokenval == MENOR || atual()->tokenval == MAIOR || atual()->tokenval == MENOR_IGUAL ||
+		atual()->tokenval == MAIOR_IGUAL || atual()->tokenval == IGUALDADE || atual()->tokenval == DIFERENTE) {
 
-		return exp_simples;
+		insere_filho(exp_simples, operador_relacional());	// insere como filho o operador
+		insere_filho(exp_simples, expressao_aditiva());		// insere como filho o operador
 	}
-
-	//insere_filho(exp_simples, expressao_simples());		// recursão à esquerda
-	insere_filho(exp_simples, operador_relacional());	// insere como filho o operador
-	insere_filho(exp_simples, expressao_aditiva());		// insere como filho o operador
 
 	return exp_simples;
 }
@@ -389,13 +380,10 @@ TreeNode *expressao_logica() {
 	insere_filho(exp_logica, expressao_simples());	// insere o filho expressao_simples()
 
 	// se for um destes, é a recursão à esquerda
-	if(atual()->tokenval != OU_LOGICO && atual()->tokenval != E_LOGICO) {
-		return exp_logica;
+	while(atual()->tokenval == OU_LOGICO || atual()->tokenval == E_LOGICO) {
+		insere_filho(exp_logica, operador_logico());	// insere como filho o operador
+		insere_filho(exp_logica, expressao_simples());	// insere como filho o operador
 	}
-
-	//insere_filho(exp_logica, expressao_logica());	// recursão à esquerda
-	insere_filho(exp_logica, operador_logico());	// insere como filho o operador
-	insere_filho(exp_logica, expressao_simples());	// insere como filho o operador
 
 	return exp_logica;
 }

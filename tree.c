@@ -161,6 +161,8 @@ void printLabel1X(TreeNode *node, FILE *treedot){
         fprintf(treedot, "OPERADOR_LOGICO");
     else if (node->bnfval == OPERADOR_MULTIPLICACAO)
         fprintf(treedot, "OPERADOR_MULTIPLICACAO");
+    else if (node->bnfval == OPERADOR_NEGACAO)
+        fprintf(treedot, "OPERADOR_NEGACAO");
     else if (node->bnfval == FATOR)
         fprintf(treedot, "FATOR");
     else if (node->bnfval == NUMERO)
