@@ -132,6 +132,7 @@ int main(int argc, char *argv[]) {
 
             default:
                 printf("Erro: opção não reconhecida: %s.\n", flags[i]);
+                printf("Use: ./vcc -h para opções.\n");
         }
 
         i ++;

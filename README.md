@@ -1,4 +1,4 @@
-# VenturininCompilerCompiler
+# Venturini Compiler Compiler
 
 Compilador em desenvolvimento para a disciplina de Compiladores. Este irá compilar para T++, uma linguagem desenvolvida propriamente para a disciplina, o gcc é melhor.
 

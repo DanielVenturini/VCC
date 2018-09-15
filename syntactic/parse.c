@@ -2,6 +2,7 @@
 #include "../lexical/varredura.h"
 
 // apenas declarando para não ter problemas de função a cima que não reconhece as abaixos
+TreeNode *atribuicao(TreeNode *varToken);
 TreeNode *expressao_multiplicativa();
 TreeNode *inicializacao_variaveis();
 TreeNode *operador_multiplicacao();
@@ -20,7 +21,6 @@ TreeNode *operador_logico();
 TreeNode *chamada_funcao();
 TreeNode *operador_soma();
 TreeNode *declaracao();
-TreeNode *atribuicao();
 TreeNode *cabecalho();
 TreeNode *parametro();
 TreeNode *expressao();
@@ -402,11 +402,49 @@ TreeNode *expressao() {
 
 	TreeNode *expressao = novo_node(NULL, EXPRESSAO);
 
-	// se o próximo for ":="
-	if(atual()->tokenval == ID && verificaEAvanca(ATRIBUICAO, FALSE))
-		insere_filho(expressao, atribuicao());
-	else {
+	// O problema aqui é qual recuperar: expressao_logica | atribuicao.
+	// A priori, a atribuicao é facil: apenas verificar se o próximo é um ":="
+	// porém o próximo pode ser um "[" da seguinte linha: "id[expressao] := expressao"
+	// entretanto, ainda pode ser somente um "id[expressao]" sem uma atribuicao, pois a EBNF permite.
+	// Assim, fica difícil determinar quando é uma atribuicao.
+	// Então recupera a expressao_logica, que é a outra produção de expressao
+	// e depois só verificar se contém apenas uma var. Se tiver somente uma var e o próximo for uma atribuicao
+	// então troca essa expressao_logica para uma atribuicao
+	char id = FALSE;
+	if(atual()->tokenval == ID) {
+		switch(verProximo()->tokenval){
+			case ATRIBUICAO:	// se o próximo for uma ATRIBUICAO, já recupera e retorna
+				insere_filho(expressao, atribuicao(NULL));
+				return expressao;
+
+			case ABRE_COLCHETES:// se for um ABRE_COLCHETES, é uma possível ATRIBUICAO
+				id = TRUE;
+				break;
+
+			default:			// se não for nenhum dos acimas, então é uma expressao_logica
+				insere_filho(expressao, expressao_logica());
+				return expressao;
+		}
+	} else {	// se não for um ID, então é certeza que é uma expressao_logica
 		insere_filho(expressao, expressao_logica());
+		return expressao;
+	}
+
+	// só vai chegar aqui se for uma possível atribuicao
+	// recupera a expressao_logica
+	TreeNode *exp_logica = expressao_logica();
+
+	// se o anterior for um ID e o atual é uma ATRIBUICAO
+	// então não é uma expressao_logica, e sim uma atribuicao
+	// remove a expressao_logica e recupera a atribuicao
+	if(id && atual()->tokenval == ATRIBUICAO) {
+
+		// remover a expressao_logica e adicionar como var
+		// exp_logica->exp_simples->exp_aditiva->exp_multiplicativa->exp_unaria->fator->var
+		TreeNode *var = exp_logica->filhos[0]->filhos[0]->filhos[0]->filhos[0]->filhos[0]->filhos[0];
+		insere_filho(expressao, atribuicao(var));
+	} else {
+		insere_filho(expressao, exp_logica);
 	}
 
 	return expressao;
@@ -491,10 +529,17 @@ TreeNode *leia() {
 }
 
 // var ":=" expressao
-TreeNode *atribuicao() {
+// é preciso o varToken por causa da incoerência em expressao
+TreeNode *atribuicao(TreeNode *varToken) {
 
 	TreeNode *atribuicao = novo_node(NULL, B_ATRIBUICAO);
-	insere_filho(atribuicao, var());						// insere a variável como filho
+
+	// se o varToken não for passado
+	if(!varToken)
+		insere_filho(atribuicao, var());						// insere a variável como filho
+	else
+		insere_filho(atribuicao, varToken);						// se já foi passado, somente insere
+
 	insere_filho(atribuicao, novo_node(atualEAvanca(), -1));// insere o ":=" como filho
 	insere_filho(atribuicao, expressao());
 
@@ -816,7 +861,7 @@ TreeNode *lista_variaveis() {
 TreeNode *inicializacao_variaveis() {
 
 	TreeNode *inicializacao_variaveis = novo_node(NULL, INICIALIZACAO_VARIAVEIS);
-	insere_filho(inicializacao_variaveis, atribuicao());
+	insere_filho(inicializacao_variaveis, atribuicao(NULL));
 
 	return inicializacao_variaveis;
 }
