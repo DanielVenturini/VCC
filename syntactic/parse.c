@@ -134,7 +134,7 @@ TreeNode *chamada_funcao() {
 
 	if(atual()->tokenval != FECHA_PARENTESES){
 		printf("Err chamada_funcao\n");
-		erro(nomeArquivo, atual(), "Token esperado: ')'.");
+		erro(nomeArquivo, atual(), "Token esperado: ')' ou ','.");
 		return NULL;
 	}
 
@@ -164,7 +164,7 @@ TreeNode *fator() {
 
 			if(atual()->tokenval != FECHA_PARENTESES){			// verifica o fecha parenteses
 				printf("Err fator\n");
-				erro(nomeArquivo, atual(), "Token esperado: '('.");
+				erro(nomeArquivo, atual(), "Token esperado: ')'.");
 				return NULL;
 			}
 
@@ -175,7 +175,7 @@ TreeNode *fator() {
 			if(verificaEAvanca(ABRE_PARENTESES, FALSE)) {
 				insere_filho(fator, chamada_funcao());			// insere o filho chamada_funcao()
 			} else {
-				insere_filho(fator, var());						// insere o filho var()
+				insere_filho(fator, var());						// insere o filho var
 			}
 
 			break;
@@ -393,7 +393,7 @@ TreeNode *expressao() {
 
 	if(atual()->tokenval != ABRE_PARENTESES && atual()->tokenval != ID && atual()->tokenval != NUM_F &&
 		atual()->tokenval != NUM_I && atual()->tokenval != SOMA && atual()->tokenval != SUBTRACAO &&
-		atual()->tokenval != DIFERENTE){
+		atual()->tokenval != NEGACAO){
 
 		printf("Err expressao\n");
 		erro(nomeArquivo, atual(), "Token esperado: '(', 'ID', 'NUMERO', '+', '-' ou '!'.");
@@ -510,12 +510,12 @@ TreeNode *repita() {
 
 	if(atual()->tokenval != ATE){
 		printf("Err repita\n");
-		erro(nomeArquivo, atual(), "Token esperado: 'FIM'.");
+		erro(nomeArquivo, atual(), "Token esperado: 'ATÉ'.");
 		return NULL;
 	}
 
 	insere_filho(repita, novo_node(atualEAvanca(), -1));// adiciona o ATE
-	insere_filho(repita, expressao());				// insere a expressão
+	insere_filho(repita, expressao());					// insere a expressão
 
 	return repita;
 }
@@ -601,7 +601,7 @@ TreeNode *acao() {
 			printToken(atual(), 0, 0);
 			erro(nomeArquivo, atual(), "Token inesperado.");
 			return acao;
-		break;
+			break;
 	}
 
 	return acao;
@@ -636,16 +636,24 @@ TreeNode *parametro() {
 
 	if(!verificaEAvanca(ID, TRUE)){
 		printf("Err parametro.\n");
-		erro(nomeArquivo, verProximo(), "Token esperado 'ID'.");
+		erro(nomeArquivo, verProximo(), "Token esperado: 'ID'.");
 		return parametro;
 	}
 
 	insere_filho(parametro, novo_node(atualEAvanca(), -1));	// insere o ID
 
 	// parametro "[" "]"
-	while(atual()->tokenval == ABRE_COLCHETES && verProximo()->tokenval == FECHA_COLCHETES){
+	while(atual()->tokenval == ABRE_COLCHETES) {
 		insere_filho(parametro, novo_node(atualEAvanca(), -1));	// insere o "["
-		insere_filho(parametro, novo_node(atualEAvanca(), -1));	// insere o "]"
+
+		// verifica se o próximo é o FECHA_COLCHETES
+		if(atual()->tokenval == FECHA_COLCHETES){
+			insere_filho(parametro, novo_node(atualEAvanca(), -1));	// insere o "]"
+		} else {
+			printf("Err parametro..\n");
+			erro(nomeArquivo, atual(), "Token esperado: ']'.");
+			return NULL;
+		}
 	}
 
 	return parametro;
@@ -665,7 +673,6 @@ TreeNode *lista_parametros() {
 		if(atual()->tokenval != INTEIRO && atual()->tokenval != FLUTUANTE){
 			printf("Err lista_parametros\n");
 			erro(nomeArquivo, atual(), "Token esperado: 'INTEIRO' ou 'FLUTUANTE'.");
-			exit(1);
 			return NULL;
 		}
 
@@ -678,7 +685,6 @@ TreeNode *lista_parametros() {
 		if(atual()->tokenval != VIRGULA) {
 			printf("Err lista_parametros.\n");
 			erro(nomeArquivo, atual(), "Token esperado: ',' ou ')'.");
-			exit(1);
 			return NULL;
 		}
 
@@ -743,18 +749,16 @@ TreeNode *indice() {
 
 	while(TRUE){
 
-		TreeNode *abre = novo_node(atualEAvanca(), -1);		// cria o nó "]"
-		TreeNode *exp = expressao();						// cria o nó expressao
+		insere_filho(indice, novo_node(atualEAvanca(), -1));// cria o nó "["
+		insere_filho(indice, expressao());					// cria o nó expressao
 
-		// se não encontrar o FECHA_COLCHETES ou a expressão for NULL
-		if(atual()->tokenval != FECHA_COLCHETES || !exp){
+		// se não encontrar o FECHA_COLCHETES
+		if(atual()->tokenval != FECHA_COLCHETES){
 			printf("Err indice\n");
 			erro(nomeArquivo, atual(), "Token esperado: ']'.");
 			return NULL;
 		}
 
-		insere_filho(indice, abre);							// adiciona o nó "["
-		insere_filho(indice, exp);							// adiciona o nó expressao
 		insere_filho(indice, novo_node(atualEAvanca(), -1));// adiciona o nó "]"
 
 		// se for igual a "[", então recupera o próximo indice
@@ -766,6 +770,12 @@ TreeNode *indice() {
 
 // ID | ID indice
 TreeNode *var() {
+
+	if(atual()->tokenval != ID){
+		printf("Err var\n");
+		erro(nomeArquivo, atual(), "Token esperado: 'ID'.");
+		return NULL;
+	}
 
 	TreeNode *var = novo_node(NULL, VAR);				// cria o nó ID
 	insere_filho(var, novo_node(atualEAvanca(), -1));	// adiciona o filho ID e avança
@@ -826,21 +836,21 @@ TreeNode *declaracao_variaveis() {
 	TreeNode *declaracao_variaveis = novo_node(NULL, DECLARACAO_VARIAVEIS);	// recupera o token que trouxe até aqui INTEIRO | FLUTUANTE
 	insere_filho(declaracao_variaveis, tipo());								// insere o tipo como filho de declaracao_variaveis
 
-	if(verificaEAvanca(DOIS_PONTOS, TRUE)) {								// se não houver um tipo e o próximo não for DOIS_PONTOS; porém, esta verificação é redundante
+	if(atual()->tokenval != DOIS_PONTOS) {									// se não houver um tipo e o próximo não for DOIS_PONTOS; porém, esta verificação é redundante
 		printf("Err declaracao_variaveis\n");
-		erro(nomeArquivo, verProximo(), "Token esperado: ':'.");
+		erro(nomeArquivo, atual(), "Token esperado: ':'.");
 		return NULL;
 	}
 
-	insere_filho(declaracao_variaveis, novo_node(atual(), -1));				// insere o ":" como filho de declaracao_variaveis
+	insere_filho(declaracao_variaveis, novo_node(atualEAvanca(), -1));		// insere o ":" como filho de declaracao_variaveis
 
-	if(!verificaEAvanca(ID, TRUE)){
+	if(atual()->tokenval != ID){
 		printf("Err declaracao_variaveis.\n");
-		erro(nomeArquivo, verProximo(), "Token esperado: 'ID'.");
+		erro(nomeArquivo, atual(), "Token esperado: 'ID'.");
 		return NULL;
 	}
 
-	insere_filho(declaracao_variaveis, lista_variaveis());		// recupera a lista de variáveis
+	insere_filho(declaracao_variaveis, lista_variaveis());					// recupera a lista de variáveis
 	return declaracao_variaveis;
 }
 
@@ -879,7 +889,7 @@ TreeNode *declaracao() {
     			insere_filho(declaracao, inicializacao_variaveis());
     		} else {
     			printf("Err declaracao.\n");
-				erro(nomeArquivo, verProximo(), "Token esperado: '(' ou ':='.");
+				erro(nomeArquivo, verProximo(), "Token esperado: '(', '[' ou ':='.");
     		}
 
     		break;

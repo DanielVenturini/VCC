@@ -14,7 +14,7 @@ void nullPosicoes(TreeNode *node, char inicial, char final){
 		node->filhos[i] = NULL;
 }
 
-TreeNode *novo_node(TokenRecord *token, BNFType bnfval){
+TreeNode *novo_node(TokenRecord *token, EBNFType bnfval){
     // aloca os devidos ponteiros
     TreeNode *node = (TreeNode *) malloc(sizeof(TreeNode));
     node->filhos = (TreeNode **) malloc(NUM_INICIAL_FILHOS*sizeof(TreeNode*));
