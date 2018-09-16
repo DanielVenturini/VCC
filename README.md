@@ -8,7 +8,7 @@ O VCC está sendo implementado para ser rápido e robusto. Não será usado fun�
 
 Compilar um arquivo:
 ```
-./vcc [flags] arquivo1.tpp arquivo2.tpp
+./vcc [flags] [arquivo1.tpp arquivo2.tpp ...]
 ```
 Visualizar as opções de saídas da compilação dos arquivos:
 ```

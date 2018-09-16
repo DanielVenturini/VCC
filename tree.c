@@ -181,9 +181,9 @@ void printLabel2X(TreeNode *node, FILE *treedot) {
 	if (node->token->tokenval == ID)
         fprintf(treedot, "%s", (char *) node->token->val);
     else if (node->token->tokenval == NUM_I)
-        fprintf(treedot, "%d", *(int *) node->token->val);
+        fprintf(treedot, "NUM_INTEIRO: %d", *(int *) node->token->val);
     else if (node->token->tokenval == NUM_F)
-        fprintf(treedot, "NUMERO-%f", *((float *) node->token->val));
+        fprintf(treedot, "NUM_PONTO_FLUTUANTE: %f", *((float *) node->token->val));
     else if (node->token->tokenval == ATE)
         fprintf(treedot, "ATÉ");
     else if (node->token->tokenval == ENTAO)
@@ -367,9 +367,9 @@ void printLabel2T(TreeNode *node) {
     if (node->token->tokenval == ID)
         printf("%s", (char *) node->token->val);
     else if (node->token->tokenval == NUM_I)
-        printf("%d", *(int *) node->token->val);
+        printf("NUM_INTEIRO: %d", *(int *) node->token->val);
     else if (node->token->tokenval == NUM_F)
-        printf("NUMERO-%f", *((float *) node->token->val));
+        printf("NUM_PONTO_FLUTUANTE: %f", *((float *) node->token->val));
     else if (node->token->tokenval == ATE)
         printf("ATÉ");
     else if (node->token->tokenval == ENTAO)
