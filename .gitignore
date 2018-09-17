@@ -1,8 +1,7 @@
 vcc
 main
 tree
-test.tpp
-teste2.tpp
+*.tpp
 syntactic/parse
 *.dot
 
