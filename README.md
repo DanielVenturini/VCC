@@ -14,17 +14,9 @@ Visualizar as opções de saídas da compilação dos arquivos:
 ```
 ./vcc -h
 ```
-Para compilar com MAKE:
+Para gerar o VCC com MAKE:
 ```
 make
-```
-Para executar o arquivo 'teste.cpp':
-```
-make teste
-```
-ou
-```
-./vcc teste.cpp
 ```
 
 A árvore é gerada gráficamente usando o software Graphviz. Para isso, é realizado a chamada de sistema para ```xdot```, passando o arquivo que é gerado navegando a árvore. O arquivo em questão é o ```tree.dot```

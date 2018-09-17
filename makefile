@@ -16,17 +16,12 @@ parse: arvore
 desacerto:
 	gcc -c desacerto.c -o desacerto.o
 
-teste:
-	./vcc test.tpp
-
 clean:
-	rm lexical/varredura.o
-	rm tree.o
-	rm syntactic/parse.o
-	rm desacerto.o
+	rm lexical/varredura.o -f
+	rm tree.o -f
+	rm syntactic/parse.o -f
+	rm desacerto.o -f
+	rm tree.dot -f
 
 print:
 	echo "USE: make teste"
-
-parse2: main
-	./vcc testeparse.tpp -tr
