@@ -2,7 +2,7 @@ all: main
 
 main: varredura parse desacerto	# parse já inclui a árvore
 	gcc main.c lexical/varredura.o tree.o syntactic/parse.o desacerto.o -o vcc
-	#make clean
+	make clean
 
 varredura:
 	gcc -c lexical/varredura.c -o lexical/varredura.o
@@ -21,7 +21,3 @@ clean:
 	rm tree.o -f
 	rm syntactic/parse.o -f
 	rm desacerto.o -f
-	rm tree.dot -f
-
-print:
-	echo "USE: make teste"

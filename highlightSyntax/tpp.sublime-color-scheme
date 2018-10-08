@@ -1,0 +1,63 @@
+{
+    "name": "Esquema de cores do TPP",
+    "globals":
+    {
+        "background": "rgb(0, 0, 0)",
+        "foreground": "rgb(255, 255, 255)",
+        "caret": "rgb(0, 255, 255)"
+    },
+    "rules":
+    [
+        {
+            "name": "Comentario",
+            "scope": "comment",
+            "foreground": "#888888"
+        },
+        {
+            "name": "Palavra-Chave",
+            "scope": "keyword.control.c",
+            "foreground": "rgb(0, 255, 0)",
+        },
+        {
+            "name": "Numero",
+            "scope": "constant.numeric",
+            "foreground": "rgb(0, 255, 0)",
+            "font_style": "italic",
+        },
+        {
+            "name": "Operador-Logico",
+            "scope": "punctuation.definition.tag.end.js",
+            "foreground": "rgb(0, 0, 255)",
+        },
+        {
+            "name": "Dois-pontos",
+            "scope": "punctuation.definition.tag.doublequotes.js",
+            "foreground": "rgb(255, 0, 0)",
+        },
+        {
+            "name": "Igual",
+            "scope": "punctuation.definition.tag.equal.js",
+            "foreground": "rgb(255, 0, 0)",
+        },
+        {
+            "name": "Soma",
+            "scope": "punctuation.definition.tag.plus.js",
+            "foreground": "rgb(0, 0, 255)",
+        },
+        {
+            "name": "Multiplicacao",
+            "scope": "punctuation.definition.tag.multiplication.js",
+            "foreground": "rgb(0, 0, 255)",
+        },
+        {
+            "name": "Operador-Logico",
+            "scope": "punctuation.definition.tag.logical.js",
+            "foreground": "rgb(255, 255, 0)",
+        },
+        {
+            "name": "Operador-Diferenca",
+            "scope": "punctuation.definition.tag.diference.js",
+            "foreground": "rgb(0, 0, 255)",
+        }
+    ]
+}
