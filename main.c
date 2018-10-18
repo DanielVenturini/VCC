@@ -87,7 +87,7 @@ void executaParaFlags(FlagType tipo) {
 
 int main(int argc, char *argv[]) {
     if(argc < 2){
-        fprintf(stderr, "Use: vcc file.tpp");
+        fprintf(stderr, "Use: vcc [flags] [arquivo1.tpp arquivo2.tpp ...]\n");
         return 1;
     }
 

@@ -6,17 +6,21 @@ O VCC está sendo implementado para ser rápido e robusto. Não será usado fun�
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/vcc.jpg)
 
+Para instalar o vcc:
+
+```
+git clone https://github.com/danielventurini/vcc
+cd vcc
+sudo make install
+```
+
 Compilar um arquivo:
 ```
-./vcc [flags] [arquivo1.tpp arquivo2.tpp ...]
+vcc [flags] [arquivo1.tpp arquivo2.tpp ...]
 ```
 Visualizar as opções de saídas da compilação dos arquivos:
 ```
 ./vcc -h
 ```
-Para gerar o VCC com MAKE:
-```
-make
-```
 
-A árvore é gerada gráficamente usando o software Graphviz. Para isso, é realizado a chamada de sistema para ```xdot```, passando o arquivo que é gerado navegando a árvore. O arquivo em questão é o ```tree.dot```
+Na instalação, o software ```Graphviz``` é instalado junto, pois é usado para exibir a árvore gerada na análise sintática. Porém, o ```vcc``` funcionará normalmente se este não for instalado. Para verificar se o ```Graphviz``` foi instalado, execute ```xdot```.
