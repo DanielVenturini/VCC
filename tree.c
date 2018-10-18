@@ -11,12 +11,13 @@ char* criaComando(char cid, char *nomeArquivo) {
     char prog;
     for(i = 0; nomeArquivo[i] != '\0'; i ++);           // apenas procura o '\0'
 
+    i ++;
     if(cid == 1) {          // '1' == 'nomearquivo.tpp.dot'
         i += 4;
     } else if(cid == 2) {   // '2' == 'xdot'
-        i += 9;             // 'xdot file.ext.dot'
+        i += 9;             // 'xdot file.tpp.dot'
     } else {                // '3' == 'rm'
-        i += 7;             // 'rm file.ext.dot'
+        i += 7;             // 'rm file.tpp.dot'
     }
 
     char* comando = (char *) malloc(i*sizeof(char));    // aloca a quantidade necessária
@@ -124,6 +125,7 @@ void printArvoreX(TreeNode *raiz, char *nomeArquivo){
         system(comando);                        // printa a arvore com o xdot - graphviz
         comando = criaComando(3, nomeArquivo);  // cria o comando rm file.dot
         system(comando);                        // apaga o arquivo do xdot
+        exit(0);                            // não deve retornar, e sim sair
     }
 }
 
@@ -316,10 +318,10 @@ void printArvoreT(TreeNode *raiz, unsigned short int identacao){
     printLabel1(raiz, stdout);                  // printa o pai
 
     char i;
-    /*for(i = 0; raiz->filhos[i]; i ++) {         // adiciona 'pai -- filho' para cada filho
+    for(i = 0; raiz->filhos[i]; i ++) {         // adiciona 'pai -- filho' para cada filho
         printIdentacao(identacao);
         printLabel1(raiz->filhos[i], stdout);   // printa o filho no arquivo
-    }*/
+    }
 
     for(i = 0; raiz->filhos[i]; i ++)           // chama para cada filho também
         printArvoreT(raiz->filhos[i], identacao+1);
