@@ -23,8 +23,8 @@ clean:		# apaga os arquivos objetos de compilação
 	rm syntactic/parse.o -f
 	rm desacerto.o -f
 
-xdot:		# instala o graphviz, ou seja, o xdot
-	apt-get install graphviz
+xdot:		# instala o xdot
+	apt-get install xdot --allow-unauthenticated
 
 move:		# move o executavel para a pasta /bin/
 	mv vcc /usr/bin/
