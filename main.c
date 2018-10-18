@@ -1,8 +1,9 @@
 #include "lexical/varredura.h"
 #include "syntactic/parse.h"
+#include <string.h>
 
 typedef enum {      // os tipos de flags reconhecidas
-    TOKENS, TREEX, TREET, HELP, DESCONHECIDA
+    TOKENS, AST_X, AST_T, ST_X, ST_T, HELP, DESCONHECIDA
 } FlagType;
 
 char **arquivos;        // este ponteiro conterá todos os arquivo passados por parâmetros
@@ -12,13 +13,17 @@ char **flags;           // este ponteiro conterá todas as flags passadas por pa
 FlagType *qualFlag(char *flag, char f) {
     FlagType *flagType = (FlagType*) malloc(sizeof(FlagType));
 
-    if(flag[1] == 't' && flag[2] == 'k' && flag[3] == '\0')
+    if(strcmp(flag, "--tokens") == 0 || strcmp(flag, "-tk") == 0)       // --tokens
         *flagType = TOKENS;
-    else if(flag[1] == 't' && flag[2] == 'r' && flag[3] == 'x' && flag[4] == '\0')
-        *flagType = TREEX;
-    else if(flag[1] == 't' && flag[2] == 'r' && flag[3] == 't' && flag[4] == '\0')
-        *flagType = TREET;
-    else if(flag[1] == 'h' && flag[2] == '\0')
+    else if(strcmp(flag, "--ast-x") == 0 || strcmp(flag, "-ax") == 0)   // --abstract syntax tree-xdot
+        *flagType = AST_X;
+    else if(strcmp(flag, "--ast-t") == 0 || strcmp(flag, "-at") == 0)   // --abstract syntax tree-term
+        *flagType = AST_T;
+    else if(strcmp(flag, "--st-x") == 0 || strcmp(flag, "-sx") == 0)    // --syntax tree-xdot
+        *flagType = ST_X;
+    else if(strcmp(flag, "--st-t") == 0 || strcmp(flag, "-st") == 0)    // --syntax tree-term
+        *flagType = ST_T;
+    else if(strcmp(flag, "--help") == 0 || strcmp(flag, "-h") == 0)     // --help
         *flagType = HELP;
     else
         *flagType = DESCONHECIDA;
@@ -61,13 +66,19 @@ void executaParaFlags(FlagType tipo) {
 
         switch(tipo) {
 
+            case ST_X:
+            case ST_T:
+                // em breve
+                printf("VCC: não implementado.\n");
+                break;
+
             // printa a árvore no XDOT
-            case TREEX:
+            case AST_X:
                 printArvoreX(parse(arquivos[i]), arquivos[i]);  /// recupera a árvore chamando o getToken()
                 break;
 
             // printa a árvore no TERMINAL
-            case TREET:
+            case AST_T:
                 printArvoreT(parse(arquivos[i]), 0);
                 break;
 
@@ -111,23 +122,28 @@ int main(int argc, char *argv[]) {
     i = 0;
     while(flagsType[i]){
         switch(*flagsType[i]){
-            case TREEX:
-            case TREET:
+            case ST_X:
+            case ST_T:
+            case AST_X:
+            case AST_T:
             case TOKENS:
                 executaParaFlags(*flagsType[i]);
                 break;
 
             case HELP:
-                printf("|_____________________________________________________________________________________|\n");
-                printf("| V C C      -       Venturini Compiler  Compiler      -       B R A S I L            |\n");
-                printf("|_____________________________________________________________________________________|\n");
-                printf("|./vcc [flags] arquivo        --------------------------------------------------------|\n");
-                printf("|Flags:                       --------------------------------------------------------|\n");
-                printf("|    -h                       exibe ajuda---------------------------------------------|\n");
-                printf("|    -trx                     exibe as árvores sintáticas de cada arquivo com xdot ---|\n");
-                printf("|    -trt                     exibe as árvores sintáticas de cada arquivo no terminal-|\n");
-                printf("|    -tk                      exibe os tokens de cada arquivo-------------------------|\n");
-                printf("|_____________________________________________________________________________________|\n");
+                printf("|_______________________________________________________________________________________|\n");
+                printf("|     V C C    -       Venturini Compiler  Compiler      -       B R A S I L            |\n");
+                printf("|_______________________________________________________________________________________|\n");
+                printf("|                   vcc [flags] arquivo1.tpp arquivo2.tpp ...                           |\n");
+                printf("|_______________________________________________________________________________________|\n");
+                printf("|Flags:                                                                                 |\n");
+                printf("|    -h       --help,           exibe ajuda---------------------------------------------|\n");
+                printf("|    -tk      --tokens,         exibe os tokens-----------------------------------------|\n");
+                printf("|    -ax      --ast-x,          exibe as árvores de análises sintáticas no xdot---------|\n");
+                printf("|    -at      --ast-t,          exibe as árvores de análises sintáticas no terminal-----|\n");
+                printf("|    -sx      --st-x,           exibe as árvores sintáticas no xdot---------------------|\n");
+                printf("|    -st      --st-t,           exibe as árvores sintáticas no terminal-----------------|\n");
+                printf("|_______________________________________________________________________________________|\n");
                 break;
 
             default:
