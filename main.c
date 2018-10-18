@@ -63,7 +63,7 @@ void executaParaFlags(FlagType tipo) {
 
             // printa a árvore no XDOT
             case TREEX:
-                printArvoreX(parse(arquivos[i]));   /// recupera a árvore chamando o getToken()
+                printArvoreX(parse(arquivos[i]), arquivos[i]);  /// recupera a árvore chamando o getToken()
                 break;
 
             // printa a árvore no TERMINAL

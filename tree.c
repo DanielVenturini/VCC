@@ -1,8 +1,36 @@
 #include "tree.h"
+#include <unistd.h>
 
 void printLabel1(TreeNode *node, FILE *treedot);
 void printLabel2(TreeNode *node, FILE *treedot);
 void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot);
+
+char* criaComando(char cid, char *nomeArquivo) {
+
+    unsigned char i;
+    char prog;
+    for(i = 0; nomeArquivo[i] != '\0'; i ++);           // apenas procura o '\0'
+
+    if(cid == 1) {          // '1' == 'nomearquivo.tpp.dot'
+        i += 4;
+    } else if(cid == 2) {   // '2' == 'xdot'
+        i += 9;             // 'xdot file.ext.dot'
+    } else {                // '3' == 'rm'
+        i += 7;             // 'rm file.ext.dot'
+    }
+
+    char* comando = (char *) malloc(i*sizeof(char));    // aloca a quantidade necessária
+
+    if(cid == 1) {
+        sprintf(comando, "%s.dot", nomeArquivo);
+    } else if(cid == 2) {
+        sprintf(comando, "xdot %s.dot", nomeArquivo);
+    } else {
+        sprintf(comando, "rm %s.dot", nomeArquivo);
+    }
+
+    return comando;
+}
 
 void nullPosicoes(TreeNode *node, char inicial, char final){
 	char i;
@@ -75,19 +103,28 @@ void getArvoreRecursiva(TreeNode *pai, FILE *treedot) {
 		getArvoreRecursiva(pai->filhos[i], treedot);
 }
 
-void printArvoreX(TreeNode *raiz){
+void printArvoreX(TreeNode *raiz, char *nomeArquivo){
     if(!raiz)
         return;
 
-	FILE *treedot = fopen("tree.dot", "w");	// abrindo o arquivo
+    char* comando = criaComando(1, nomeArquivo);    // retorna uma string com o nome do arquivo.dot
+
+	FILE *treedot = fopen(comando, "w");    // abrindo o arquivo
 	fprintf(treedot, "strict graph G {\n"); // imprime cabeçalho
 
 	getArvoreRecursiva(raiz, treedot);		// recursivamente vai adicionando no arquivo
 
     fprintf(treedot, "}");                  // finaliza o digrafo com o '}'
 	fclose(treedot);						// fecha o arquivo
-    system("xdot tree.dot");                // printa a arvore com o xdot - graphviz
-	system("rm -rf tree.dot");				// apaga o arquivo do xdot
+
+    pid_t pid = fork();                     // cria o processo filho
+
+    if (pid < 0 || pid == 0) {              // se deu erro, ou se é o processo filho
+        comando = criaComando(2, nomeArquivo);  // cria o comando xdot file.dot ou rm file.dot
+        system(comando);                        // printa a arvore com o xdot - graphviz
+        comando = criaComando(3, nomeArquivo);  // cria o comando rm file.dot
+        system(comando);                        // apaga o arquivo do xdot
+    }
 }
 
 void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot){
@@ -279,10 +316,10 @@ void printArvoreT(TreeNode *raiz, unsigned short int identacao){
     printLabel1(raiz, stdout);                  // printa o pai
 
     char i;
-    for(i = 0; raiz->filhos[i]; i ++) {         // adiciona 'pai -- filho' para cada filho
+    /*for(i = 0; raiz->filhos[i]; i ++) {         // adiciona 'pai -- filho' para cada filho
         printIdentacao(identacao);
         printLabel1(raiz->filhos[i], stdout);   // printa o filho no arquivo
-    }
+    }*/
 
     for(i = 0; raiz->filhos[i]; i ++)           // chama para cada filho também
         printArvoreT(raiz->filhos[i], identacao+1);
