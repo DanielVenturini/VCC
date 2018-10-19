@@ -96,6 +96,30 @@ void executaParaFlags(FlagType tipo) {
     }
 }
 
+// imprime a linha com os cantos formatados
+void desenhaLinha(char linha) {
+
+    if(linha == 0) {            // linha superior
+        printf("\u250C");
+    } else if (linha == 1) {    // linhas intermediárias
+        printf("\u251C");
+    } else {                    // linha inferior
+        printf("\u2514");
+    }
+
+    char i;
+    for(i = 0; i < 77; i ++)
+        printf("\u2500");
+
+    if(linha == 0) {            // linha superior
+        printf("\u2510\n");
+    } else if (linha == 1) {    // linhas intermediárias
+        printf("\u2524\n");
+    } else {                    // linha inferior
+        printf("\u2518\n");
+    }
+}
+
 int main(int argc, char *argv[]) {
     if(argc < 2){
         fprintf(stderr, "Use: vcc [flags] [arquivo1.tpp arquivo2.tpp ...]\n");
@@ -131,19 +155,22 @@ int main(int argc, char *argv[]) {
                 break;
 
             case HELP:
-                printf("|_______________________________________________________________________________________|\n");
-                printf("|     V C C    -       Venturini Compiler  Compiler      -       B R A S I L            |\n");
-                printf("|_______________________________________________________________________________________|\n");
-                printf("|                   vcc [flags] arquivo1.tpp arquivo2.tpp ...                           |\n");
-                printf("|_______________________________________________________________________________________|\n");
-                printf("|Flags:                                                                                 |\n");
-                printf("|    -h       --help,           exibe ajuda---------------------------------------------|\n");
-                printf("|    -tk      --tokens,         exibe os tokens-----------------------------------------|\n");
-                printf("|    -ax      --ast-x,          exibe as árvores de análises sintáticas no xdot---------|\n");
-                printf("|    -at      --ast-t,          exibe as árvores de análises sintáticas no terminal-----|\n");
-                printf("|    -sx      --st-x,           exibe as árvores sintáticas no xdot---------------------|\n");
-                printf("|    -st      --st-t,           exibe as árvores sintáticas no terminal-----------------|\n");
-                printf("|_______________________________________________________________________________________|\n");
+                // https://en.wikipedia.org/wiki/Box-drawing_character
+                desenhaLinha(0);
+                printf("\u2502     V C C   -      Venturini Compiler  Compiler     -     B R A S I L       \u2502\n");
+                desenhaLinha(1);
+                printf("\u2502               vcc [flags] arquivo1.tpp arquivo2.tpp ...                     \u2502\n");
+                desenhaLinha(1);
+
+                printf("\u2502Flags:                                                                       \u2502\n");
+                printf("\u2502   -h,    --help      exibe ajuda--------------------------------------------\u2502\n");
+                printf("\u2502   -tk,   --tokens,   exibe os tokens----------------------------------------\u2502\n");
+                printf("\u2502   -ax,   --ast-x,    exibe as árvores de análises sintáticas no xdot--------\u2502\n");
+                printf("\u2502   -at,   --ast-t,    exibe as árvores de análises sintáticas no terminal----\u2502\n");
+                //printf("\u2502   -sx,   --st-x,     exibe as árvores sintáticas no xdot--------------------\u2502\n");
+                //printf("\u2502   -st,   --st-t,     exibe as árvores sintáticas no terminal----------------\u2502\n");
+
+                desenhaLinha(2);
                 break;
 
             default:
