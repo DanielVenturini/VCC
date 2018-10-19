@@ -22,5 +22,6 @@ Visualizar as opções de saídas da compilação dos arquivos:
 ```
 vcc -h
 ```
+As flags desconhecidas são ignoradas.
 
 Na instalação, o software ```xdot``` é instalado junto, pois é usado para exibir a árvore gerada na análise sintática. Porém, o ```vcc``` funcionará normalmente se este não for instalado. Para verificar se o ```xdot``` foi instalado, apenas execute ```xdot```.

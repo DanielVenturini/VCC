@@ -18,6 +18,8 @@
 *                   ESTRUTURAS NECESSÁRIAS                          *
 ********************************************************************/
 
+struct TokenRecord;
+
 typedef enum {                  /// palavras reservadas e símbolos
     SE, ENTAO, SENAO, FIM, REPITA, FLUTUANTE, RETORNA, ATE, LEIA, ESCREVA, INTEIRO, SOMA, SUBTRACAO, MULTIPLICACAO, DIVISAO, IGUALDADE, VIRGULA, NUM_I, NUM_F, ID, ATRIBUICAO, MENOR, MAIOR, MAIOR_IGUAL, MENOR_IGUAL, DIFERENTE, ABRE_COLCHETES, FECHA_COLCHETES, ABRE_PARENTESES, FECHA_PARENTESES, DOIS_PONTOS, E_LOGICO, OU_LOGICO, NEGACAO, NAO_IDENTIFICADO
 } TokenType;
@@ -28,6 +30,7 @@ typedef struct {                /// tokens propriamente ditos
     unsigned short int numline;	/// número da linha que este token está. Permite arquivos de 0 até 65,535 linhas
     unsigned char numcaracter;	/// número do caracter na linha especificada
     void *val;					/// posição deste na memoria. Foi escolhido um ponteiro void para guardar o endereço de qualquer valor na memória
+    struct TokenRecord *proximo;/// próximo token
 
 } TokenRecord;
 
