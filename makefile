@@ -1,5 +1,5 @@
-all: main						# compila todos os arquivos
-install: main clean move xdot	# instala o vcc
+all: main								# compila todos os arquivos
+install: main clean move xdot highlight	# instala o vcc
 
 main: varredura parse desacerto	# parse já inclui a árvore
 	gcc main.c lexical/varredura.o tree.o syntactic/parse.o desacerto.o -o vcc
@@ -28,3 +28,6 @@ xdot:		# instala o xdot
 
 move:		# move o executavel para a pasta /bin/
 	mv vcc /usr/bin/
+
+highlight:
+	cd highlightSyntax/ && make

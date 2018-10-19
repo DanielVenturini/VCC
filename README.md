@@ -6,14 +6,26 @@ O VCC está sendo implementado para ser rápido e robusto. Não será usado fun�
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/vcc.jpg)
 
+## Instação
 Para instalar o vcc:
 
 ```
-git clone https://github.com/danielventurini/vcc
+git clone https://github.com/danielventurini/vcc.git
 cd vcc
 sudo make install
 ```
 
+O software ```xdot``` é instalado junto, pois é usado para exibir a árvore gerada na análise sintática. Porém, o ```vcc``` funcionará normalmente se este não for instalado. Para verificar se o ```xdot``` foi instalado, apenas execute ```xdot```.
+
+Também na instalação, é copiado os arquivos necessários para o ```hithlight Syntax``` no ```Sublime Text 3```. As seguintes etapas devem ser realizadas para finalizar a instalação:
+
+1. Abra um arquivo ```tpp``` no ```Sublime```;
+2. Nas abas, navege em ```View->Syntax->Open all with current extension as ...->TPP```; e
+3. Novamente nas abas, navege em ```Preferences->Color Scheme...-> tpp (User)```.
+
+Se o ```Sublime``` não estiver instalado na máquina, ignore estas etapas.
+
+## Execução
 Compilar um arquivo:
 ```
 vcc [flags] [arquivo1.tpp arquivo2.tpp ...]
@@ -22,6 +34,4 @@ Visualizar as opções de saídas da compilação dos arquivos:
 ```
 vcc -h
 ```
-As flags desconhecidas são ignoradas.
-
-Na instalação, o software ```xdot``` é instalado junto, pois é usado para exibir a árvore gerada na análise sintática. Porém, o ```vcc``` funcionará normalmente se este não for instalado. Para verificar se o ```xdot``` foi instalado, apenas execute ```xdot```.
+As flags desconhecidas são ignoradas e a compilação procede normalmente.
