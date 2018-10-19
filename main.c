@@ -22,6 +22,8 @@ void qualFlag(char *flag) {
         flags[4] = 1;
     else if(strcmp(flag, "-h") == 0 || strcmp(flag, "--help") == 0)     // --help
         flags[5] = 1;
+    else    // flag desconhecida
+        printf("\n\e[38;5;184mvcc:\e[38;5;196m erro: flag desconhecida \e[38;5;255m\'%s\'.\n\n", flag);
 }
 
 // esta função separa as flags dos arquivos no argv
@@ -122,12 +124,12 @@ int main(int argc, char *argv[]) {
         /*******************\
         * análise sintática *
         \*******************/
-        TreeNode *ast = parse(arquivos[i]);     /// recupera a árvore chamando o getToken()
+        TreeNode *ast = parse(arquivos[i], primeiro);   /// recupera a árvore chamando o getToken()
 
         if(flags[1])
-            printArvoreX(parse(arquivos[i]), arquivos[i]);
+            printArvoreX(ast, arquivos[i]);
         if(flags[2])
-            printArvoreT(parse(arquivos[i]), 0);
+            printArvoreT(ast, 0);
 
         i ++;
     }

@@ -39,31 +39,31 @@ TreeNode *se();
 
 // esta função recupera o próximo token
 // porém não substitui pelo token atual, apenas recupera e retorna
-TokenRecord *verProximo() {
+TK *verProximo() {
 	if(tokenProximo)			// se o próximo já estiver algo
 		return tokenProximo;	// retorna o token que é atualmente o próximo
 
-	tokenProximo = getToken();	// recupera o próximo token
-	return tokenProximo;		// retorna o token próximo
+	tokenProximo = (TK *) tokenAtual->proximo;// recupera o próximo token
+	return tokenProximo;			// retorna o token próximo
 }
 
 // esta função retorna token a token
 // retorna o tokenAtual
 // se o próximo existir, troca em tokenAtual
-TokenRecord *proximo() {
+TK *proximo() {
 
 	if(tokenProximo) {				// se já tiver um token de próximo
 		tokenAtual = tokenProximo;	// troca os tokens
 		tokenProximo = NULL;
 	} else {
-		tokenAtual = getToken();	// recupera o próximo token
+		tokenAtual = (TK *) tokenAtual->proximo;	// recupera o próximo token
 	}
 
 	return tokenAtual;
 }
 
 // retorna o tokenAtual
-TokenRecord *atual(){
+TK *atual(){
 	return tokenAtual;
 }
 
@@ -95,7 +95,6 @@ TokenRecord *atualEAvanca(){
 
 // apenas cria um nó que será o nó programa
 TreeNode *criaPrograma() {
-	proximo();									// avança para o primeiro token
 	return novo_node(NULL, PROGRAMA);
 }
 
@@ -961,7 +960,8 @@ TreeNode *lista_declaracoes() {
 	return lista_declaracao;
 }
 
-TreeNode *parse(char *arquivo) {
+TreeNode *parse(char *arquivo, TokenRecord *token) {
+	tokenAtual = token;							// guarda o primeiro token
 	tokenProximo = NULL;
 	nomeArquivo = arquivo;						// quando houver algum erro/warning, este arquivo será reaberto
 
