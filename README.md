@@ -39,10 +39,12 @@ As flags desconhecidas são ignoradas e a compilação procede normalmente.
 ### Flags
 Para cada uma das três primeiras partes da compilação, é possível verificar os resultados por meio de flags, que apresentam as saídas da compilação.
 
-A flag ```-tk``` ou ```--tokens``` apresentam os tokens de cada arquivo de entrada. Para o arquivo de entrada ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
+#### Tokens
+A flag ```-tk``` ou ```--tokens``` apresentam os tokens de cada arquivo de entrada. Para os arquivos de entrada ```exemplos/teste.tpp``` e ```exemplos/hashtable.tpp```, o ```vcc``` gera a seguinte saída:
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/lexical/tokens.jpeg)
 
+#### Árvore de Análise Sintática
 A flag ```-ax``` ou ```--ast-x``` gera a saída da árvore de análise sintática. Esta árvore é gerada utilizando o software ```xdot```, que é instalado junto com o ```vcc```. Usando esta flag para o arquivo de entrada ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg)

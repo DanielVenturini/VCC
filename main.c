@@ -120,6 +120,7 @@ int main(int argc, char *argv[]) {
                 printToken(token, 1, 1);        // se 0, não printar número da linha/caracter; se 1, printar
                 token = (TR *) token->proximo;  // avança para o próximo
             } while (token->tokenval != EOFU);
+            printf("\n");
         }
 
         /*******************\

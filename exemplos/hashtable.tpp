@@ -1,4 +1,4 @@
-{fator é o fator do vetor da hash.
+{{fator é o fator do vetor da hash.
 	{max_filhos é o tamanho máximo de mapeamento para cada chave.}
 fator é a função hash.}
 
@@ -109,4 +109,8 @@ inteiro principal()
 	imprime(valor(131))
 	imprime(valor(142))
 	imprime(valor(42))
+fim}
+
+inteiro brasil()
+	a:= 1 || 4 && !2
 fim
