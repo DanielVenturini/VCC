@@ -115,6 +115,7 @@ int main(int argc, char *argv[]) {
 
         if(flags[0]) {                          // se a flag para tokens for setada: --tokens -tk
             token = primeiro;
+            printf("Arquivo: %s.\n", arquivos[i]);
             do {
                 printToken(token, 1, 1);        // se 0, não printar número da linha/caracter; se 1, printar
                 token = (TR *) token->proximo;  // avança para o próximo

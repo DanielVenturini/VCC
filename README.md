@@ -26,7 +26,7 @@ Também na instalação, é copiado os arquivos necessários para o ```hithlight
 Se o ```Sublime``` não estiver instalado na máquina, ignore estas etapas.
 
 ## Execução
-Compilar um arquivo:
+Compilar arquivos:
 ```
 vcc [flags] [arquivo1.tpp arquivo2.tpp ...]
 ```
@@ -35,3 +35,14 @@ Visualizar as opções de saídas da compilação dos arquivos:
 vcc -h
 ```
 As flags desconhecidas são ignoradas e a compilação procede normalmente.
+
+### Flags
+Para cada uma das três primeiras partes da compilação, é possível verificar os resultados por meio de flags, que apresentam as saídas da compilação.
+
+A flag ```-tk``` ou ```--tokens``` apresentam os tokens de cada arquivo de entrada. Para o arquivo de entrada ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
+
+![Alt Text](https://github.com/danielventurini/vcc/raw/master/lexical/tokens.jpeg)
+
+A flag ```-ax``` ou ```--ast-x``` gera a saída da árvore de análise sintática. Esta árvore é gerada utilizando o software ```xdot```, que é instalado junto com o ```vcc```. Usando esta flag para o arquivo de entrada ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
+
+![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg)
