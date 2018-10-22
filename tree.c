@@ -81,6 +81,25 @@ void insere_filho(TreeNode *pai, TreeNode *filho){
 	pai->filhos[i] = filho;		// insere o filho
 }
 
+// remove o último filho e o devolve
+// esta função será usada somente para garantir a precedencia na regra da expressao_logica
+TreeNode *remove_filho(TreeNode *pai) {
+    if(!pai)
+        return NULL;
+
+    unsigned char i = 1;
+
+    while (pai->filhos[i]) {            // enquanto não encontrar o último filho
+        i ++;
+    }
+
+    i --;                               // decrementa para a posição que o último filho está
+    TreeNode *filho = pai->filhos[i];   // recupera o filho que vai remover
+    pai->filhos[i] = NULL;              // remove o filho
+
+    return filho;
+}
+
 // printa a string direto no arquivo
 // o arquivo pode ser o stdout, no caso para printar no terminal
 // ou o arquivo pode ser o tree.dot
@@ -130,14 +149,14 @@ void printArvoreX(TreeNode *raiz, char *nomeArquivo){
 }
 
 void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot){
-    fprintf(treedot, "    %i -- %i;\n", pai, filho);
+    fprintf(treedot, "    %i -- %i [color=green];\n", pai, filho);
 }
 
 // printa no arquivos os nós intermediários
 void printLabel1(TreeNode *node, FILE *treedot){
 
     if(treedot != stdout)                           // se for diferente do stdout, então printa no arquivo
-        fprintf(treedot, "    %i [label=\"", node); // printa o id do nó e o 'label="'
+        fprintf(treedot, "    %i [color=yellow, label=\"", node); // printa o id do nó e o 'label="'
 
     if(node->token) {      // se tiver um token, então é uma folha
         printLabel2(node, treedot);
@@ -227,7 +246,7 @@ void printLabel1(TreeNode *node, FILE *treedot){
 void printLabel2(TreeNode *node, FILE *treedot) {
 
 	if (node->token->tokenval == ID)
-        printArquivo(treedot, (char *) node->token->val);
+        fprintf(treedot, "ID: %s", (char *) node->token->val);
     else if (node->token->tokenval == NUM_I)
         fprintf(treedot, "NUM_INTEIRO: %d", *(int *) node->token->val);
     else if (node->token->tokenval == NUM_F)
