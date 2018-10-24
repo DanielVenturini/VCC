@@ -45,6 +45,13 @@ A flag ```-tk``` ou ```--tokens``` apresentam os tokens de cada arquivo de entra
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/lexical/tokens.jpeg)
 
 #### Árvore de Análise Sintática
+Há dois tipos de flags para saída da árvore de análise sintática: ```--ast-x``` e ```--ast-t```.
+
+
 A flag ```-ax``` ou ```--ast-x``` gera a saída da árvore de análise sintática. Esta árvore é gerada utilizando o software ```xdot```, que é instalado junto com o ```vcc```. Usando esta flag para o arquivo de entrada ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg)
+
+Já a flag ```-at``` gera a saída da árvore de anaĺise sintática utilizando o terminal. Este modelo é similar ao útilizado pelo ```Windows``` para printar a árvore de diretórios. Usando a flag para o arquivo de entrada ```exemplos/hashtabel.tpp```, o ```vcc``` gera a seguinte saída no terminal:
+
+![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-t.jpeg)
