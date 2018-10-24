@@ -1,6 +1,5 @@
 vcc
 main
-tree
 *.tpp
 syntactic/parse
 *.dot

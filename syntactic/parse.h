@@ -1,7 +1,7 @@
 #ifndef _PARSE_H_
 #define _PARSE_H_
 
-#include "../tree.h"
+#include "../tree/tree.h"
 #include "../desacerto.h"
 
 typedef TokenRecord TK;

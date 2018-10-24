@@ -1,5 +1,6 @@
 #include "lexical/varredura.h"
 #include "syntactic/parse.h"
+#include "tree/tree.h"
 #include <string.h>
 
 typedef TokenRecord TR; // apenas para economizar espaços na linha
@@ -131,7 +132,7 @@ int main(int argc, char *argv[]) {
         if(flags[1])
             printArvoreX(ast, arquivos[i]);
         if(flags[2])
-            printArvoreT(ast, 0);
+            printArvoreT(ast, arquivos[i]);
 
         i ++;
     }
