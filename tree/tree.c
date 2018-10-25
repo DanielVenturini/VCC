@@ -14,7 +14,7 @@ char* criaComando(char cid, char *nomeArquivo) {
     if(cid == 1) {          // '1' == 'nomearquivo.tpp.dot'
         i += 4;
     } else if(cid == 2) {   // '2' == 'xdot'
-        i += 9;             // 'xdot file.tpp.dot'
+        i += 19;            // 'xdot file.tpp.dot 2>warning'
     } else {                // '3' == 'rm'
         i += 7;             // 'rm file.tpp.dot'
     }
@@ -24,7 +24,7 @@ char* criaComando(char cid, char *nomeArquivo) {
     if(cid == 1) {
         sprintf(comando, "%s.dot", nomeArquivo);
     } else if(cid == 2) {
-        sprintf(comando, "xdot %s.dot", nomeArquivo);
+        sprintf(comando, "xdot %s.dot 2>warning", nomeArquivo);
     } else {
         sprintf(comando, "rm %s.dot", nomeArquivo);
     }
