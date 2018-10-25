@@ -86,24 +86,6 @@ void printLine(unsigned short int numline, unsigned char posLine) {
 	printf("^\n");
 }
 
-// varre até encontrar o local de sincronização
-TokenRecord *varrePara(Conjunto *sincronizacao, TokenRecord *token) {
-
-	while(!contem(sincronizacao, token->tokenval, 1)) {			// procura no conjunto de sincronização
-		token = (TokenRecord*) token->proximo;
-	}
-
-	return token;
-}
-
-TokenRecord *verificaEntrada(Conjunto *primeiro, Conjunto *sequencia, char *nomeArquivo, TokenRecord *token, char *msgErro) {
-
-	if(!contem(primeiro, token->tokenval, 1)) {				// se a marca NÃO está no conjunto primeiro
-		erro(nomeArquivo,  token, msgErro);					// anuncia o erro
-		return varrePara(uniao(primeiro, sequencia), token);// varre até sincronizar
-	}
-}
-
 void erro(char *nomeArquivo, TokenRecord *token, char *msgErro) {
 
 	if(!abreArquivo(nomeArquivo)) {

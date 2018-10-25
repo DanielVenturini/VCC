@@ -14,9 +14,9 @@ char* criaComando(char cid, char *nomeArquivo) {
     if(cid == 1) {          // '1' == 'nomearquivo.tpp.dot'
         i += 4;
     } else if(cid == 2) {   // '2' == 'xdot'
-        i += 19;            // 'xdot file.tpp.dot 2>warning'
+        i += 23;            // 'xdot file.tpp.dot 2>.xdotwarning'
     } else {                // '3' == 'rm'
-        i += 7;             // 'rm file.tpp.dot'
+        i += 23;             // 'rm file.tpp.dot .xdotwarning -f'
     }
 
     char* comando = (char *) malloc(i*sizeof(char));    // aloca a quantidade necessária
@@ -24,9 +24,9 @@ char* criaComando(char cid, char *nomeArquivo) {
     if(cid == 1) {
         sprintf(comando, "%s.dot", nomeArquivo);
     } else if(cid == 2) {
-        sprintf(comando, "xdot %s.dot 2>warning", nomeArquivo);
+        sprintf(comando, "xdot %s.dot 2>.xdotwarning", nomeArquivo);
     } else {
-        sprintf(comando, "rm %s.dot", nomeArquivo);
+        sprintf(comando, "rm %s.dot .xdotwarning -f", nomeArquivo);
     }
 
     return comando;

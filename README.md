@@ -52,6 +52,6 @@ A flag ```-ax``` ou ```--ast-x``` gera a saída da árvore de análise sintátic
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg)
 
-Já a flag ```-at``` gera a saída da árvore de anaĺise sintática utilizando o terminal. Este modelo é similar ao útilizado pelo ```Windows``` para printar a árvore de diretórios. Usando a flag para o arquivo de entrada ```exemplos/hashtabel.tpp```, o ```vcc``` gera a seguinte saída no terminal:
+Já a flag ```-at``` ou ```--ast-t``` gera a saída da árvore de anaĺise sintática utilizando o terminal. Este modelo é similar ao útilizado pelo ```Windows``` para printar a árvore de diretórios. Usando a flag para o arquivo de entrada ```exemplos/hashtabel.tpp```, o ```vcc``` gera a seguinte saída no terminal:
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-t.jpeg)
