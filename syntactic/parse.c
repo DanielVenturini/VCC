@@ -31,6 +31,7 @@ TreeNode *repita();
 TreeNode *numero();
 TreeNode *corpo();
 TreeNode *fator();
+TreeNode *vazio();
 TreeNode *leia();
 TreeNode *tipo();
 TreeNode *acao();
@@ -98,6 +99,11 @@ TreeNode *criaPrograma() {
 	return novo_node(NULL, PROGRAMA);
 }
 
+// apenas retorna um nó vazio sem token
+TreeNode *vazio() {
+	return novo_node(NULL, VAZIO);
+}
+
 // lista_argumentos "," expressao | expressao | vazio
 TreeNode *lista_argumentos() {
 
@@ -105,6 +111,8 @@ TreeNode *lista_argumentos() {
 
 	// vazio
 	if(atual()->tokenval == FECHA_PARENTESES){
+		printf("OI\n");
+		insere_filho(lista_argumentos, vazio());
 		return lista_argumentos;
 	}
 
@@ -661,7 +669,6 @@ TreeNode *acao() {
 			printf("Err acao: ");
 			printToken(atual(), 0, 0);
 			erro(nomeArquivo, atual(), "Token inesperado.");
-			return acao;
 			break;
 	}
 
@@ -726,6 +733,7 @@ TreeNode *lista_parametros() {
 	TreeNode *lista_parametros = novo_node(NULL, LISTA_PARAMETROS);
 
 	if(atual()->tokenval == FECHA_PARENTESES){				// pode ser vazio
+		insere_filho(lista_parametros, vazio());
 		return lista_parametros;
 	}
 

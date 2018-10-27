@@ -234,6 +234,8 @@ void printLabel1(TreeNode *node, FILE *treedot){
         printArquivo(treedot, "CHAMADA_FUNCAO");
     else if (node->bnfval == LISTA_ARGUMENTOS)
         printArquivo(treedot, "LISTA_ARGUMENTOS");
+    else if (node->bnfval == VAZIO)
+        printArquivo(treedot, "VAZIO");
 
     if(treedot != stdout)                    // se for diferente do stdout, então printa no arquivo
         printArquivo(treedot, "\"];\n");     // finalizando a linha
