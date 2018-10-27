@@ -3,7 +3,6 @@
 
 #include <stdio.h>
 #include "lexical/varredura.h"
-#include "syntactic/conjunto.h"
 
 /********************************************************************
 *                   	DEFINICAO DAS FUNÇÕES                       *

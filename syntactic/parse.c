@@ -8,6 +8,7 @@ TreeNode *inicializacao_variaveis();
 TreeNode *operador_multiplicacao();
 TreeNode *declaracao_variaveis();
 TreeNode *operador_relacional();
+TreeNode *corpo(char instrucao);
 TreeNode *lista_declaracoes();
 TreeNode *expressao_aditiva();
 TreeNode *expressao_simples();
@@ -29,8 +30,8 @@ TreeNode *retorna();
 TreeNode *indice();
 TreeNode *repita();
 TreeNode *numero();
-TreeNode *corpo();
 TreeNode *fator();
+TreeNode *vazio();
 TreeNode *leia();
 TreeNode *tipo();
 TreeNode *acao();
@@ -98,6 +99,11 @@ TreeNode *criaPrograma() {
 	return novo_node(NULL, PROGRAMA);
 }
 
+// apenas retorna um nó vazio sem token
+TreeNode *vazio() {
+	return novo_node(NULL, VAZIO);
+}
+
 // lista_argumentos "," expressao | expressao | vazio
 TreeNode *lista_argumentos() {
 
@@ -105,6 +111,7 @@ TreeNode *lista_argumentos() {
 
 	// vazio
 	if(atual()->tokenval == FECHA_PARENTESES){
+		insere_filho(lista_argumentos, vazio());
 		return lista_argumentos;
 	}
 
@@ -567,7 +574,7 @@ TreeNode *repita() {
 
 	TreeNode *repita = novo_node(NULL, B_REPITA);
 	insere_filho(repita, novo_node(atualEAvanca(), -1));// adicionando o REPITA
-	insere_filho(repita, corpo());						// adiciona o corpo
+	insere_filho(repita, corpo('R'));					// adiciona o corpo
 
 	if(atual()->tokenval != ATE){
 		printf("Err repita\n");
@@ -595,12 +602,12 @@ TreeNode *se() {
 	}
 
 	insere_filho(se, novo_node(atualEAvanca(), -1));// insere como filho o ENTAO
-	insere_filho(se, corpo());						// adiciona como filho o corpo
+	insere_filho(se, corpo('S'));					// adiciona como filho o corpo
 
 	// parte opcional
 	if(atual()->tokenval == SENAO){
 		insere_filho(se, novo_node(atualEAvanca(), -1));// adiciona o SENÃO
-		insere_filho(se, corpo());						// insere o corpo do SENÃO
+		insere_filho(se, corpo('S'));					// insere o corpo do SENÃO
 	}
 
 	if(atual()->tokenval != FIM){
@@ -661,7 +668,6 @@ TreeNode *acao() {
 			printf("Err acao: ");
 			printToken(atual(), 0, 0);
 			erro(nomeArquivo, atual(), "Token inesperado.");
-			return acao;
 			break;
 	}
 
@@ -669,14 +675,37 @@ TreeNode *acao() {
 }
 
 // corpo acao | vazio
-TreeNode *corpo() {
+// se a instrução for um CABECALHO, e o próximo token for um FIM, então o corpo é vazio
+// se a instrução for um SE e o próximo token for um FIM ou SENÃO, então o corpo é vazio
+// se a instrução for um REPITA e o próximo token for um ATE, então o corpo é vazio
+TreeNode *corpo(char instrucao) {
 
 	TreeNode *corpo = novo_node(NULL, CORPO);
 
-	// pode ser vazio
-	while(atual()->tokenval != FIM && atual()->tokenval != ATE && atual()->tokenval != SENAO){
-		insere_filho(corpo, acao());
+	switch(instrucao) {
+		case 'C':	// cabecalho
+			if(atual()->tokenval == FIM) {
+				insere_filho(corpo, vazio());
+				return corpo;
+			}
+
+		case 'S':	// se
+			if(atual()->tokenval == FIM || atual()->tokenval == SENAO) {
+				insere_filho(corpo, vazio());
+				return corpo;
+			}
+
+		case 'R':	// repita
+			if(atual()->tokenval == ATE) {
+				insere_filho(corpo, vazio());
+				return corpo;
+			}
 	}
+
+	// não precisa da primeira verificação
+	do {
+		insere_filho(corpo, acao());
+	} while(atual()->tokenval != FIM && atual()->tokenval != ATE && atual()->tokenval != SENAO);
 
 	return corpo;
 }
@@ -726,6 +755,7 @@ TreeNode *lista_parametros() {
 	TreeNode *lista_parametros = novo_node(NULL, LISTA_PARAMETROS);
 
 	if(atual()->tokenval == FECHA_PARENTESES){				// pode ser vazio
+		insere_filho(lista_parametros, vazio());
 		return lista_parametros;
 	}
 
@@ -775,7 +805,7 @@ TreeNode *cabecalho() {
 	}
 
 	insere_filho(cabecalho, novo_node(atualEAvanca(), -1));	// insere como filho o ")"
-	insere_filho(cabecalho, corpo());						// insere como filho o corpo
+	insere_filho(cabecalho, corpo('C'));					// insere como filho o corpo
 
 	if(atual()->tokenval != FIM){
 		printf("Err cabecalho..\n");

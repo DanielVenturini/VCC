@@ -96,4 +96,6 @@ void erro(char *nomeArquivo, TokenRecord *token, char *msgErro) {
 	printInformacoes(nomeArquivo, token, msgErro);
 	avancaLinha(token->numline);
 	printLine(token->numline, token->numcaracter);
+
+	exit(0);
 }
