@@ -4,7 +4,7 @@ void printLabel1(TreeNode *node, FILE *treedot);
 void printLabel2(TreeNode *node, FILE *treedot);
 void printAresta(TreeNode *pai, TreeNode *filho, FILE *treedot);
 
-char* criaComando(char cid, char *nomeArquivo) {
+char* criaComando(char cid, char *nomeArquivo, char analise) {
 
     unsigned char i;
     char prog;
@@ -19,14 +19,15 @@ char* criaComando(char cid, char *nomeArquivo) {
         i += 23;             // 'rm file.tpp.dot .xdotwarning -f'
     }
 
+    i += 3;                 // mais três posições para guardar o '.ax' ou '.sx'
     char* comando = (char *) malloc(i*sizeof(char));    // aloca a quantidade necessária
 
     if(cid == 1) {
-        sprintf(comando, "%s.dot", nomeArquivo);
+        sprintf(comando, "%s.dot.%s", nomeArquivo, analise==0?"ax":"sx");
     } else if(cid == 2) {
-        sprintf(comando, "xdot %s.dot 2>.xdotwarning", nomeArquivo);
+        sprintf(comando, "xdot %s.dot.%s 2>.xdotwarning", nomeArquivo, analise==0?"ax":"sx");
     } else {
-        sprintf(comando, "rm %s.dot .xdotwarning -f", nomeArquivo);
+        sprintf(comando, "rm %s.dot.%s .xdotwarning -f", nomeArquivo, analise==0?"ax":"sx");
     }
 
     return comando;
@@ -122,11 +123,12 @@ void getArvoreRecursiva(TreeNode *pai, FILE *treedot) {
 		getArvoreRecursiva(pai->filhos[i], treedot);
 }
 
-void printArvoreX(TreeNode *raiz, char *nomeArquivo){
+// analise diz respeito ao tipo da arvore da analise, no caso, sintática ou semântica
+void printArvoreX(TreeNode *raiz, char *nomeArquivo, char analise) {
     if(!raiz)
         return;
 
-    char* comando = criaComando(1, nomeArquivo);    // retorna uma string com o nome do arquivo.dot
+    char* comando = criaComando(1, nomeArquivo, analise);   // retorna uma string com o nome do arquivo.dot
 
 	FILE *treedot = fopen(comando, "w");    // abrindo o arquivo
 	fprintf(treedot, "strict graph G {\n"); // imprime cabeçalho
@@ -139,9 +141,9 @@ void printArvoreX(TreeNode *raiz, char *nomeArquivo){
     pid_t pid = fork();                     // cria o processo filho
 
     if (pid < 0 || pid == 0) {              // se deu erro, ou se é o processo filho
-        comando = criaComando(2, nomeArquivo);  // cria o comando xdot file.dot ou rm file.dot
+        comando = criaComando(2, nomeArquivo, analise); // cria o comando xdot file.dot ou rm file.dot
         system(comando);                        // printa a arvore com o xdot - graphviz
-        comando = criaComando(3, nomeArquivo);  // cria o comando rm file.dot
+        comando = criaComando(3, nomeArquivo, analise); // cria o comando rm file.dot
         system(comando);                        // apaga o arquivo do xdot
         exit(0);                            // não deve retornar, e sim sair
     }
