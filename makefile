@@ -1,8 +1,8 @@
 all: main								# compila todos os arquivos
 install: main clean move xdot highlight	# instala o vcc
 
-main: varredura parse	# parse já inclui a árvore
-	gcc main.c lexical/varredura.o tree/tree.o syntactic/parse.o desacerto.o tree/stack.o -o vcc
+main: varredura parse semantic	# parse já inclui a árvore
+	gcc main.c lexical/varredura.o tree/tree.o syntactic/parse.o desacerto.o tree/stack.o semantic/poda.c -o vcc
 	#make clean
 
 varredura:
@@ -19,6 +19,12 @@ desacerto:
 
 pilha:	# a pilha é usado somente na árvore
 	gcc -c tree/stack.c -o tree/stack.o
+
+semantic: poda
+	# none
+
+poda:
+	gcc -c semantic/poda.c -o semantic/poda.o
 
 clean:		# apaga os arquivos objetos de compilação
 	rm lexical/varredura.o -f

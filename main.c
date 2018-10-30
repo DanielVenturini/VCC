@@ -1,6 +1,7 @@
 #include "lexical/varredura.h"
 #include "syntactic/parse.h"
 #include "tree/tree.h"
+#include "semantic/poda.h"
 #include <string.h>
 
 typedef TokenRecord TR; // apenas para economizar espaços na linha
@@ -133,6 +134,16 @@ int main(int argc, char *argv[]) {
             printArvoreX(ast, arquivos[i], 0);          // 0 indica que a árvore é da análise sintática
         if(flags[2])
             printArvoreT(ast, arquivos[i]);
+
+        /*******************\
+        * análise semântica *
+        \*******************/
+        TreeNode *st = podar(ast);                      // podar a árvore
+
+        if(flags[3])
+            printArvoreX(st, arquivos[i], 1);           // 0 indica que a árvore é da análise semântica
+        if(flags[4])
+            printArvoreT(st, arquivos[i]);
 
         i ++;
     }
