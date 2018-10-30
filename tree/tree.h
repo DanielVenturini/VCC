@@ -33,7 +33,10 @@ typedef struct TreeNode {
 TreeNode *novo_node(TokenRecord *token, EBNFType bnfval);	// apenas aloca um novo nó e retorna
 TreeNode *remove_filho(TreeNode *pai);						// remove o último filho e o retorna
 void insere_filho(TreeNode *pai, TreeNode *filho);			// dado o pai, insere o filho na próximo local
-void printArvoreX(TreeNode *raiz, char *nomeArquivo);		// a partir deste nó, printa a árvore no xdot
+// analise diz respeito ao tipo da arvore da analise, no caso, sintática ou semântica
+// para adicionar um '.ax' ou '.as' no fim do nome do arquivo passado para o xdot, caso as duas árvores seja
+// exibidas ao mesmo tempo
+void printArvoreX(TreeNode *raiz, char *nomeArquivo, char analise);	// a partir deste nó, printa a árvore no xdot
 void printArvoreT(TreeNode *raiz, char *nomeArquivo);		// a partir deste nó, printa a árvore no terminal
 
 #endif

@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
         TreeNode *ast = parse(arquivos[i], primeiro);   /// recupera a árvore chamando o getToken()
 
         if(flags[1])
-            printArvoreX(ast, arquivos[i]);
+            printArvoreX(ast, arquivos[i], 0);          // 0 indica que a árvore é da análise sintática
         if(flags[2])
             printArvoreT(ast, arquivos[i]);
 
