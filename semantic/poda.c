@@ -113,16 +113,22 @@ void get_lista_parametros(TreeNode *lista_parametros) {
 
 void get_declaracao_funcao(TreeNode *declaracao_funcao) {
 
+	unsigned char pos = 0;
 	TreeNode *tipo = declaracao_funcao->filhos[0];
+	// se a declaração de função não tiver tipo, então ignora
+	if(tipo->bnfval == TIPO) {
+		declaracao_funcao->filhos[0] = tipo->filhos[0];		// remove o nó tipo e adiciona o INTEIRO | FLUTUANTE
+		pos = 1;
+	} else {
+		pos = 0;
+	}
 
-	declaracao_funcao->filhos[0] = tipo->filhos[0];			// remove o nó tipo e adiciona o INTEIRO | FLUTUANTE
+	TreeNode *cabecalho = declaracao_funcao->filhos[pos];
+	declaracao_funcao->filhos[pos] = cabecalho->filhos[0];		// remove o nó cabecalho e adiciona o nó ID
+	declaracao_funcao->filhos[pos+1] = cabecalho->filhos[2];	// insere a lista_parametros
+	declaracao_funcao->filhos[pos+2] = cabecalho->filhos[4];	// insere o corpo
 
-	TreeNode *cabecalho = declaracao_funcao->filhos[1];
-	declaracao_funcao->filhos[1] = cabecalho->filhos[0];	// remove o nó cabecalho e adiciona o nó ID
-	declaracao_funcao->filhos[2] = cabecalho->filhos[2];	// insere a lista_parametros
-	declaracao_funcao->filhos[3] = cabecalho->filhos[4];	// insere o corpo
-
-	get_lista_parametros(declaracao_funcao->filhos[2]);		// simplifica a lista_parametros
+	get_lista_parametros(declaracao_funcao->filhos[pos+1]);		// simplifica a lista_parametros
 }
 
 void get_declaracao(TreeNode *declaracao) {
