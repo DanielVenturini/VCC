@@ -31,8 +31,6 @@ TreeNode *get_expressao(TreeNode *expressao) {
 	}
 }
 
-
-
 void get_lista_variaveis(TreeNode *lista_variaveis) {
 	unsigned char posVar = 0;
 	unsigned char posFilho = 0;
@@ -76,8 +74,55 @@ void get_inicializacao_variaveis(TreeNode *inicializacao_variaveis) {
 	insere_filho(inicializacao_variaveis, get_expressao(atribuicao->filhos[2]));
 }
 
-void get_declaracao_funcao(TreeNode *raiz) {
+void get_parametro(TreeNode *parametro) {
 
+	parametro->filhos[0] = parametro->filhos[0]->filhos[0];	// remove o nó TIPO e adiciona o INTEIRO|FLUTUANTE
+
+	unsigned char i = 1;
+	// se tiver vários indices, tem qu deslocar para a esquerda
+	do {
+		parametro->filhos[i] = parametro->filhos[i+1];			// remove o ':' e adiciona o próximo
+		i ++;
+	} while(parametro->filhos[i+1]);
+
+	remove_filho(parametro);
+}
+
+void get_lista_parametros(TreeNode *lista_parametros) {
+	if(lista_parametros->filhos[0]->bnfval == VAZIO)		// se a lista for vázia
+		return;
+
+	unsigned char posVar = 0;
+	unsigned char posFilho = 0;
+
+	do {
+
+		TreeNode *parametro = lista_parametros->filhos[posFilho];
+		get_parametro(parametro);							// simplifica o parâmetro
+		lista_parametros->filhos[posVar] = parametro;		// removendo o nó ',' e pegando o 'parametro'
+		posVar ++;
+
+		posFilho += 2;
+
+	} while(lista_parametros->filhos[posFilho]);				// enquanto tiver o próximo filho
+
+	for(; posFilho > posVar+1; posFilho --) {				// remove todos nós a frente do último var
+		remove_filho(lista_parametros);
+	}
+}
+
+void get_declaracao_funcao(TreeNode *declaracao_funcao) {
+
+	TreeNode *tipo = declaracao_funcao->filhos[0];
+
+	declaracao_funcao->filhos[0] = tipo->filhos[0];			// remove o nó tipo e adiciona o INTEIRO | FLUTUANTE
+
+	TreeNode *cabecalho = declaracao_funcao->filhos[1];
+	declaracao_funcao->filhos[1] = cabecalho->filhos[0];	// remove o nó cabecalho e adiciona o nó ID
+	declaracao_funcao->filhos[2] = cabecalho->filhos[2];	// insere a lista_parametros
+	declaracao_funcao->filhos[3] = cabecalho->filhos[4];	// insere o corpo
+
+	get_lista_parametros(declaracao_funcao->filhos[2]);		// simplifica a lista_parametros
 }
 
 void get_declaracao(TreeNode *declaracao) {
