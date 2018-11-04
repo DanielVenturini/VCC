@@ -34,7 +34,7 @@ clean:		# apaga os arquivos objetos de compilação
 	rm tree/pilha.o -f
 
 xdot:		# instala o xdot
-	apt-get install xdot --allow-unauthenticated
+	apt-get install xdot --allow-unauthenticated -y
 
 move:		# move o executavel para a pasta /bin/
 	mv vcc /usr/bin/

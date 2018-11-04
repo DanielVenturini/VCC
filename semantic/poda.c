@@ -1,17 +1,5 @@
 #include "poda.h"
 
-
-
-
-
-
-
-
-
-
-
-
-
 TreeNode *get_atribuicao(TreeNode *atribuicao) {
 
 }
@@ -31,6 +19,20 @@ TreeNode *get_expressao(TreeNode *expressao) {
 	}
 }
 
+// remove o índice do var e adiciona a expressão como filho do ID
+void get_indice(TreeNode *var) {
+	if(!var->filhos[1])			// se não tiver índice
+		return;
+
+	TreeNode *id = var->filhos[0];		// recupera o id
+	TreeNode *indice = var->filhos[1];	// recupera o nó indice
+	unsigned char i = 1;
+	while(indice->filhos[i]) {
+		insere_filho(id, get_expressao(indice->filhos[i]));
+		i += 3;							// pula o ']' e '['
+	}
+}
+
 void get_lista_variaveis(TreeNode *lista_variaveis) {
 	unsigned char posVar = 0;
 	unsigned char posFilho = 0;
@@ -38,6 +40,7 @@ void get_lista_variaveis(TreeNode *lista_variaveis) {
 	do {
 
 		TreeNode *var = lista_variaveis->filhos[posFilho];
+		get_indice(var);									// se houver índice, simplifica
 		lista_variaveis->filhos[posVar] = var->filhos[0];	// removendo o nó 'var' e pegando o 'id'
 		posVar ++;
 
