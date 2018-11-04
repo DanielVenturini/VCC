@@ -1,5 +1,14 @@
 #include "poda.h"
 
+void get_corpo(TreeNode *corpo) {
+	if(corpo->filhos[0]->bnfval == VAZIO) {
+		corpo->filhos[0] = NULL;
+		return;
+	}
+
+	// do something
+}
+
 TreeNode *get_atribuicao(TreeNode *atribuicao) {
 
 }
@@ -92,8 +101,10 @@ void get_parametro(TreeNode *parametro) {
 }
 
 void get_lista_parametros(TreeNode *lista_parametros) {
-	if(lista_parametros->filhos[0]->bnfval == VAZIO)		// se a lista for vázia
+	if(lista_parametros->filhos[0]->bnfval == VAZIO) {		// se a lista for vázia
+		lista_parametros->filhos[0] = NULL;					// remove o nó VAZIO
 		return;
+	}
 
 	unsigned char posVar = 0;
 	unsigned char posFilho = 0;
@@ -130,6 +141,8 @@ void get_declaracao_funcao(TreeNode *declaracao_funcao) {
 	declaracao_funcao->filhos[pos] = cabecalho->filhos[0];		// remove o nó cabecalho e adiciona o nó ID
 	declaracao_funcao->filhos[pos+1] = cabecalho->filhos[2];	// insere a lista_parametros
 	declaracao_funcao->filhos[pos+2] = cabecalho->filhos[4];	// insere o corpo
+
+	get_corpo(cabecalho->filhos[4]);							// simplifica o corpo
 
 	get_lista_parametros(declaracao_funcao->filhos[pos+1]);		// simplifica a lista_parametros
 }
