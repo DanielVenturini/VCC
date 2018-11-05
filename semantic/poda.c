@@ -1,12 +1,86 @@
 #include "poda.h"
 
+void get_declaracao_variaveis(TreeNode *declaracao_variaveis);
+void get_corpo(TreeNode *corpo);
+
+void get_se(TreeNode *se) {
+
+	se->filhos[0] = se->filhos[1];	// remove o nó SE e substitui pelo expressao
+	se->filhos[1] = se->filhos[3];	// remove o nó expressao e substitui pelo corpo
+
+	get_corpo(se->filhos[1]);		// simplifica o corpo
+
+	unsigned char comeco;			// começa a apagar os filhos dessa posição
+	unsigned char fim;				// apaga os filhos até esta posição
+
+	TokenRecord *token = se->filhos[4]->token;	// será o token FIM ou SENAO
+
+	if(token->tokenval == FIM) {		// nao tem o corpo do SENAO
+		comeco = 2;
+		fim = 5;
+	} else {
+		se->filhos[2] = se->filhos[5];	// coloca o corpo do SENÃO
+		get_corpo(se->filhos[2]);		// simplifica o corpo
+		comeco = 3;
+		fim = 7;
+	}
+
+	for(; comeco < fim; comeco ++) {	// remove os filhos a frente
+		remove_filho(se);
+	}
+}
+
+void get_repita(TreeNode *repita) {
+	
+}
+void get_leia(TreeNode *leia) {
+	
+}
+
+TreeNode *get_acao(TreeNode *acao) {
+
+	acao = acao->filhos[0];		// remove o nó acao
+
+	switch(acao->bnfval) {
+
+		case EXPRESSAO:
+			break;
+
+		case DECLARACAO_VARIAVEIS:
+			get_declaracao_variaveis(acao);
+			break;
+
+		case B_SE:
+			get_se(acao);
+			break;
+
+		case B_REPITA:
+			break;
+
+		case B_LEIA:
+			break;
+
+		case B_RETORNA:
+			break;
+	}
+
+	return acao;
+}
+
 void get_corpo(TreeNode *corpo) {
 	if(corpo->filhos[0]->bnfval == VAZIO) {
 		corpo->filhos[0] = NULL;
 		return;
 	}
 
-	// do something
+	unsigned short int i = 0;
+	while(corpo->filhos[i]) {					// enquanto houver acoes
+
+		TreeNode *acao = corpo->filhos[i];
+		corpo->filhos[i] = get_acao(acao);		// simplifica acao
+
+		i ++;
+	}
 }
 
 TreeNode *get_atribuicao(TreeNode *atribuicao) {
