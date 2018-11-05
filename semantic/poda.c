@@ -9,6 +9,7 @@ TreeNode *get_fator(TreeNode *fator) {
 	switch(fator->filhos[0]->bnfval) {
 
 		case NUMERO:
+			1;		// apenas porque não pode ter declaração de variável como primeiro comando no case
 			TreeNode *numero = fator->filhos[0]->filhos[0];
 			numero->bnfval = NUMERO;
 			return numero;
@@ -26,21 +27,46 @@ TreeNode *get_expressao_unaria(TreeNode *exp_unaria) {
 }
 
 TreeNode *get_expressao_multiplicativa(TreeNode *exp_multiplicativa) {
+
 	if(!exp_multiplicativa->filhos[1]) {			// se não for um operador_multiplicacao, então é uma expressao_unaria
 		return get_expressao_unaria(exp_multiplicativa->filhos[0]);
 	}
 }
 
 TreeNode *get_expressao_aditiva(TreeNode *exp_aditiva) {
+
 	if(!exp_aditiva->filhos[1]) {			// se não for um operador_soma, então é uma expressao_multiplicativa
 		return get_expressao_multiplicativa(exp_aditiva->filhos[0]);
 	}
 }
 
 TreeNode *get_expressao_simples(TreeNode *exp_simples) {
+
 	if(!exp_simples->filhos[1]) {			// se não for um operador_relacional, então é uma expressao_aditiva
 		return get_expressao_aditiva(exp_simples->filhos[0]);
 	}
+
+	unsigned char i = 0;
+	TreeNode *op_relacional;
+	TreeNode *left = exp_simples->filhos[i];
+
+	i ++;
+	do {
+		op_relacional = exp_simples->filhos[i];
+		op_relacional = op_relacional->filhos[0];
+		op_relacional->bnfval = OPERADOR_RELACIONAL;
+
+		if(left->bnfval == OPERADOR_RELACIONAL)		// se já é um operador_relacional
+			insere_filho(op_relacional, left);
+		else
+			insere_filho(op_relacional, get_expressao_aditiva(left));
+
+		insere_filho(op_relacional, get_expressao_aditiva(exp_simples->filhos[++ i]));;
+
+		left = op_relacional;
+	} while (exp_simples->filhos[++ i]);
+
+	return op_relacional;
 }
 
 TreeNode *get_expressao_logica(TreeNode *exp_logico) {
