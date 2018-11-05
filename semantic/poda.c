@@ -5,6 +5,61 @@ TreeNode *get_expressao(TreeNode *expressao);
 void get_corpo(TreeNode *corpo);
 void get_indice(TreeNode *var);
 
+TreeNode *get_expressao_simples(TreeNode *exp_simples) {
+	return exp_simples;
+}
+
+TreeNode *get_expressao_logica(TreeNode *exp_logico) {
+
+	if(!exp_logico->filhos[1]) {	// se não for um operador_logico, então é uma expressao_simples
+		return get_expressao_simples(exp_logico);
+	}
+
+	unsigned char i = 0;
+	TreeNode *op_logico;
+	TreeNode *left = exp_logico->filhos[i];
+
+	i ++;
+	do {
+
+		op_logico = exp_logico->filhos[i];				// recupera o nó OU ou E
+		op_logico = op_logico->filhos[0];				// troca o nó OPERADOR_LOGICO pelo token || ou &&
+		op_logico->bnfval = OPERADOR_LOGICO;			// adiciona o tipo do operador
+
+		if(left->bnfval == EXPRESSAO_LOGICA)			// se for EXPRESSAO_LOGICA, então tem um E na esquerda
+			insere_filho(op_logico, get_expressao_logica(left));// adiciona a EXPRESSAO_SIMPLES como filho do token
+		else
+			insere_filho(op_logico, left);
+		// como foi alterado a regra da expressao_logica, tem que executar uma chamada recursiva para os filhos
+		insere_filho(op_logico, get_expressao_logica(exp_logico->filhos[++ i]));
+
+		left = op_logico;
+	} while (exp_logico->filhos[++ i]);
+
+	return op_logico;
+}
+
+
+TreeNode *get_atribuicao(TreeNode *atribuicao) {
+
+}
+
+
+TreeNode *get_expressao(TreeNode *expressao) {
+	TreeNode *filho = expressao->filhos[0];
+
+	switch(filho->bnfval) {
+
+		case EXPRESSAO_LOGICA:
+			return get_expressao_logica(filho);
+			break;
+
+		case B_ATRIBUICAO:
+			return get_atribuicao(filho);
+			break;
+	}
+}
+
 void get_retorna(TreeNode *retorna) {
 
 	retorna->filhos[0] = retorna->filhos[2];
@@ -83,6 +138,7 @@ TreeNode *get_acao(TreeNode *acao) {
 	switch(acao->bnfval) {
 
 		case EXPRESSAO:
+			get_expressao(acao);
 			break;
 
 		case DECLARACAO_VARIAVEIS:
@@ -126,25 +182,6 @@ void get_corpo(TreeNode *corpo) {
 		corpo->filhos[i] = get_acao(acao);		// simplifica acao
 
 		i ++;
-	}
-}
-
-TreeNode *get_atribuicao(TreeNode *atribuicao) {
-
-}
-
-TreeNode *get_expressao(TreeNode *expressao) {
-	TreeNode *filho = expressao->filhos[0];
-
-	switch(filho->bnfval) {
-
-		case EXPRESSAO_LOGICA:
-			return expressao->filhos[0]->filhos[0]->filhos[0]->filhos[0]->filhos[0]->filhos[0]->filhos[0]->filhos[0];
-			break;
-
-		case B_ATRIBUICAO:
-			return get_atribuicao(filho);
-			break;
 	}
 }
 
