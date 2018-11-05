@@ -390,9 +390,8 @@ TreeNode *expressao_logica() {
 	// se for um destes, é a recursão à esquerda
 	while(atual()->tokenval == OU_LOGICO || atual()->tokenval == E_LOGICO) {
 
-		if(atual()->tokenval == E_LOGICO && temOU) {	// tem precedência sobre o OU_LOGICO
+		if(atual()->tokenval == E_LOGICO) {			// tem precedência sobre o OU_LOGICO
 
-			temOU = 0;									// agora, o próximo anterior não será mais o OU, e sim o E
 			TreeNode *exp_logica2 = novo_node(NULL, EXPRESSAO_LOGICA);
 			insere_filho(exp_logica2, remove_filho(exp_logica));
 			insere_filho(exp_logica2, operador_logico());
@@ -400,9 +399,6 @@ TreeNode *expressao_logica() {
 
 			insere_filho(exp_logica, exp_logica2);
 		} else {
-			if (atual()->tokenval == OU_LOGICO)
-				temOU = 1;
-
 			insere_filho(exp_logica, operador_logico());	// insere como filho o operador
 			insere_filho(exp_logica, expressao_simples());	// insere como filho o operador
 		}
