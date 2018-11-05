@@ -5,14 +5,48 @@ TreeNode *get_expressao(TreeNode *expressao);
 void get_corpo(TreeNode *corpo);
 void get_indice(TreeNode *var);
 
+TreeNode *get_fator(TreeNode *fator) {
+	switch(fator->filhos[0]->bnfval) {
+
+		case NUMERO:
+			TreeNode *numero = fator->filhos[0]->filhos[0];
+			numero->bnfval = NUMERO;
+			return numero;
+
+		default:
+			return fator;
+	}
+}
+
+TreeNode *get_expressao_unaria(TreeNode *exp_unaria) {
+
+	if(!exp_unaria->filhos[1]) {			// se não tiver filho na posição 1, então é fator
+		return get_fator(exp_unaria->filhos[0]);
+	}
+}
+
+TreeNode *get_expressao_multiplicativa(TreeNode *exp_multiplicativa) {
+	if(!exp_multiplicativa->filhos[1]) {			// se não for um operador_multiplicacao, então é uma expressao_unaria
+		return get_expressao_unaria(exp_multiplicativa->filhos[0]);
+	}
+}
+
+TreeNode *get_expressao_aditiva(TreeNode *exp_aditiva) {
+	if(!exp_aditiva->filhos[1]) {			// se não for um operador_soma, então é uma expressao_multiplicativa
+		return get_expressao_multiplicativa(exp_aditiva->filhos[0]);
+	}
+}
+
 TreeNode *get_expressao_simples(TreeNode *exp_simples) {
-	return exp_simples;
+	if(!exp_simples->filhos[1]) {			// se não for um operador_relacional, então é uma expressao_aditiva
+		return get_expressao_aditiva(exp_simples->filhos[0]);
+	}
 }
 
 TreeNode *get_expressao_logica(TreeNode *exp_logico) {
 
 	if(!exp_logico->filhos[1]) {	// se não for um operador_logico, então é uma expressao_simples
-		return get_expressao_simples(exp_logico);
+		return get_expressao_simples(exp_logico->filhos[0]);
 	}
 
 	unsigned char i = 0;
