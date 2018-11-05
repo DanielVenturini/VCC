@@ -1,13 +1,36 @@
 #include "poda.h"
 
 void get_declaracao_variaveis(TreeNode *declaracao_variaveis);
+TreeNode *get_expressao(TreeNode *expressao);
 void get_corpo(TreeNode *corpo);
+void get_indice(TreeNode *var);
+
+void get_retorna(TreeNode *retorna) {
+
+	retorna->filhos[0] = retorna->filhos[2];
+	retorna->filhos[0] = get_expressao(retorna->filhos[0]);
+
+	remove_filho(retorna);	// remove o ')'
+	remove_filho(retorna);	// remove expressao
+	remove_filho(retorna);	// remove o '('
+}
+
+void get_escreva(TreeNode *escreva) {
+
+	escreva->filhos[0] = escreva->filhos[2];
+	escreva->filhos[0] = get_expressao(escreva->filhos[0]);
+
+	remove_filho(escreva);	// remove o ')'
+	remove_filho(escreva);	// remove expressao
+	remove_filho(escreva);	// remove '('
+}
 
 void get_se(TreeNode *se) {
 
 	se->filhos[0] = se->filhos[1];	// remove o nó SE e substitui pelo expressao
 	se->filhos[1] = se->filhos[3];	// remove o nó expressao e substitui pelo corpo
 
+	se->filhos[0] = get_expressao(se->filhos[0]);	// simplifica a expressao
 	get_corpo(se->filhos[1]);		// simplifica o corpo
 
 	unsigned char comeco;			// começa a apagar os filhos dessa posição
@@ -31,10 +54,26 @@ void get_se(TreeNode *se) {
 }
 
 void get_repita(TreeNode *repita) {
-	
+
+	repita->filhos[0] = repita->filhos[1];	// remove o repita e substitui pelo corpo
+	repita->filhos[1] = repita->filhos[3];	// remove o corpo e adiciona o expressao
+
+	repita->filhos[1] = get_expressao(repita->filhos[1]);	// simplifica a expressao
+	get_corpo(repita->filhos[0]);							// simplifica o corpo
+
+	remove_filho(repita);	// remove o ate
+	remove_filho(repita);	// remove expressao
 }
+
 void get_leia(TreeNode *leia) {
-	
+
+	leia->filhos[0] = leia->filhos[2];				// substitui o LEIA pelo var
+	get_indice(leia->filhos[0]);					// se houver índice, organiza
+	leia->filhos[0] = leia->filhos[0]->filhos[0];	// remove o nó intermediário VAR
+
+	remove_filho(leia);		// remove o filho ')'
+	remove_filho(leia);		// remove o filho 'var'
+	remove_filho(leia);		// remove o filho '('
 }
 
 TreeNode *get_acao(TreeNode *acao) {
@@ -55,12 +94,19 @@ TreeNode *get_acao(TreeNode *acao) {
 			break;
 
 		case B_REPITA:
+			get_repita(acao);
 			break;
 
 		case B_LEIA:
+			get_leia(acao);
+			break;
+
+		case B_ESCREVA:
+			get_escreva(acao);
 			break;
 
 		case B_RETORNA:
+			get_retorna(acao);
 			break;
 	}
 
