@@ -139,7 +139,7 @@ TreeNode *chamada_funcao() {
 	insere_filho(chamada_funcao, lista_argumentos());				// adiciona o filho lista_argumentos
 
 	if(atual()->tokenval != FECHA_PARENTESES){
-		printf("Err chamada_funcao\n");
+		//printf("Err chamada_funcao\n");
 		erro(nomeArquivo, atual(), "Token esperado: ')' ou ','.");
 		return NULL;
 	}
@@ -169,7 +169,7 @@ TreeNode *fator() {
 			insere_filho(fator, expressao());					// recupera a expressão
 
 			if(atual()->tokenval != FECHA_PARENTESES){			// verifica o fecha parenteses
-				printf("Err fator\n");
+				//printf("Err fator\n");
 				erro(nomeArquivo, atual(), "Token esperado: ')'.");
 				return NULL;
 			}
@@ -192,7 +192,7 @@ TreeNode *fator() {
 			break;
 
 		default:
-			printf("Err fator\n");
+			//printf("Err fator\n");
 			erro(nomeArquivo, atual(), "Token esperado: '(', 'ID' ou NUMERO.");
 			return NULL;
 	}
@@ -210,7 +210,7 @@ TreeNode *operador_negacao() {
 			break;
 
 		default:
-			printf("Err operador_negacao\n");
+			//printf("Err operador_negacao\n");
 			erro(nomeArquivo, atual(), "Token esperado: '!'.");
 			operador_negacao = NULL;
 			break;
@@ -231,7 +231,7 @@ TreeNode *operador_multiplicacao() {
 			break;
 
 		default:
-			printf("Erro operador_multiplicacao\n");
+			//printf("Erro operador_multiplicacao\n");
 			erro(nomeArquivo, atual(), "Token esperado: '*' ou '/'.");
 			operador_multiplicacao = NULL;
 	}
@@ -251,7 +251,7 @@ TreeNode *operador_logico() {
 			break;
 
 		default:
-			printf("Err operador_logico\n");
+			//printf("Err operador_logico\n");
 			erro(nomeArquivo, atual(), "Token esperado: '&&' ou '||'.");
 			operador_logico = NULL;
 	}
@@ -271,7 +271,7 @@ TreeNode *operador_soma() {
 			break;
 
 		default:
-			printf("Err operador_soma\n");
+			//printf("Err operador_soma\n");
 			erro(nomeArquivo, atual(), "Token esperado: '+' ou '-'.");
 			operador_soma = NULL;
 	}
@@ -296,7 +296,7 @@ TreeNode *operador_relacional() {
 			break;
 
 		default:			// marca não reconhecida
-			printf("Err operador_relacional\n");
+			//printf("Err operador_relacional\n");
 			erro(nomeArquivo, atual(), "Token esperado: '<', '>', '=', '<>', '<=' ou '>='");
 			operador_relacional = NULL;
 	}
@@ -414,7 +414,7 @@ TreeNode *expressao() {
 		atual()->tokenval != NUM_I && atual()->tokenval != SOMA && atual()->tokenval != SUBTRACAO &&
 		atual()->tokenval != NEGACAO){
 
-		printf("Err expressao\n");
+		//printf("Err expressao\n");
 		erro(nomeArquivo, atual(), "Token esperado: '(', 'ID', 'NUMERO', '+', '-' ou '!'.");
 		return NULL;
 	}
@@ -476,7 +476,7 @@ TreeNode *retorna() {
 	insere_filho(retorna, novo_node(atual(), -1));			// adicionando o RETORNA
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
-		printf("Err retorna\n");
+		//printf("Err retorna\n");
 		erro(nomeArquivo, verProximo(), "Token esperado '('.");
 		return NULL;
 	}
@@ -485,7 +485,7 @@ TreeNode *retorna() {
 	insere_filho(retorna, expressao());
 
 	if(atual()->tokenval != FECHA_PARENTESES){
-		printf("Err retorna.\n");
+		//printf("Err retorna.\n");
 		erro(nomeArquivo, atual(), "Token esperado ')'.");
 		return NULL;
 	}
@@ -502,7 +502,7 @@ TreeNode *escreva() {
 	insere_filho(escreva, novo_node(atual(), -1));
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
-		printf("Err escreva\n");
+		//printf("Err escreva\n");
 		erro(nomeArquivo, verProximo(), "Token esperado '('.");
 		return NULL;
 	}
@@ -511,7 +511,7 @@ TreeNode *escreva() {
 	insere_filho(escreva, expressao());						// insere como filho a expressao
 
 	if(atual()->tokenval != FECHA_PARENTESES){
-		printf("Err escreva.\n");
+		//printf("Err escreva.\n");
 		erro(nomeArquivo, atual(), "Token esperado ')'.");
 		return NULL;
 	}
@@ -528,7 +528,7 @@ TreeNode *leia() {
 	insere_filho(leia, novo_node(atual(), -1));
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)){
-		printf("Err leia.\n");
+		//printf("Err leia.\n");
 		erro(nomeArquivo, verProximo(), "Token esperado '('.");
 		return NULL;
 	}
@@ -537,7 +537,7 @@ TreeNode *leia() {
 	insere_filho(leia, var());							// inserindo uma variavel
 
 	if(atual()->tokenval != FECHA_PARENTESES){
-		printf("Err leia..\n");
+		//printf("Err leia..\n");
 		erro(nomeArquivo, atual(), "Token esperado ')'.");
 		return NULL;
 	}
@@ -573,7 +573,7 @@ TreeNode *repita() {
 	insere_filho(repita, corpo('R'));					// adiciona o corpo
 
 	if(atual()->tokenval != ATE){
-		printf("Err repita\n");
+		//printf("Err repita\n");
 		erro(nomeArquivo, atual(), "Token esperado: 'ATÉ'.");
 		return NULL;
 	}
@@ -592,7 +592,7 @@ TreeNode *se() {
 	insere_filho(se, expressao());					// adiciona a expressao como filho
 
 	if(atual()->tokenval != ENTAO){
-		printf("Err se\n");
+		//printf("Err se\n");
 		erro(nomeArquivo, atual(), "Token esperado: 'ENTÃO'.");
 		return NULL;
 	}
@@ -607,7 +607,7 @@ TreeNode *se() {
 	}
 
 	if(atual()->tokenval != FIM){
-		printf("Err se.\n");
+		//printf("Err se.\n");
 		erro(nomeArquivo, atual(), "Token esperado: 'FIM'.");
 		return NULL;
 	}
@@ -661,7 +661,7 @@ TreeNode *acao() {
 
 		// no caso do SENÃO, ATÉ
 		default:
-			printf("Err acao: ");
+			//printf("Err acao: ");
 			printToken(atual(), 0, 0);
 			erro(nomeArquivo, atual(), "Token inesperado.");
 			break;
@@ -713,7 +713,7 @@ TreeNode *parametro() {
 	insere_filho(parametro, tipo());					// adiciona o tipo como filho
 
 	if(atual()->tokenval != DOIS_PONTOS) {				// se não for ":"
-		printf("Err parametro\n");
+		//printf("Err parametro\n");
 		erro(nomeArquivo, atual(), "Token esperado ':'.");
 		return parametro;
 	}
@@ -721,7 +721,7 @@ TreeNode *parametro() {
 	insere_filho(parametro, novo_node(atual(), -1));	// insere o ":"
 
 	if(!verificaEAvanca(ID, TRUE)){
-		printf("Err parametro.\n");
+		//printf("Err parametro.\n");
 		erro(nomeArquivo, verProximo(), "Token esperado: 'ID'.");
 		return parametro;
 	}
@@ -736,7 +736,7 @@ TreeNode *parametro() {
 		if(atual()->tokenval == FECHA_COLCHETES){
 			insere_filho(parametro, novo_node(atualEAvanca(), -1));	// insere o "]"
 		} else {
-			printf("Err parametro..\n");
+			//printf("Err parametro..\n");
 			erro(nomeArquivo, atual(), "Token esperado: ']'.");
 			return NULL;
 		}
@@ -758,7 +758,7 @@ TreeNode *lista_parametros() {
 	while(TRUE) {
 
 		if(atual()->tokenval != INTEIRO && atual()->tokenval != FLUTUANTE){
-			printf("Err lista_parametros\n");
+			//printf("Err lista_parametros\n");
 			erro(nomeArquivo, atual(), "Token esperado: 'INTEIRO' ou 'FLUTUANTE'.");
 			return NULL;
 		}
@@ -770,7 +770,7 @@ TreeNode *lista_parametros() {
 		}
 
 		if(atual()->tokenval != VIRGULA) {
-			printf("Err lista_parametros.\n");
+			//printf("Err lista_parametros.\n");
 			erro(nomeArquivo, atual(), "Token esperado: ',' ou ')'.");
 			return NULL;
 		}
@@ -786,7 +786,7 @@ TreeNode *cabecalho() {
 	insere_filho(cabecalho, novo_node(atual(), -1));	// insere o filho ID
 
 	if(!verificaEAvanca(ABRE_PARENTESES, TRUE)) {
-		printf("Err cabecalho\n");
+		//printf("Err cabecalho\n");
 		erro(nomeArquivo, verProximo(), "Token esperado: '('.");
 		return NULL;
 	}
@@ -795,7 +795,7 @@ TreeNode *cabecalho() {
 	insere_filho(cabecalho, lista_parametros());			// insere como filho a lista_parametros
 
 	if(atual()->tokenval != FECHA_PARENTESES){
-		printf("Err cabecalho.\n");
+		//printf("Err cabecalho.\n");
 		erro(nomeArquivo, atual(), "Token esperado: ']'.");
 		return NULL;
 	}
@@ -804,7 +804,7 @@ TreeNode *cabecalho() {
 	insere_filho(cabecalho, corpo('C'));					// insere como filho o corpo
 
 	if(atual()->tokenval != FIM){
-		printf("Err cabecalho..\n");
+		//printf("Err cabecalho..\n");
 		erro(nomeArquivo, atual(), "Token esperado: 'FIM'.");
 		return NULL;
 	}
@@ -841,7 +841,7 @@ TreeNode *indice() {
 
 		// se não encontrar o FECHA_COLCHETES
 		if(atual()->tokenval != FECHA_COLCHETES){
-			printf("Err indice\n");
+			//printf("Err indice\n");
 			erro(nomeArquivo, atual(), "Token esperado: ']'.");
 			return NULL;
 		}
@@ -859,7 +859,7 @@ TreeNode *indice() {
 TreeNode *var() {
 
 	if(atual()->tokenval != ID){
-		printf("Err var\n");
+		//printf("Err var\n");
 		erro(nomeArquivo, atual(), "Token esperado: 'ID'.");
 		return NULL;
 	}
@@ -887,7 +887,7 @@ TreeNode *lista_variaveis() {
 
 		// se houver um token "," e não houver após um ID
 		if(!verificaEAvanca(ID, FALSE)){
-			printf("Err lista_variaveis\n");
+			//printf("Err lista_variaveis\n");
 			erro(nomeArquivo, verProximo(), "Token esperado 'ID'.");
 			return NULL;
 		}
@@ -924,7 +924,7 @@ TreeNode *declaracao_variaveis() {
 	insere_filho(declaracao_variaveis, tipo());								// insere o tipo como filho de declaracao_variaveis
 
 	if(atual()->tokenval != DOIS_PONTOS) {									// se não houver um tipo e o próximo não for DOIS_PONTOS; porém, esta verificação é redundante
-		printf("Err declaracao_variaveis\n");
+		//printf("Err declaracao_variaveis\n");
 		erro(nomeArquivo, atual(), "Token esperado: ':'.");
 		return NULL;
 	}
@@ -932,7 +932,7 @@ TreeNode *declaracao_variaveis() {
 	insere_filho(declaracao_variaveis, novo_node(atualEAvanca(), -1));		// insere o ":" como filho de declaracao_variaveis
 
 	if(atual()->tokenval != ID){
-		printf("Err declaracao_variaveis.\n");
+		//printf("Err declaracao_variaveis.\n");
 		erro(nomeArquivo, atual(), "Token esperado: 'ID'.");
 		return NULL;
 	}
@@ -959,7 +959,7 @@ TreeNode *declaracao() {
     		} else if (verificaEAvanca(ID, FALSE)) {
     			insere_filho(declaracao, declaracao_funcao());		// em declaracao_funcao, a regra que começa com um tipo, é seguida de um ID
     		} else {
-    			printf("Err declaracao\n");
+    			//printf("Err declaracao\n");
     			erro(nomeArquivo, verProximo(), "Token esperado: ':' ou 'ID'.");
     		}
 
@@ -975,14 +975,14 @@ TreeNode *declaracao() {
     		} else if (verificaEAvanca(ATRIBUICAO, FALSE) || verificaEAvanca(ABRE_COLCHETES, FALSE)) {
     			insere_filho(declaracao, inicializacao_variaveis());
     		} else {
-    			printf("Err declaracao.\n");
+    			//printf("Err declaracao.\n");
 				erro(nomeArquivo, verProximo(), "Token esperado: '(', '[' ou ':='.");
     		}
 
     		break;
 
     	default:
-    		printf("Err declaracao..\n");
+    		//printf("Err declaracao..\n");
 			erro(nomeArquivo, atual(), "Token esperado: 'ID', 'INTEIRO' ou 'FLUTUANTE'.");
     		// wrong token
     		break;
