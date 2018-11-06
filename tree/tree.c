@@ -366,9 +366,7 @@ void printArvoreT1(TreeNode *raiz, Stack *pilha) {
     }
 }
 
-void printArvoreT(TreeNode *raiz, char *nomeArquivo) {
-    printf("Arquivo: %s.\n", nomeArquivo);
-
+void printArvoreT(TreeNode *raiz) {
     Stack *pilha = createStack(1000);       // inicialmente com 1000
     printArvoreT1(raiz, pilha);
     printf("\n");
