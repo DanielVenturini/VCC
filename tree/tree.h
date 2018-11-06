@@ -37,6 +37,6 @@ void insere_filho(TreeNode *pai, TreeNode *filho);			// dado o pai, insere o fil
 // para adicionar um '.ax' ou '.as' no fim do nome do arquivo passado para o xdot, caso as duas árvores seja
 // exibidas ao mesmo tempo
 void printArvoreX(TreeNode *raiz, char *nomeArquivo, char analise);	// a partir deste nó, printa a árvore no xdot
-void printArvoreT(TreeNode *raiz, char *nomeArquivo);		// a partir deste nó, printa a árvore no terminal
+void printArvoreT(TreeNode *raiz);									// a partir deste nó, printa a árvore no terminal
 
 #endif
