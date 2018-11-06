@@ -340,7 +340,6 @@ TreeNode *expressao_multiplicativa() {
 
 	// segunda verificação necessária, sentão permitia redundância de operadores: a */ 4
 	while((atual()->tokenval == MULTIPLICACAO || atual()->tokenval == DIVISAO) && (verProximo()->tokenval != MULTIPLICACAO && verProximo()->tokenval != DIVISAO)) {
-		printToken(verProximo(), 0, 0);
 		insere_filho(exp_multiplicativa, operador_multiplicacao());		// insere como filho o operador
 		insere_filho(exp_multiplicativa, expressao_unaria());			// insere como filho o operador
 	}
