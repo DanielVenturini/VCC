@@ -5,8 +5,57 @@ TreeNode *get_expressao(TreeNode *expressao);
 void get_corpo(TreeNode *corpo);
 void get_indice(TreeNode *var);
 
+void get_lista_argumentos(TreeNode *lista_argumentos) {
+
+	if(lista_argumentos->filhos[0]->bnfval == VAZIO) {		// se a lista for vázia
+		lista_argumentos->filhos[0] = NULL;					// remove o nó VAZIO
+		return;
+	}
+
+	unsigned char posVar = 0;
+	unsigned char posFilho = 0;
+
+	do {
+
+		TreeNode *argumento = lista_argumentos->filhos[posFilho];
+		get_expressao(argumento);							// simplifica o parâmetro
+		lista_argumentos->filhos[posVar] = argumento;		// removendo o nó ',' e pegando o 'parametro'
+		posVar ++;
+
+		posFilho += 2;
+
+	} while(lista_argumentos->filhos[posFilho]);				// enquanto tiver o próximo filho
+
+	for(; posFilho > posVar+1; posFilho --) {				// remove todos nós a frente do último var
+		remove_filho(lista_argumentos);
+	}
+}
+
+TreeNode *get_chamada_funcao(TreeNode *chamada_funcao) {
+
+	chamada_funcao->filhos[1] = chamada_funcao->filhos[2];	// troca o '(' pela lista_argumentos
+
+	remove_filho(chamada_funcao);	// remove o filho ')'
+	remove_filho(chamada_funcao);	// remove o filho 'lista_argumentos', visto que este já foi para a esquerda
+
+	get_lista_argumentos(chamada_funcao->filhos[1]);		// simplifica o lista_argumentos
+	return chamada_funcao;
+}
+
+
 TreeNode *get_fator(TreeNode *fator) {
 	switch(fator->filhos[0]->bnfval) {
+
+		case VAR:
+			1;
+			TreeNode *var = fator->filhos[0];
+			get_indice(var);				// simplifica os índices
+			var = var->filhos[0];			// remove o nó var e troca pelo ID
+			var->bnfval = VAR;
+			return var;
+
+		case CHAMADA_FUNCAO:
+			return get_chamada_funcao(fator->filhos[0]);
 
 		case NUMERO:
 			1;		// apenas porque não pode ter declaração de variável como primeiro comando no case
@@ -24,6 +73,23 @@ TreeNode *get_expressao_unaria(TreeNode *exp_unaria) {
 	if(!exp_unaria->filhos[1]) {			// se não tiver filho na posição 1, então é fator
 		return get_fator(exp_unaria->filhos[0]);
 	}
+
+	TreeNode *operador = exp_unaria->filhos[0]->filhos[0];
+	operador->bnfval = exp_unaria->filhos[0]->bnfval;
+
+	exp_unaria->filhos[0] = operador;
+	exp_unaria->filhos[1] = get_fator(exp_unaria->filhos[1]);
+	return exp_unaria;/*
+	switch(exp_unaria->filhos[1]) {
+
+		case OPERADOR_SOMA:
+			1;
+			TreeNode *operador_soma = exp_unaria->filhos[0]->filhos[0];
+			operador_soma->filhos[1];
+
+		case OPERADOR_NEGACAO:
+			break;
+	}*/
 }
 
 TreeNode *get_expressao_multiplicativa(TreeNode *exp_multiplicativa) {
@@ -31,6 +97,28 @@ TreeNode *get_expressao_multiplicativa(TreeNode *exp_multiplicativa) {
 	if(!exp_multiplicativa->filhos[1]) {			// se não for um operador_multiplicacao, então é uma expressao_unaria
 		return get_expressao_unaria(exp_multiplicativa->filhos[0]);
 	}
+
+	unsigned char i = 0;
+	TreeNode *op_multiplicacao;
+	TreeNode *left = exp_multiplicativa->filhos[i];
+
+	i ++;
+	do {
+		op_multiplicacao = exp_multiplicativa->filhos[i];		// trocando o operador_multiplicacao pelo '*'
+		op_multiplicacao = op_multiplicacao->filhos[0];
+		op_multiplicacao->bnfval = OPERADOR_MULTIPLICACAO;
+
+		if(left->bnfval == OPERADOR_MULTIPLICACAO)		// se já é um operador_multiplicacao
+			insere_filho(op_multiplicacao, left);
+		else
+			insere_filho(op_multiplicacao, get_expressao_unaria(left));
+
+		insere_filho(op_multiplicacao, get_expressao_unaria(exp_multiplicativa->filhos[++ i]));;
+
+		left = op_multiplicacao;
+	} while (exp_multiplicativa->filhos[++ i]);
+
+	return op_multiplicacao;
 }
 
 TreeNode *get_expressao_aditiva(TreeNode *exp_aditiva) {
@@ -38,6 +126,28 @@ TreeNode *get_expressao_aditiva(TreeNode *exp_aditiva) {
 	if(!exp_aditiva->filhos[1]) {			// se não for um operador_soma, então é uma expressao_multiplicativa
 		return get_expressao_multiplicativa(exp_aditiva->filhos[0]);
 	}
+
+	unsigned char i = 0;
+	TreeNode *op_soma;
+	TreeNode *left = exp_aditiva->filhos[i];
+
+	i ++;
+	do {
+		op_soma = exp_aditiva->filhos[i];		// trocando o operador_soma pelo '+'
+		op_soma = op_soma->filhos[0];
+		op_soma->bnfval = OPERADOR_SOMA;
+
+		if(left->bnfval == OPERADOR_SOMA)		// se já é um operador_relacional
+			insere_filho(op_soma, left);
+		else
+			insere_filho(op_soma, get_expressao_multiplicativa(left));
+
+		insere_filho(op_soma, get_expressao_multiplicativa(exp_aditiva->filhos[++ i]));;
+
+		left = op_soma;
+	} while (exp_aditiva->filhos[++ i]);
+
+	return op_soma;
 }
 
 TreeNode *get_expressao_simples(TreeNode *exp_simples) {
@@ -87,7 +197,6 @@ TreeNode *get_expressao_logica(TreeNode *exp_logico) {
 		op_logico->bnfval = OPERADOR_LOGICO;			// adiciona o tipo do operador
 
 		// como foi alterado a regra da expressao_logica, tem que executar uma chamada recursiva para os filhos
-
 		if(left->bnfval == EXPRESSAO_LOGICA)			// se for EXPRESSAO_LOGICA, então tem um E na esquerda
 			insere_filho(op_logico, get_expressao_logica(left));// adiciona a EXPRESSAO_SIMPLES como filho do token
 		else
@@ -204,8 +313,7 @@ TreeNode *get_acao(TreeNode *acao) {
 	switch(acao->bnfval) {
 
 		case EXPRESSAO:
-			get_expressao(acao);
-			break;
+			return get_expressao(acao);
 
 		case DECLARACAO_VARIAVEIS:
 			get_declaracao_variaveis(acao);
