@@ -18,8 +18,7 @@ void get_lista_argumentos(TreeNode *lista_argumentos) {
 	do {
 
 		TreeNode *argumento = lista_argumentos->filhos[posFilho];
-		get_expressao(argumento);							// simplifica o parâmetro
-		lista_argumentos->filhos[posVar] = argumento;		// removendo o nó ',' e pegando o 'parametro'
+		lista_argumentos->filhos[posVar] = get_expressao(argumento);
 		posVar ++;
 
 		posFilho += 2;
@@ -225,11 +224,9 @@ TreeNode *get_expressao(TreeNode *expressao) {
 
 		case EXPRESSAO_LOGICA:
 			return get_expressao_logica(filho);
-			break;
 
 		case B_ATRIBUICAO:
 			return get_atribuicao(filho);
-			break;
 	}
 }
 
@@ -291,6 +288,8 @@ void get_repita(TreeNode *repita) {
 
 	remove_filho(repita);	// remove o ate
 	remove_filho(repita);	// remove expressao
+
+	printArvoreT(repita, "oi");
 }
 
 void get_leia(TreeNode *leia) {
@@ -366,9 +365,10 @@ void get_indice(TreeNode *var) {
 
 	TreeNode *id = var->filhos[0];		// recupera o id
 	TreeNode *indice = var->filhos[1];	// recupera o nó indice
-	unsigned char i = 1;
+	unsigned char i = 0;
+
 	while(indice->filhos[i]) {
-		insere_filho(id, get_expressao(indice->filhos[i]));
+		insere_filho(id, get_expressao(indice->filhos[i+1]));
 		i += 3;							// pula o ']' e '['
 	}
 }
@@ -405,18 +405,6 @@ void get_declaracao_variaveis(TreeNode *declaracao_variaveis) {
 	get_lista_variaveis(lista_variaveis);				// simplifica a lista de variaveis
 
 	remove_filho(declaracao_variaveis);					// apenas coloca NULL no último filho
-}
-
-void get_inicializacao_variaveis(TreeNode *inicializacao_variaveis) {
-
-	TreeNode *atribuicao = inicializacao_variaveis->filhos[0];
-
-	remove_filho(inicializacao_variaveis);					// remove o atribuicao
-
-	TreeNode *var = atribuicao->filhos[0];
-	insere_filho(inicializacao_variaveis, var->filhos[0]);	// adiciona o nó 'var' que vai ser atribuido
-	// coloca a expressao como segundo filho para atribuir
-	insere_filho(inicializacao_variaveis, get_expressao(atribuicao->filhos[2]));
 }
 
 void get_parametro(TreeNode *parametro) {
@@ -492,7 +480,9 @@ void get_declaracao(TreeNode *declaracao) {
 			break;
 
 		case INICIALIZACAO_VARIAVEIS:
-			get_inicializacao_variaveis(filho);
+			1;
+			TreeNode *atribuicao = get_atribuicao(filho->filhos[0]);
+			declaracao->filhos[0] = atribuicao;
 			break;
 
 		case DECLARACAO_FUNCAO:
