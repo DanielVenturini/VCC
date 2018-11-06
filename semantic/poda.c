@@ -86,12 +86,18 @@ TreeNode *get_expressao_logica(TreeNode *exp_logico) {
 		op_logico = op_logico->filhos[0];				// troca o nó OPERADOR_LOGICO pelo token || ou &&
 		op_logico->bnfval = OPERADOR_LOGICO;			// adiciona o tipo do operador
 
+		// como foi alterado a regra da expressao_logica, tem que executar uma chamada recursiva para os filhos
+
 		if(left->bnfval == EXPRESSAO_LOGICA)			// se for EXPRESSAO_LOGICA, então tem um E na esquerda
 			insere_filho(op_logico, get_expressao_logica(left));// adiciona a EXPRESSAO_SIMPLES como filho do token
 		else
-			insere_filho(op_logico, left);
-		// como foi alterado a regra da expressao_logica, tem que executar uma chamada recursiva para os filhos
-		insere_filho(op_logico, get_expressao_logica(exp_logico->filhos[++ i]));
+			insere_filho(op_logico, get_expressao_simples(left));
+
+		i ++;
+		if(exp_logico->filhos[i]->bnfval == EXPRESSAO_LOGICA)
+			insere_filho(op_logico, get_expressao_logica(exp_logico->filhos[i]));
+		else
+			insere_filho(op_logico, get_expressao_simples(exp_logico->filhos[i]));
 
 		left = op_logico;
 	} while (exp_logico->filhos[++ i]);
