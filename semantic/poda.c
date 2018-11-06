@@ -288,8 +288,6 @@ void get_repita(TreeNode *repita) {
 
 	remove_filho(repita);	// remove o ate
 	remove_filho(repita);	// remove expressao
-
-	printArvoreT(repita, "oi");
 }
 
 void get_leia(TreeNode *leia) {
