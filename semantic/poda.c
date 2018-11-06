@@ -42,8 +42,8 @@ TreeNode *get_chamada_funcao(TreeNode *chamada_funcao) {
 	return chamada_funcao;
 }
 
-
 TreeNode *get_fator(TreeNode *fator) {
+
 	switch(fator->filhos[0]->bnfval) {
 
 		case VAR:
@@ -63,8 +63,8 @@ TreeNode *get_fator(TreeNode *fator) {
 			numero->bnfval = NUMERO;
 			return numero;
 
-		default:
-			return fator;
+		default:	// caso onde o fator leva à '(' expressao ')'
+			return get_expressao(fator->filhos[1]);
 	}
 }
 
@@ -79,17 +79,7 @@ TreeNode *get_expressao_unaria(TreeNode *exp_unaria) {
 
 	exp_unaria->filhos[0] = operador;
 	exp_unaria->filhos[1] = get_fator(exp_unaria->filhos[1]);
-	return exp_unaria;/*
-	switch(exp_unaria->filhos[1]) {
-
-		case OPERADOR_SOMA:
-			1;
-			TreeNode *operador_soma = exp_unaria->filhos[0]->filhos[0];
-			operador_soma->filhos[1];
-
-		case OPERADOR_NEGACAO:
-			break;
-	}*/
+	return exp_unaria;
 }
 
 TreeNode *get_expressao_multiplicativa(TreeNode *exp_multiplicativa) {
@@ -214,13 +204,21 @@ TreeNode *get_expressao_logica(TreeNode *exp_logico) {
 	return op_logico;
 }
 
-
 TreeNode *get_atribuicao(TreeNode *atribuicao) {
 
+	TreeNode *atr = atribuicao->filhos[1];		// recuperando o token atribuição
+	atr->bnfval = B_ATRIBUICAO;
+
+	get_indice(atribuicao->filhos[0]);			// simplifica o var
+
+	insere_filho(atr, atribuicao->filhos[0]->filhos[0]);	// adiciona o ID como primeiro filho
+	insere_filho(atr, get_expressao(atribuicao->filhos[2]));// adiciona a expressao como segundo filho
+
+	return atr;
 }
 
-
 TreeNode *get_expressao(TreeNode *expressao) {
+
 	TreeNode *filho = expressao->filhos[0];
 
 	switch(filho->bnfval) {
@@ -344,6 +342,7 @@ TreeNode *get_acao(TreeNode *acao) {
 }
 
 void get_corpo(TreeNode *corpo) {
+
 	if(corpo->filhos[0]->bnfval == VAZIO) {
 		corpo->filhos[0] = NULL;
 		return;
@@ -361,6 +360,7 @@ void get_corpo(TreeNode *corpo) {
 
 // remove o índice do var e adiciona a expressão como filho do ID
 void get_indice(TreeNode *var) {
+
 	if(!var->filhos[1])			// se não tiver índice
 		return;
 
@@ -374,6 +374,7 @@ void get_indice(TreeNode *var) {
 }
 
 void get_lista_variaveis(TreeNode *lista_variaveis) {
+
 	unsigned char posVar = 0;
 	unsigned char posFilho = 0;
 
@@ -394,6 +395,7 @@ void get_lista_variaveis(TreeNode *lista_variaveis) {
 }
 
 void get_declaracao_variaveis(TreeNode *declaracao_variaveis) {
+
 	TreeNode *tipo = declaracao_variaveis->filhos[0];	// recuperando o nó tipo
 	declaracao_variaveis->filhos[0] = tipo->filhos[0];	// remove o nó intermediário TIPO
 
@@ -432,6 +434,7 @@ void get_parametro(TreeNode *parametro) {
 }
 
 void get_lista_parametros(TreeNode *lista_parametros) {
+
 	if(lista_parametros->filhos[0]->bnfval == VAZIO) {		// se a lista for vázia
 		lista_parametros->filhos[0] = NULL;					// remove o nó VAZIO
 		return;
