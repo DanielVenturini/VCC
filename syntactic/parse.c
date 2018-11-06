@@ -338,11 +338,12 @@ TreeNode *expressao_multiplicativa() {
 	TreeNode *exp_multiplicativa = novo_node(NULL, EXPRESSAO_MULTIPLICATIVA);
 	insere_filho(exp_multiplicativa, expressao_unaria());	// insere o filho expressao_unaria()
 
-	while(atual()->tokenval == MULTIPLICACAO || atual()->tokenval == DIVISAO) {
+	// segunda verificação necessária, sentão permitia redundância de operadores: a */ 4
+	while((atual()->tokenval == MULTIPLICACAO || atual()->tokenval == DIVISAO) && (verProximo()->tokenval != MULTIPLICACAO && verProximo()->tokenval != DIVISAO)) {
+		printToken(verProximo(), 0, 0);
 		insere_filho(exp_multiplicativa, operador_multiplicacao());		// insere como filho o operador
 		insere_filho(exp_multiplicativa, expressao_unaria());			// insere como filho o operador
 	}
-
 
 	return exp_multiplicativa;
 }
@@ -354,7 +355,8 @@ TreeNode *expressao_aditiva() {
 	insere_filho(exp_aditiva, expressao_multiplicativa());	// insere o filho expressao_multiplicativa()
 
 	// se for um destes, é a recursão à esquerda
-	while(atual()->tokenval == SOMA || atual()->tokenval == SUBTRACAO) {
+	// segunda verificação necessária, sentão permitia redundância de operadores: a +-- 4
+	while((atual()->tokenval == SOMA || atual()->tokenval == SUBTRACAO) && (verProximo()->tokenval != SOMA && verProximo()->tokenval != SUBTRACAO)) {
 		insere_filho(exp_aditiva, operador_soma());				// insere como filho o operador
 		insere_filho(exp_aditiva, expressao_multiplicativa());	// insere como filho o operador
 	}
@@ -369,8 +371,11 @@ TreeNode *expressao_simples() {
 	insere_filho(exp_simples, expressao_aditiva());	// insere o filho expressao_aditiva()
 
 	// se não for uma expressao_relacional
-	while(atual()->tokenval == MENOR || atual()->tokenval == MAIOR || atual()->tokenval == MENOR_IGUAL ||
-		atual()->tokenval == MAIOR_IGUAL || atual()->tokenval == IGUALDADE || atual()->tokenval == DIFERENTE) {
+	while((atual()->tokenval == MENOR || atual()->tokenval == MAIOR || atual()->tokenval == MENOR_IGUAL ||
+		atual()->tokenval == MAIOR_IGUAL || atual()->tokenval == IGUALDADE || atual()->tokenval == DIFERENTE) &&
+		// segunda verificação necessária, sentão permitia redundância de operadores: a >= < 4
+		(verProximo()->tokenval != MENOR && verProximo()->tokenval != MAIOR && verProximo()->tokenval != MENOR_IGUAL &&
+		verProximo()->tokenval != MAIOR_IGUAL && verProximo()->tokenval != IGUALDADE && verProximo()->tokenval != DIFERENTE)) {
 
 		insere_filho(exp_simples, operador_relacional());	// insere como filho o operador
 		insere_filho(exp_simples, expressao_aditiva());		// insere como filho o operador
@@ -388,7 +393,7 @@ TreeNode *expressao_logica() {
 	char temOU = 1;									// se tiver um OU_LOGICO e após um E_LOGICO, tem que prover precedência
 
 	// se for um destes, é a recursão à esquerda
-	while(atual()->tokenval == OU_LOGICO || atual()->tokenval == E_LOGICO) {
+	while((atual()->tokenval == OU_LOGICO || atual()->tokenval == E_LOGICO) && (verProximo()->tokenval != OU_LOGICO && verProximo()->tokenval != E_LOGICO)) {
 
 		if(atual()->tokenval == E_LOGICO) {			// tem precedência sobre o OU_LOGICO
 
