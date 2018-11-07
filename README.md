@@ -52,6 +52,17 @@ A flag ```-ax``` ou ```--ast-x``` gera a saída da árvore de análise sintátic
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg)
 
-Já a flag ```-at``` ou ```--ast-t``` gera a saída da árvore de anaĺise sintática utilizando o terminal. Este modelo é similar ao útilizado pelo ```Windows``` para printar a árvore de diretórios. Usando a flag para o arquivo de entrada ```exemplos/hashtabel.tpp```, o ```vcc``` gera a seguinte saída no terminal:
+Já a flag ```-at``` ou ```--ast-t``` gera a saída da árvore de anaĺise sintática utilizando o terminal. Este modelo é similar ao útilizado pelo ```Windows``` para printar a árvore de diretórios. Usando a flag para o arquivo de entrada ```exemplos/hashtable.tpp```, o ```vcc``` gera a seguinte saída no terminal:
 
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-t.jpeg)
+
+#### Árvore Sintática
+Diferente da árvore de análise sintática, a Árvore Sintática é a simplificação da AST. Os nós intermediários que eram usados para análise sintática são removidos, assim, deixando a árvore mais simples e de fácil visualização. Esta não segue um padrão formal para simplificação, apenas foi escolhido os nós que seriam removidos.
+
+Para gerar a saída da árvore sintática, use as flags: ```--st-x``` e ```--st-t```.
+
+A flag ```-sx``` ou ```--st-x``` gera a saída da árvore sintática. Esta árvore é gerada utilizando o software ```xdot```, que é instalado junto com o ```vcc```. Usando esta flag para o mesmo arquivo de entrada, ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
+
+![Alt Text](https://github.com/danielventurini/vcc/raw/master/semantic/st-x.jpeg)
+
+Já a flag ```-st``` ou ```--st-t``` gera a saída da árvore sintática utilizando o terminal de maneira semelhante ao da AST.

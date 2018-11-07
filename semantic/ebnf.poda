@@ -1,0 +1,24 @@
+{EBNF simplificada para a árvore podada. Todos os nós intermediários não necessários são removidos}
+{uma mistura da EBNF com REGEX para padronizar a árvore podada}
+{Não condiz com uma representação formal; apenas para me organizar melhor}
+
+programa -> declaracao_variaveis | inicializacao_variaveis | declaracao_funcao	{aqui há recursão em programa}
+declaracao_variaveis -> [INTEIRO | FLUTUANTE] lista_variaveis
+{inicializacao_variaveis -> ID expressao ==> substitui pela atribuição}
+ID -> ID []													{quando houver indice}
+lista_variaveis -> lista_variaveis ID | ID
+declaracao_funcao -> [INTEIRO | FLUTUANTE] ID lista_parametros corpo
+{cabecalho ==> foi removido e os nós inseridos em declaracao_funcao}
+lista_parametros -> lista_parametro parametro | parametro
+parametro -> [INTEIRO] ID									{não necessáriamente há o indice do ID []}
+corpo -> expressao | declaracao_variaveis | se | repita| leia| escreva | retorna	{aqui também há recursão}
+se -> expressao corpoSE | expressao corpoSE corpoSENAO		{corpo é normal, apenas para diferenciar}
+repita -> corpo expressao
+leia -> ID
+escreva -> expressao
+retorna -> expressao
+chamada_funcao -> ID lista_argumentos
+lista_argumentos -> lista_argumento expressao | expressao
+atribuicao -> ID expressao
+{expressao_ ==> não há mais expressão; todos os nós intermediários foram simplificados}
+expressao_unaria -> operador_[soma|negacao] fator			{não necessáriamente um fator, mas não pensei em nada melhor}
