@@ -1,6 +1,7 @@
 #include "lexical/varredura.h"
 #include "syntactic/parse.h"
 #include "tree/tree.h"
+#include "semantic/poda.h"
 #include <string.h>
 
 typedef TokenRecord TR; // apenas para economizar espaços na linha
@@ -81,8 +82,8 @@ void printHelp() {
     printf("\u2502   -tk,   --tokens,   exibe os tokens----------------------------------------\u2502\n");
     printf("\u2502   -ax,   --ast-x,    exibe as árvores de análises sintáticas no xdot--------\u2502\n");
     printf("\u2502   -at,   --ast-t,    exibe as árvores de análises sintáticas no terminal----\u2502\n");
-    //printf("\u2502   -sx,   --st-x,     exibe as árvores sintáticas no xdot--------------------\u2502\n");
-    //printf("\u2502   -st,   --st-t,     exibe as árvores sintáticas no terminal----------------\u2502\n");
+    printf("\u2502   -sx,   --st-x,     exibe as árvores sintáticas no xdot--------------------\u2502\n");
+    printf("\u2502   -st,   --st-t,     exibe as árvores sintáticas no terminal----------------\u2502\n");
     //printf("\u2502   -ts,   --tab-s,    exibe a tabela de símbolos-----------------------------\u2502\n");
 
     desenhaLinha(2);
@@ -135,6 +136,16 @@ int main(int argc, char *argv[]) {
             printArvoreX(ast, arquivos[i], 0);          // 0 indica que a árvore é da análise sintática
         if(flags[2])
             printArvoreT(ast);
+
+        /*******************\
+        * análise semântica *
+        \*******************/
+        TreeNode *st = podar(ast);                      // podar a árvore
+
+        if(flags[3])
+            printArvoreX(st, arquivos[i], 1);           // 0 indica que a árvore é da análise semântica
+        if(flags[4])
+            printArvoreT(st);
 
         i ++;
     }
