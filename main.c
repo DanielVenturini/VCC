@@ -2,6 +2,8 @@
 #include "syntactic/parse.h"
 #include "tree/tree.h"
 #include "semantic/poda.h"
+#include "semantic/semantico.h"
+
 #include <string.h>
 
 typedef TokenRecord TR; // apenas para economizar espaços na linha
@@ -146,6 +148,8 @@ int main(int argc, char *argv[]) {
             printArvoreX(st, arquivos[i], 1);           // 0 indica que a árvore é da análise semântica
         if(flags[4])
             printArvoreT(st);
+
+        TabSimb *tabela = constroiTabSimb(st);          // recupera a tabela de símbolos a partir da ST
 
         i ++;
     }

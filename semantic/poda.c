@@ -32,6 +32,7 @@ void get_lista_argumentos(TreeNode *lista_argumentos) {
 
 TreeNode *get_chamada_funcao(TreeNode *chamada_funcao) {
 
+	chamada_funcao->filhos[0]->bnfval = VAR;
 	chamada_funcao->filhos[1] = chamada_funcao->filhos[2];	// troca o '(' pela lista_argumentos
 
 	remove_filho(chamada_funcao);	// remove o filho ')'
@@ -213,6 +214,8 @@ TreeNode *get_atribuicao(TreeNode *atribuicao) {
 	insere_filho(atr, atribuicao->filhos[0]->filhos[0]);	// adiciona o ID como primeiro filho
 	insere_filho(atr, get_expressao(atribuicao->filhos[2]));// adiciona a expressao como segundo filho
 
+	atr->filhos[0]->bnfval = VAR;				// atribui var ao filho
+
 	return atr;
 }
 
@@ -295,6 +298,7 @@ void get_leia(TreeNode *leia) {
 	leia->filhos[0] = leia->filhos[2];				// substitui o LEIA pelo var
 	get_indice(leia->filhos[0]);					// se houver índice, organiza
 	leia->filhos[0] = leia->filhos[0]->filhos[0];	// remove o nó intermediário VAR
+	leia->filhos[0]->bnfval = VAR;
 
 	remove_filho(leia);		// remove o filho ')'
 	remove_filho(leia);		// remove o filho 'var'
@@ -371,7 +375,7 @@ void get_indice(TreeNode *var) {
 	}
 }
 
-void get_lista_variaveis(TreeNode *lista_variaveis) {
+void get_lista_variaveis(TreeNode *lista_variaveis, EBNFType tipo) {
 
 	unsigned char posVar = 0;
 	unsigned char posFilho = 0;
@@ -379,8 +383,10 @@ void get_lista_variaveis(TreeNode *lista_variaveis) {
 	do {
 
 		TreeNode *var = lista_variaveis->filhos[posFilho];
-		get_indice(var);									// se houver índice, simplifica
-		lista_variaveis->filhos[posVar] = var->filhos[0];	// removendo o nó 'var' e pegando o 'id'
+		get_indice(var);										// se houver índice, simplifica
+		lista_variaveis->filhos[posVar] = var->filhos[0];		// removendo o nó 'var' e pegando o 'id'
+		lista_variaveis->filhos[posVar]->tipoExpressao = tipo;	// atribui o tipo já a var
+		lista_variaveis->filhos[posVar]->bnfval = VAR;			// diz que é um var
 		posVar ++;
 
 		posFilho += 2;
@@ -400,7 +406,7 @@ void get_declaracao_variaveis(TreeNode *declaracao_variaveis) {
 	TreeNode *lista_variaveis = declaracao_variaveis->filhos[2];	// recuperando nó lista_variaveis
 	declaracao_variaveis->filhos[1] = lista_variaveis;	// colocando a lista_variaveis no lugar de ':', assim remove o nó ':''
 
-	get_lista_variaveis(lista_variaveis);				// simplifica a lista de variaveis
+	get_lista_variaveis(lista_variaveis, tipo->filhos[0]->token->tokenval);	// simplifica a lista de variaveis e atribui o tipo
 
 	remove_filho(declaracao_variaveis);					// apenas coloca NULL no último filho
 }
@@ -408,6 +414,11 @@ void get_declaracao_variaveis(TreeNode *declaracao_variaveis) {
 void get_parametro(TreeNode *parametro) {
 
 	parametro->filhos[0] = parametro->filhos[0]->filhos[0];	// remove o nó TIPO e adiciona o INTEIRO|FLUTUANTE
+
+	// adicionando o tipo na var
+	TokenType tipo = parametro->filhos[0]->token->tokenval;
+	parametro->filhos[2]->bnfval = VAR;
+	parametro->filhos[2]->tipoExpressao = tipo;
 
 	unsigned char i = 1;
 	// se tiver vários indices, tem qu deslocar para a esquerda
@@ -448,17 +459,22 @@ void get_lista_parametros(TreeNode *lista_parametros) {
 void get_declaracao_funcao(TreeNode *declaracao_funcao) {
 
 	unsigned char pos = 0;
-	TreeNode *tipo = declaracao_funcao->filhos[0];
+	TreeNode *TIPONode = declaracao_funcao->filhos[0];
+	TokenType tipo;	// tipo será [-1:VOID | INTEIRO | FLUTUANTE]
 	// se a declaração de função não tiver tipo, então ignora
-	if(tipo->bnfval == TIPO) {
-		declaracao_funcao->filhos[0] = tipo->filhos[0];		// remove o nó tipo e adiciona o INTEIRO | FLUTUANTE
+	if(TIPONode->bnfval == TIPO) {
+		declaracao_funcao->filhos[0] = TIPONode->filhos[0];		// remove o nó tipo e adiciona o INTEIRO | FLUTUANTE
+		tipo = TIPONode->filhos[0]->token->tokenval;
 		pos = 1;
 	} else {
+		tipo = 0;	// void
 		pos = 0;
 	}
 
 	TreeNode *cabecalho = declaracao_funcao->filhos[pos];
 	declaracao_funcao->filhos[pos] = cabecalho->filhos[0];		// remove o nó cabecalho e adiciona o nó ID
+	declaracao_funcao->filhos[pos]->bnfval = VAR;				// é um VAR
+	declaracao_funcao->filhos[pos]->tipoExpressao = tipo;
 	declaracao_funcao->filhos[pos+1] = cabecalho->filhos[2];	// insere a lista_parametros
 	declaracao_funcao->filhos[pos+2] = cabecalho->filhos[4];	// insere o corpo
 

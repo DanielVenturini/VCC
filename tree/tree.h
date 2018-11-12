@@ -24,6 +24,8 @@ typedef struct TreeNode {
 	char max_filhos;			// quantidade de filhos máxima sem realocar; necessária para o realloc
 	struct TreeNode **filhos;	// o vetor para cada um dos filhos
 	EBNFType bnfval;			// tipo do nó de acordo com a BNF
+	/* USADO PELO ANALISADOR SEMÂNTICO */
+	TokenType tipoExpressao;	// o tipo desta expressão.
 } TreeNode;
 
 /********************************************************************

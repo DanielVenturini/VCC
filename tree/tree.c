@@ -48,6 +48,7 @@ TreeNode *novo_node(TokenRecord *token, EBNFType bnfval){
     node->token = token;
     node->bnfval = bnfval;
     node->max_filhos = NUM_INICIAL_FILHOS;
+    node->tipoExpressao = 0;    // 0 é VAZIO. Também pode ser INTEIRO ou FLUTUANTE
 
     nullPosicoes(node, 0, node->max_filhos);
 
