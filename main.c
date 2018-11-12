@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
         if(flags[4])
             printArvoreT(st);
 
-        TabSimb *tabela = constroiTabSimb(st);          // recupera a tabela de símbolos a partir da ST
+        TabSimb *tabela = constroiTabSimb(st, arquivos[i]); // recupera a tabela de símbolos a partir da ST
 
         i ++;
     }

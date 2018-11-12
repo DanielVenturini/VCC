@@ -1,5 +1,7 @@
 #include "semantico.h"
 
+char *filename;
+
 void getTipso(TreeNode *node){
 	char tipo = node->tipoExpressao;
 	switch (node->bnfval) {
@@ -34,61 +36,69 @@ void getTipso(TreeNode *node){
 
 
 // esta função existe apenas para alocar o escopo local caso precise
-void insere(TabSimb *escopoSuperior, TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
+void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 
-	char *id = (char *) var->token->tokenval;
+	char *id = (char *) var->token->val;
 	char funcao = tipoAnterior == DECLARACAO_FUNCAO ? 1 : 0;	// recupera se este é uma variavel ou uma declaracao_funcao
 
 	// deve procurar apenas no escopo local
-	if(!contem(escopoLocal, id, 0, funcao)) {
-		//printf("ERRO: %s já existe neste escopo.\n", id);
-		return;
+	if(contem(escopoLocal, id, 0, funcao)) {
+		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0);
 	} else {	// se não tem, então insere
 
-		if(!escopoLocal)	// se é a primeira variável do escopo
-			escopoLocal = criaTabSim(escopoSuperior);
-
-		//printf("INSERINDO: %s.\n", id);
+		printf("Adicionando var %s.\n", (char *) var->token->val);
 		insere_escopo(escopoLocal, id, var->tipoExpressao, funcao);
 	}
 }
 
 
-void procura(TabSimb *escopoSuperior, TabSimb *escopoLocal, TreeNode *filho) {
+void procura(TabSimb *escopoLocal, TreeNode *filho) {
 
 }
 
+
 // tipoAnterior é quem é o pai deste nó st
 // se o nó for um VAR e  o tipoAnterior for lista_variaveis, declaracao_funcao, parametro
-void recursivo(TabSimb *escopoSuperior, TreeNode *st, EBNFType tipoAnterior) {
+void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 	if(!st)
 		return;
 
 	unsigned char i;
-	TabSimb *escopoLocal = NULL;			// somente se precisar alocar
 	for(i = 0; st->filhos[i]; i ++) {		// cada uma das declaracoes globais
 		TreeNode *filho = st->filhos[i];
-		recursivo(escopoSuperior, filho, st->bnfval);
+
+		TabSimb *escopoInferior;
+		// se começar um novo bloco
+		if(st->filhos[0]->bnfval == SE || st->filhos[0]->bnfval == SENAO ||
+		   st->filhos[0]->bnfval == REPITA || st->filhos[0]->bnfval == DECLARACAO_FUNCAO) {
+
+			escopoInferior = criaTabSim(escopoLocal);
+			recursivo(escopoInferior, filho, st->bnfval);	// utiliza o novo escopo
+		} else {
+			recursivo(escopoLocal, filho, st->bnfval);		// utiliza o escopo atual
+		}
 	}
 
 	if(st->bnfval == VAR) {
 
 		// se for um desses tipos, então adiciona na tabela de símbolos
 		if(tipoAnterior == LISTA_VARIAVEIS || tipoAnterior == DECLARACAO_FUNCAO || tipoAnterior == PARAMETRO) {
-		   	printf("-");
-			getTipso(st);
-			insere(escopoSuperior, escopoLocal, st, tipoAnterior);
+			//getTipso(st);
+			insere(escopoLocal, st, tipoAnterior);
 		} else {	// então procura na tabela de símbolos
-			getTipso(st);
-			procura(escopoSuperior, escopoLocal, st);
+			//getTipso(st);
+			procura(escopoLocal, st);
 		}
 	}
 }
 
 
-TabSimb *constroiTabSimb(TreeNode *st) {
+TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
-	TabSimb *global = criaTabSim(NULL/*, "global\0"*/);		// NULL é o escopo superior, que no caso não existe
+	filename = nomeArquivo;
+	TabSimb *programa = criaTabSim(NULL/*, "global\0"*/);	// escopo superior, que no caso não existe
+	TabSimb *global = criaTabSim(programa);					// escopo global
+
 	recursivo(global, st, -1);
 
 	return global;
