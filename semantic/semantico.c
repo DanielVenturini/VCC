@@ -35,7 +35,7 @@ void getTipso(TreeNode *node){
 }
 
 
-// esta função existe apenas para alocar o escopo local caso precise
+// função responsável por procurar e inserir um nó na tabela de símbolos
 void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 
 	char *id = (char *) var->token->val;
@@ -46,14 +46,23 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0);
 	} else {	// se não tem, então insere
 
-		printf("Adicionando var %s.\n", (char *) var->token->val);
 		insere_escopo(escopoLocal, id, var->tipoExpressao, funcao);
 	}
 }
 
+// função responsável por procurar um nó na tabela
+void procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 
-void procura(TabSimb *escopoLocal, TreeNode *filho) {
+	char *id = (char *) var->token->val;
+	char funcao = tipoAnterior == CHAMADA_FUNCAO ? 1 : 0;		// recupera se este é uma variavel ou uma declaracao_funcao
 
+	// procura em todos os escopos passados
+	// se não tiver
+	Identificador *identificador = contem(escopoLocal, id, 1, funcao);
+	if(!identificador) {
+		erro(filename, var->token, "Variável não declarada neste e nem nos escopos superiores.", 0);
+		insere_escopo(escopoLocal, id, var->tipoExpressao, funcao);	// insere na tabela, para suprimir os erros que 
+	}
 }
 
 
@@ -69,9 +78,7 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 
 		TabSimb *escopoInferior;
 		// se começar um novo bloco
-		if(st->filhos[0]->bnfval == SE || st->filhos[0]->bnfval == SENAO ||
-		   st->filhos[0]->bnfval == REPITA || st->filhos[0]->bnfval == DECLARACAO_FUNCAO) {
-
+		if(filho->bnfval == B_SE || filho->bnfval == B_REPITA || filho->bnfval == DECLARACAO_FUNCAO) {
 			escopoInferior = criaTabSim(escopoLocal);
 			recursivo(escopoInferior, filho, st->bnfval);	// utiliza o novo escopo
 		} else {
@@ -87,7 +94,7 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 			insere(escopoLocal, st, tipoAnterior);
 		} else {	// então procura na tabela de símbolos
 			//getTipso(st);
-			procura(escopoLocal, st);
+			procura(escopoLocal, st, tipoAnterior);
 		}
 	}
 }

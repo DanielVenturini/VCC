@@ -1,6 +1,7 @@
 #ifndef _TAB_SIMB_H_
 #define _TAB_SIMB_H_
 
+#include <string.h>
 #include "../tree/tree.h"
 
 /********************************************************************
@@ -27,6 +28,7 @@ typedef struct {
 
 	struct TabSimb *escopoSuperior;	// o escopo superior, que tem as demais variáveis que são acessíveis
 	Identificador *declarados;		// lista das variáveis declaradas neste escopo
+	unsigned char numEscopo;		// numero deste escopo
 	char *nome;						// nome do escopo: 'nome de função', se, senao, enquanto
 
 } TabSimb;
@@ -39,6 +41,6 @@ Identificador *contem(TabSimb *, char *, char, char);	// retorna o Identificador
 TabSimb *criaTabSim(TabSimb */*, char */);				// cria a tabela de símbolos e aponta para o escopo superior e atribui um nome
 TokenType getTipo(TabSimb *, char *);					// retorna o tipo de um identificador da tabela
 void insere_escopo(TabSimb *, char *, TokenType, char);	// insere o token do nó na tabela de símbolos
-void printTabSimb(TabSimb *);							// printa a tabela de símbolos
+void printEscopo(TabSimb *, char);						// printa a tabela de símbolos
 
 #endif
