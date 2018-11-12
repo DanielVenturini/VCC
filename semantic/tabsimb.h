@@ -26,7 +26,7 @@ typedef struct {
 typedef struct {
 
 	struct TabSimb *escopoSuperior;	// o escopo superior, que tem as demais variáveis que são acessíveis
-	Identificador **declarados;		// lista das variáveis declaradas neste escopo
+	Identificador *declarados;		// lista das variáveis declaradas neste escopo
 	char *nome;						// nome do escopo: 'nome de função', se, senao, enquanto
 
 } TabSimb;
@@ -35,10 +35,10 @@ typedef struct {
 *                   	DEFINICAO DAS FUNÇÕES                       *
 ********************************************************************/
 
-Identificador *contem(TabSimb *, char *, char);	// retorna o Identificador se este estiver na tabela de símbolos
-TabSimb *criaTabSim(TabSimb */*, char */);			// cria a tabela de símbolos e aponta para o escopo superior e atribui um nome
-TokenType getTipo(TabSimb *, char *);			// retorna o tipo de um identificador da tabela
-void inserir(TabSimb *, char *);				// insere o token do nó na tabela de símbolos
-void printTabSimb(TabSimb *);					// printa a tabela de símbolos
+Identificador *contem(TabSimb *, char *, char, char);	// retorna o Identificador se este estiver na tabela de símbolos
+TabSimb *criaTabSim(TabSimb */*, char */);				// cria a tabela de símbolos e aponta para o escopo superior e atribui um nome
+TokenType getTipo(TabSimb *, char *);					// retorna o tipo de um identificador da tabela
+void insere_escopo(TabSimb *, char *, TokenType, char);	// insere o token do nó na tabela de símbolos
+void printTabSimb(TabSimb *);							// printa a tabela de símbolos
 
 #endif

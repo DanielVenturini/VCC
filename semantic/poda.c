@@ -32,7 +32,7 @@ void get_lista_argumentos(TreeNode *lista_argumentos) {
 
 TreeNode *get_chamada_funcao(TreeNode *chamada_funcao) {
 
-	chamada_funcao->filhos[0]->bnfval = DECLARACAO_FUNCAO;
+	chamada_funcao->filhos[0]->bnfval = VAR;
 	chamada_funcao->filhos[1] = chamada_funcao->filhos[2];	// troca o '(' pela lista_argumentos
 
 	remove_filho(chamada_funcao);	// remove o filho ')'
@@ -473,7 +473,7 @@ void get_declaracao_funcao(TreeNode *declaracao_funcao) {
 
 	TreeNode *cabecalho = declaracao_funcao->filhos[pos];
 	declaracao_funcao->filhos[pos] = cabecalho->filhos[0];		// remove o nó cabecalho e adiciona o nó ID
-	declaracao_funcao->filhos[pos]->bnfval = DECLARACAO_FUNCAO;	// não é um VAR, mas sim DECLARACAO_FUNCAO
+	declaracao_funcao->filhos[pos]->bnfval = VAR;				// é um VAR
 	declaracao_funcao->filhos[pos]->tipoExpressao = tipo;
 	declaracao_funcao->filhos[pos+1] = cabecalho->filhos[2];	// insere a lista_parametros
 	declaracao_funcao->filhos[pos+2] = cabecalho->filhos[4];	// insere o corpo

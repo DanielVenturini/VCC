@@ -34,16 +34,22 @@ void getTipso(TreeNode *node){
 
 
 // esta função existe apenas para alocar o escopo local caso precise
-void insere(TabSimb *escopoSuperior, TabSimb *escopoLocal, TreeNode *var) {
+void insere(TabSimb *escopoSuperior, TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
+
+	char *id = (char *) var->token->tokenval;
+	char funcao = tipoAnterior == DECLARACAO_FUNCAO ? 1 : 0;	// recupera se este é uma variavel ou uma declaracao_funcao
 
 	// deve procurar apenas no escopo local
-	if(!contem(escopoLocal, (char *) var->token->tokenval, 0)) {
-		// printa mensagem de erro
+	if(!contem(escopoLocal, id, 0, funcao)) {
+		//printf("ERRO: %s já existe neste escopo.\n", id);
 		return;
 	} else {	// se não tem, então insere
 
-		if(!escopoLocal)
+		if(!escopoLocal)	// se é a primeira variável do escopo
 			escopoLocal = criaTabSim(escopoSuperior);
+
+		//printf("INSERINDO: %s.\n", id);
+		insere_escopo(escopoLocal, id, var->tipoExpressao, funcao);
 	}
 }
 
@@ -53,7 +59,7 @@ void procura(TabSimb *escopoSuperior, TabSimb *escopoLocal, TreeNode *filho) {
 }
 
 // tipoAnterior é quem é o pai deste nó st
-// se o nó for um VAR e for uma lista_variaveis, declaracao_funcao, parametro
+// se o nó for um VAR e  o tipoAnterior for lista_variaveis, declaracao_funcao, parametro
 void recursivo(TabSimb *escopoSuperior, TreeNode *st, EBNFType tipoAnterior) {
 	if(!st)
 		return;
@@ -61,19 +67,20 @@ void recursivo(TabSimb *escopoSuperior, TreeNode *st, EBNFType tipoAnterior) {
 	unsigned char i;
 	TabSimb *escopoLocal = NULL;			// somente se precisar alocar
 	for(i = 0; st->filhos[i]; i ++) {		// cada uma das declaracoes globais
-
 		TreeNode *filho = st->filhos[i];
-		recursivo(escopoSuperior, filho, filho->bnfval);
+		recursivo(escopoSuperior, filho, st->bnfval);
+	}
 
-		if(filho->bnfval == VAR || filho->bnfval == DECLARACAO_FUNCAO) {	// é uma variável ou uma função
+	if(st->bnfval == VAR) {
 
-			// se for um desses tipos, então adiciona na tabela de símbolos
-			if(tipoAnterior == LISTA_VARIAVEIS || tipoAnterior == DECLARACAO_FUNCAO || tipoAnterior == PARAMETRO) {
-				getTipso(filho);
-				//insere(escopoSuperior, escopoLocal, filho);
-			} else {	// então procura na tabela de símbolos
-				procura(escopoSuperior, escopoLocal, filho);
-			}
+		// se for um desses tipos, então adiciona na tabela de símbolos
+		if(tipoAnterior == LISTA_VARIAVEIS || tipoAnterior == DECLARACAO_FUNCAO || tipoAnterior == PARAMETRO) {
+		   	printf("-");
+			getTipso(st);
+			insere(escopoSuperior, escopoLocal, st, tipoAnterior);
+		} else {	// então procura na tabela de símbolos
+			getTipso(st);
+			procura(escopoSuperior, escopoLocal, st);
 		}
 	}
 }
