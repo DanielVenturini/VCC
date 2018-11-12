@@ -7,7 +7,7 @@
 /********************************************************************
 *                   	DEFINICAO DAS FUNÇÕES                       *
 ********************************************************************/
-void erro(char *nomeArquivo, TokenRecord *token, char *msgErro);
+void erro(char *nomeArquivo, TokenRecord *token, char *msgErro, char sair);
 void warnig(char *nomeArquivo, TokenRecord *token, char *msgErro);
 
 #endif
