@@ -86,7 +86,8 @@ void printLine(unsigned short int numline, unsigned char posLine) {
 	printf("^\n");
 }
 
-void erro(char *nomeArquivo, TokenRecord *token, char *msgErro) {
+// sair diz se encerra a execução do vcc
+void erro(char *nomeArquivo, TokenRecord *token, char *msgErro, char sair) {
 
 	if(!abreArquivo(nomeArquivo)) {
 		printf("Erro: arquivo %s com erro não existe.\n", nomeArquivo);
@@ -97,5 +98,6 @@ void erro(char *nomeArquivo, TokenRecord *token, char *msgErro) {
 	avancaLinha(token->numline);
 	printLine(token->numline, token->numcaracter);
 
-	exit(0);
+	if(sair)
+		exit(0);
 }
