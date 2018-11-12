@@ -467,7 +467,7 @@ void get_declaracao_funcao(TreeNode *declaracao_funcao) {
 		tipo = TIPONode->filhos[0]->token->tokenval;
 		pos = 1;
 	} else {
-		tipo = -1;	// void
+		tipo = 0;	// void
 		pos = 0;
 	}
 
