@@ -66,6 +66,7 @@ Identificador *procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnteri
 		// insere na tabela, para suprimir os erros que este irão causar
 		identificador = insere_escopo(escopoLocal, var, funcao, filename);
 		identificador->declarada = 0;	// marca que não existe
+		identificador->erro = 1;
 	}
 
 	return identificador;
@@ -78,6 +79,13 @@ Identificador *procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnteri
 TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, EBNFType atribuicao) {
 	if(!no)
 		return -1;
+
+	// se for chamada de função
+	// substitui pelo nome da chamada
+	if(no->bnfval == CHAMADA_FUNCAO) {
+		tipoAnterior = CHAMADA_FUNCAO;
+		no = no->filhos[0];
+	}
 
 	if(no->bnfval == VAR) {
 
@@ -94,7 +102,7 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 
 		// se não é atribuição, tem que verificar se a VAR foi iniciada
 		// se não foi iniciada, e não tiver erro, então gera o erro
-		if (atribuicao != B_ATRIBUICAO && !var->iniciada && !var->erro) {
+		if (atribuicao != B_ATRIBUICAO && !var->iniciada && !var->erro && !var->funcao) {
 			erro(filename, no->token, "Variável não inicializada.", 0);
 			return var->tipo;
 		} else if (atribuicao != B_ATRIBUICAO) {
@@ -125,15 +133,13 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior)
 				st->tipoExpressao = tipo1;	// então atribui a operação
 				procura(escopoLocal, st->filhos[0], tipoAnterior)->iniciada = 1;	// marca como iniciada
 			} else {						// fazer cast e gerar um warning
+				procura(escopoLocal, st->filhos[0], tipoAnterior)->iniciada = 1;	// marca como iniciada
 				erro(filename, st->token, "Atribuição com tipos diferentes.", 0);
-				// do something
 			}
 
 			// marca que foi inicializada se for uma atribuição
 			break;
 	}
-
-
 }
 
 

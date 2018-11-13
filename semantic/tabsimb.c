@@ -133,11 +133,13 @@ Identificador *contem(TabSimb *escopo, char *id, char escopoProcura, char funcao
 		return NULL;
 
 	Identificador *identificador = escopo->declarados;
+	Identificador *identificadorErrado = NULL;
 	while(identificador) {
 
 		// se achou o identificador na tabela de símbolos
 		if(!strcmp(id, identificador->nome) && funcao == identificador->funcao) {
 			if(!identificador->declarada) {	// se a VAR não foi declarada
+				identificadorErrado = identificador;
 				goto proximo;				// continua procurando para retornar a primera VAR declarada
 			}
 
@@ -148,10 +150,10 @@ Identificador *contem(TabSimb *escopo, char *id, char escopoProcura, char funcao
 		identificador = (Identificador *) identificador->proximo;		// avança para o próximo identificador
 	}
 
-	if(escopoProcura) {		// se é para procurar somente no local e não foi encontrado
+	if(escopoProcura && !identificadorErrado) {	// se é para procurar somente no local e não foi encontrado
 		return contem((TabSimb *) escopo->escopoSuperior, id, 1, funcao);// procura no escopo superior
 	} else {
-		return NULL;
+		return identificadorErrado;
 	}
 }
 
