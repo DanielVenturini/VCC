@@ -46,7 +46,7 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0);
 	} else {	// se não tem, então insere
 
-		insere_escopo(escopoLocal, id, var->tipoExpressao, funcao);
+		insere_escopo(escopoLocal, var, funcao, filename);
 	}
 }
 
@@ -54,14 +54,14 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 void procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 
 	char *id = (char *) var->token->val;
-	char funcao = tipoAnterior == CHAMADA_FUNCAO ? 1 : 0;		// recupera se este é uma variavel ou uma declaracao_funcao
+	char funcao = tipoAnterior == CHAMADA_FUNCAO ? 1 : 0;	// recupera se este é uma variavel ou uma declaracao_funcao
 
 	// procura em todos os escopos passados
 	// se não tiver
 	Identificador *identificador = contem(escopoLocal, id, 1, funcao);
 	if(!identificador) {
 		erro(filename, var->token, "Variável não declarada neste e nem nos escopos superiores.", 0);
-		insere_escopo(escopoLocal, id, var->tipoExpressao, funcao);	// insere na tabela, para suprimir os erros que 
+		insere_escopo(escopoLocal, var, funcao, filename);	// insere na tabela, para suprimir os erros que 
 	}
 }
 
@@ -78,7 +78,9 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 
 		TabSimb *escopoInferior;
 		// se começar um novo bloco
-		if(filho->bnfval == B_SE || filho->bnfval == B_REPITA || filho->bnfval == DECLARACAO_FUNCAO) {
+		// se for um B_SE, tem que separar um bloco para o corpo do SE e outro para o corpo do SENÃO
+		// se o i == 0, não pode entrar, pois está no corpo da expressao
+		if((st->bnfval == B_SE && i != 0) || filho->bnfval == B_REPITA || filho->bnfval == DECLARACAO_FUNCAO) {
 
 			if(filho->bnfval == DECLARACAO_FUNCAO) {		// o nome da função é no escopo global, mas o resto é local
 				TreeNode *var = filho->filhos[1]->bnfval == VAR ? filho->filhos[1] : filho->filhos[0];

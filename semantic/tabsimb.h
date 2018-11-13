@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include "../tree/tree.h"
+#include "../desacerto.h"
 
 /********************************************************************
 *                   ESTRUTURAS NECESSÁRIAS                          *
@@ -19,7 +20,7 @@ typedef struct {
 	char funcao;	// apenas para saber se o identificador remete a uma função
 	char iniciada;	// indica se a variável foi iniciada em alguma parte do código
 	char utilizada;	// indica se a variável está sendo utilizada em alguma parte do código
-	unsigned short int *indices;	// se houver índices
+	short int *indices;				// se houver índices. Cada posição representa uma dimensão, e cada valor representa o tamanho máximo daquela dimensão
 	struct Identificador *proximo;	// proximo identificador do escopo
 
 } Identificador;
@@ -43,6 +44,6 @@ Identificador *contem(TabSimb *, char *, char, char);	// retorna o Identificador
 TabSimb *criaTabSim(TabSimb *);							// cria a tabela de símbolos e aponta para o escopo superior e atribui um nome
 TokenType getTipo(TabSimb *, char *);					// retorna o tipo de um identificador da tabela
 void printEscopo(TabSimb *, char);						// printa a tabela de símbolos
-Identificador *insere_escopo(TabSimb *, char *, TokenType, char);	// insere o token do nó na tabela de símbolos
+Identificador *insere_escopo(TabSimb *, TreeNode *, char, char *);	// insere o token do nó na tabela de símbolos
 
 #endif
