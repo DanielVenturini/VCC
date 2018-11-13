@@ -42,6 +42,7 @@ Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo)
 	id->iniciada = 0;
 	id->utilizada = 0;
 	id->proximo = NULL;
+	id->declarada = 1; // mas pode ser alterada se o identificador for criado apenas para informação
 
 	id->erro = getIndice(var, id, nomeArquivo);
 	return id;
@@ -126,6 +127,7 @@ void printEscopo(TabSimb *escopo, char qtdTab) {
 // procura e retorna o id dentro do escopo.
 // se o escopoProcura for 0, procurar apenas no escopo local
 // se o escopoProcura for 1, procurar nos escopos superiores
+// se a VAR tiver erro, RETORNA O TIPO DA PRIMEIRA VAR DECLARADA, OU NULL
 Identificador *contem(TabSimb *escopo, char *id, char escopoProcura, char funcao) {
 	if(!escopo)		// se não houver nenhuma variável no escopo
 		return NULL;
@@ -135,9 +137,14 @@ Identificador *contem(TabSimb *escopo, char *id, char escopoProcura, char funcao
 
 		// se achou o identificador na tabela de símbolos
 		if(!strcmp(id, identificador->nome) && funcao == identificador->funcao) {
+			if(!identificador->declarada) {	// se a VAR não foi declarada
+				goto proximo;				// continua procurando para retornar a primera VAR declarada
+			}
+
 			return identificador;
 		}
 
+		proximo:
 		identificador = (Identificador *) identificador->proximo;		// avança para o próximo identificador
 	}
 

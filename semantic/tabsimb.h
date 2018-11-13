@@ -20,6 +20,7 @@ typedef struct {
 	char funcao;	// apenas para saber se o identificador remete a uma função
 	char iniciada;	// indica se a variável foi iniciada em alguma parte do código
 	char utilizada;	// indica se a variável está sendo utilizada em alguma parte do código
+	char declarada;	// se a variável foi declarada, visto que é adicionado na tabela mesmo se não for declarado
 	short int *indices;				// se houver índices. Cada posição representa uma dimensão, e cada valor representa o tamanho máximo daquela dimensão
 	struct Identificador *proximo;	// proximo identificador do escopo
 

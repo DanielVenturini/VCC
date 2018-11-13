@@ -44,6 +44,8 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 	// deve procurar apenas no escopo local
 	if(contem(escopoLocal, id, 0, funcao)) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0);
+		// insere do mesmo geito e marca como erro
+		insere_escopo(escopoLocal, var, funcao, filename)->erro = 1;
 	} else {	// se não tem, então insere
 
 		insere_escopo(escopoLocal, var, funcao, filename);
@@ -51,7 +53,7 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 }
 
 // função responsável por procurar um nó na tabela
-void procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
+Identificador *procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 
 	char *id = (char *) var->token->val;
 	char funcao = tipoAnterior == CHAMADA_FUNCAO ? 1 : 0;	// recupera se este é uma variavel ou uma declaracao_funcao
@@ -61,8 +63,78 @@ void procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 	Identificador *identificador = contem(escopoLocal, id, 1, funcao);
 	if(!identificador) {
 		erro(filename, var->token, "Variável não declarada neste e nem nos escopos superiores.", 0);
-		insere_escopo(escopoLocal, var, funcao, filename);	// insere na tabela, para suprimir os erros que 
+		// insere na tabela, para suprimir os erros que este irão causar
+		identificador = insere_escopo(escopoLocal, var, funcao, filename);
+		identificador->declarada = 0;	// marca que não existe
 	}
+
+	return identificador;
+}
+
+
+// retorna o tipo da expressão
+// se for uma VAR e conter erro, RETORNA O TIPO DA PRIMERIA VAR DECLARADA
+// aqui já é feita as verificações de inicialização e de uso
+TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, EBNFType atribuicao) {
+	if(!no)
+		return -1;
+
+	if(no->bnfval == VAR) {
+
+		// verificar o tipo da operação atual
+		// verificar se já é a inicialização
+		// atribuir o uso
+		Identificador *var = procura(escopoLocal, no, tipoAnterior);	// recupera a variável
+
+		if(!var || var->erro) {		// se a var não foi encontrada
+			return no->tipoExpressao;
+		}
+
+		no->tipoExpressao = var->tipo;	// atribui o tipo
+
+		// se não é atribuição, tem que verificar se a VAR foi iniciada
+		// se não foi iniciada, e não tiver erro, então gera o erro
+		if (atribuicao != B_ATRIBUICAO && !var->iniciada && !var->erro) {
+			erro(filename, no->token, "Variável não inicializada.", 0);
+			var->erro = 1;
+			return var->tipo;
+		} else if (atribuicao != B_ATRIBUICAO) {
+			var->utilizada = 1;			// marca como sendo utilizada
+		}
+
+		return var->tipo;
+	} else {						// se não for uma variável
+		return no->tipoExpressao;	// apenas retorna o tipo
+	}
+}
+
+
+// verifica os tipos das operações
+void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
+
+	switch(st->bnfval) {
+
+		case B_ATRIBUICAO:
+		case SOMA:
+		case SUBTRACAO:
+		case DIVISAO:
+		case MULTIPLICACAO:
+			1;
+			// se for atribuicao, será nesta primeira variável
+			TokenType tipo1 = getTipoNo(escopoLocal, st->filhos[0], tipoAnterior, st->bnfval);
+			TokenType tipo2 = getTipoNo(escopoLocal, st->filhos[1], tipoAnterior, 0);	// não precisa dizer qual é a operação
+
+			if(tipo1 == tipo2) {			// são os mesmos tipos
+				st->tipoExpressao = tipo1;	// então atribui a operação
+			} else {						// fazer cast e gerar um warning
+				// do something
+			}
+
+			// marca que foi inicializada se for uma atribuição
+			break;
+	}
+
+
 }
 
 
@@ -95,6 +167,7 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 		}
 	}
 
+	// aqui a tabela de símbolos é construido
 	if(st->bnfval == VAR) {
 
 		// se for um desses tipos, então adiciona na tabela de símbolos
@@ -106,6 +179,9 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 			procura(escopoLocal, st, tipoAnterior);
 		}
 	}
+
+	// se não for um VAR, então é uma operação
+	verificaOperacao(escopoLocal, st, tipoAnterior);
 }
 
 

@@ -61,6 +61,8 @@ TreeNode *get_fator(TreeNode *fator) {
 			1;		// apenas porque não pode ter declaração de variável como primeiro comando no case
 			TreeNode *numero = fator->filhos[0]->filhos[0];
 			numero->bnfval = NUMERO;
+			// para os números, atualiza o tipo aqui
+			numero->tipoExpressao = numero->token->tokenval == NUM_I ? INTEIRO : FLUTUANTE;
 			return numero;
 
 		default:	// caso onde o fator leva à '(' expressao ')'
