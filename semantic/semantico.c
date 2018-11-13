@@ -79,6 +79,13 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 		TabSimb *escopoInferior;
 		// se começar um novo bloco
 		if(filho->bnfval == B_SE || filho->bnfval == B_REPITA || filho->bnfval == DECLARACAO_FUNCAO) {
+
+			if(filho->bnfval == DECLARACAO_FUNCAO) {		// o nome da função é no escopo global, mas o resto é local
+				TreeNode *var = filho->filhos[1]->bnfval == VAR ? filho->filhos[1] : filho->filhos[0];
+				recursivo(escopoLocal, var, filho->bnfval);	// adiciona o ID no escopo global
+			}
+
+			// cria um novo escopo
 			escopoInferior = criaTabSim(escopoLocal);
 			recursivo(escopoInferior, filho, st->bnfval);	// utiliza o novo escopo
 		} else {
