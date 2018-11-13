@@ -96,7 +96,6 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 		// se não foi iniciada, e não tiver erro, então gera o erro
 		if (atribuicao != B_ATRIBUICAO && !var->iniciada && !var->erro) {
 			erro(filename, no->token, "Variável não inicializada.", 0);
-			var->erro = 1;
 			return var->tipo;
 		} else if (atribuicao != B_ATRIBUICAO) {
 			var->utilizada = 1;			// marca como sendo utilizada
@@ -115,10 +114,8 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior)
 	switch(st->bnfval) {
 
 		case B_ATRIBUICAO:
-		case SOMA:
-		case SUBTRACAO:
-		case DIVISAO:
-		case MULTIPLICACAO:
+		case OPERADOR_SOMA:
+		case OPERADOR_MULTIPLICACAO:
 			1;
 			// se for atribuicao, será nesta primeira variável
 			TokenType tipo1 = getTipoNo(escopoLocal, st->filhos[0], tipoAnterior, st->bnfval);
@@ -126,7 +123,9 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior)
 
 			if(tipo1 == tipo2) {			// são os mesmos tipos
 				st->tipoExpressao = tipo1;	// então atribui a operação
+				procura(escopoLocal, st->filhos[0], tipoAnterior)->iniciada = 1;	// marca como iniciada
 			} else {						// fazer cast e gerar um warning
+				erro(filename, st->token, "Atribuição com tipos diferentes.", 0);
 				// do something
 			}
 
