@@ -26,14 +26,23 @@ void avancaLinha(unsigned short int numline){
 // esta função printa as informações sobre o erro/warning:
 /* arquivo.tpp:linha:coluna: erro: esperado ‘TOKENTYPE’, ‘TOKENTYPE’ ou ‘TOKENTYPE’ antes de ‘TOKENTYPE‘
 *  LINHA DO ARQUIVO COM ERRO */
-void printInformacoes(char *nomeArquivo, TokenRecord *token, char *msgErro){
+void printInformacoes(char *nomeArquivo, TokenRecord *token, char *msgErro, char erro){
 	// \e[38=cor_fonte; 5=sei_la; 255=corm
 	printf("\e[38;5;184m");		// cor branco
 	printf("%s:", nomeArquivo);
-	printf("%d:", token->numline);
-	printf("%d:", token->numcaracter);
-	printf("\e[38;5;196m");		// cor vermelho
-	printf(" erro: ");
+	if(token) {		// se for passado o token
+		printf("%d:", token->numline);
+		printf("%d:", token->numcaracter);
+	}
+
+	if(erro) {
+		printf("\e[38;5;196m");		// cor vermelho
+		printf(" Erro: ");
+	} else {
+		printf("\e[38;5;123m");		// cor vermelho
+		printf(" Aviso: ");
+	}
+
 	printf("%s\n", msgErro);
 }
 
@@ -87,14 +96,17 @@ void printLine(unsigned short int numline, unsigned char posLine) {
 }
 
 // sair diz se encerra a execução do vcc
-void erro(char *nomeArquivo, TokenRecord *token, char *msgErro, char sair) {
+void erro(char *nomeArquivo, TokenRecord *token, char *msgErro, char sair, char erro) {
 
 	if(!abreArquivo(nomeArquivo)) {
 		printf("Erro: arquivo %s com erro não existe.\n", nomeArquivo);
 		return;
 	}
 
-	printInformacoes(nomeArquivo, token, msgErro);
+	printInformacoes(nomeArquivo, token, msgErro, erro);
+	if(!token)
+		return;
+
 	avancaLinha(token->numline);
 	printLine(token->numline, token->numcaracter);
 
