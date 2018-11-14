@@ -23,7 +23,7 @@ char getIndice(TreeNode *var, Identificador *id, char *nomeArquivo) {
 
 		if(id->indices[i2] < 1 || var->filhos[i2]->token->tokenval == NUM_F) {
 			temErro = 1;
-			erro(nomeArquivo, var->filhos[i2]->token, "Índice inválido'.", 0);
+			erro(nomeArquivo, var->filhos[i2]->token, "Índice inválido'.", 0, 1);
 		}
 	}
 
@@ -37,13 +37,14 @@ Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo,
 
 	id->tipo = var->tipoExpressao;
 	id->nome = (char *) var->token->val;
-	id->indices = NULL;		// pode ser alterado na função getIndice
 	id->funcao = funcao;
 	id->iniciada = 0;
 	id->utilizada = 0;
+	id->declarada = 1; // mas pode ser alterada se o identificador for criado apenas para informação
+	id->retornou = 0;
+	id->indices = NULL;		// pode ser alterado na função getIndice
 	id->proximo = NULL;
 	id->token = token;
-	id->declarada = 1; // mas pode ser alterada se o identificador for criado apenas para informação
 
 	id->erro = getIndice(var, id, nomeArquivo);
 	return id;
@@ -110,10 +111,11 @@ void printEscopo(TabSimb *escopo, char qtdTab) {
 		char *erro = id->erro ? "ERR" : "N-ERR";
 		char *iniciada = id->iniciada ? "INIC" : "N-INIC";
 		char *utilizada = id->utilizada ? "UTLZ" : "N-UTLZ";
+		char *retornou = id->retornou ? "RET" : "N-RET";
 		char *indice = id->indices ? "IND" : "N-IND";
 
 		tab(qtdTab+2);
-		printf("|%s: %s;%s;%s;%s;%s;%s|\n", id->nome, funcao, tipo, erro, iniciada, utilizada, indice);
+		printf("|%s: %s;%s;%s;%s;%s;%s;%s|\n", id->nome, funcao, tipo, erro, iniciada, utilizada, retornou, indice);
 		id = (Identificador *) id->proximo;
 	}
 

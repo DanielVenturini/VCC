@@ -21,6 +21,7 @@ typedef struct {
 	char iniciada;	// indica se a variável foi iniciada em alguma parte do código
 	char utilizada;	// indica se a variável está sendo utilizada em alguma parte do código
 	char declarada;	// se a variável foi declarada, visto que é adicionado na tabela mesmo se não for declarado
+	char retornou;	// se a função retornou algum valor
 	short int *indices;				// se houver índices. Cada posição representa uma dimensão, e cada valor representa o tamanho máximo daquela dimensão
 	struct Identificador *proximo;	// proximo identificador do escopo
 	TokenRecord *token;				// o token deste identificador, pois se precisar printar erro
