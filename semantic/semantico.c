@@ -42,7 +42,8 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 	char funcao = tipoAnterior == DECLARACAO_FUNCAO ? 1 : 0;	// recupera se este é uma variavel ou uma declaracao_funcao
 
 	// deve procurar apenas no escopo local
-	if(contem(escopoLocal, id, 0, funcao)) {
+	Identificador *identificador = contem(escopoLocal, id, 0, funcao);
+	if(identificador && !identificador->erro) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0);
 		// insere do mesmo geito e marca como erro
 		insere_escopo(escopoLocal, var, funcao, filename)->erro = 1;
@@ -117,7 +118,7 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 
 
 // verifica os tipos das operações
-void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
+void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
 
 	switch(st->bnfval) {
 
@@ -130,10 +131,19 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior)
 			TokenType tipo2 = getTipoNo(escopoLocal, st->filhos[1], tipoAnterior, 0);	// não precisa dizer qual é a operação
 
 			if(tipo1 == tipo2) {			// são os mesmos tipos
+
 				st->tipoExpressao = tipo1;	// então atribui a operação
 				procura(escopoLocal, st->filhos[0], tipoAnterior)->iniciada = 1;	// marca como iniciada
 			} else {						// fazer cast e gerar um warning
-				procura(escopoLocal, st->filhos[0], tipoAnterior)->iniciada = 1;	// marca como iniciada
+
+				Identificador *id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
+				Identificador *id2 = procura(escopoLocal, st->filhos[1], tipoAnterior);
+
+				id1->iniciada = 1;
+				// se uma das duas tiver erro, então não printa a mensagem de erro
+				if(id1->erro || id2->erro)
+					return;
+
 				erro(filename, st->token, "Atribuição com tipos diferentes.", 0);
 			}
 
@@ -145,7 +155,8 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior)
 
 // tipoAnterior é quem é o pai deste nó st
 // se o nó for um VAR e  o tipoAnterior for lista_variaveis, declaracao_funcao, parametro
-void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
+// nomeFuncao é o nome da funçao que está, para saber o tipo de retorno
+void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
 	if(!st)
 		return;
 
@@ -161,14 +172,15 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 
 			if(filho->bnfval == DECLARACAO_FUNCAO) {		// o nome da função é no escopo global, mas o resto é local
 				TreeNode *var = filho->filhos[1]->bnfval == VAR ? filho->filhos[1] : filho->filhos[0];
-				recursivo(escopoLocal, var, filho->bnfval);	// adiciona o ID no escopo global
+				nomeFuncao = (char *) var->token->val;
+				recursivo(escopoLocal, var, filho->bnfval, nomeFuncao);	// adiciona o ID no escopo global
 			}
 
 			// cria um novo escopo
 			escopoInferior = criaTabSim(escopoLocal);
-			recursivo(escopoInferior, filho, st->bnfval);	// utiliza o novo escopo
+			recursivo(escopoInferior, filho, st->bnfval, nomeFuncao);	// utiliza o novo escopo
 		} else {
-			recursivo(escopoLocal, filho, st->bnfval);		// utiliza o escopo atual
+			recursivo(escopoLocal, filho, st->bnfval, nomeFuncao);		// utiliza o escopo atual
 		}
 	}
 
@@ -186,9 +198,56 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior) {
 	}
 
 	// se não for um VAR, então é uma operação
-	verificaOperacao(escopoLocal, st, tipoAnterior);
+	verificaOperacao(escopoLocal, st, tipoAnterior, nomeFuncao);
 }
 
+
+// verifica se contém variável declarada não usada
+void verificaNaoUtilizadas(TabSimb *local) {
+
+	Identificador *id = local->declarados;
+	TabSimb *escopoSuperior = (TabSimb *) local->escopoSuperior;
+
+	for(; id;) {
+		// se a VAR não está sendo utilizada
+		// mas tem que ter sido declarada implicitamente
+		// também não pode ser a função principal
+		if(!id->utilizada && id->declarada && !id->erro && !(!strcmp(id->nome, "principal") && id->funcao)) {
+			erro(filename, id->token, "Variável declarada e não utilizada.", 0);
+		}
+
+		id = (Identificador *) id->proximo;
+	}
+
+	TabSimb *escoposInferior = (TabSimb *) local->escoposInferior;
+	while(escoposInferior) {				// procura nos escopos inferiores
+		verificaNaoUtilizadas(escoposInferior);
+		escoposInferior = (TabSimb *) escoposInferior->proximo;
+	}
+}
+
+
+// verifica se a função principal foi declarada
+// verifica direto na árvore
+void verificaPrincipal(TreeNode *st) {
+	unsigned char i;
+	for(i = 0; st->filhos[i]; i ++) {
+		if(st->filhos[i]->bnfval != DECLARACAO_FUNCAO){
+			continue;
+		}
+
+		TreeNode *declaracao_funcao = st->filhos[i];	// recupera a declaração de função
+		TreeNode *var = declaracao_funcao->filhos[1]->bnfval == VAR ? declaracao_funcao->filhos[1] : declaracao_funcao->filhos[0];
+
+		char *nomeFuncao = (char *) var->token->val;
+		if(!strcmp(nomeFuncao, "principal")) {		// se achou a função princpal
+			return;									// retorna sem gerar erro
+		}
+	}
+
+	printf("Vai brasillll.\n");
+	erro(filename, NULL, "Função principal() não declarada.", 0);
+}
 
 TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
@@ -196,7 +255,10 @@ TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 	TabSimb *programa = criaTabSim(NULL/*, "global\0"*/);	// escopo superior, que no caso não existe
 	TabSimb *global = criaTabSim(programa);					// escopo global
 
-	recursivo(global, st, -1);
+	recursivo(global, st, -1, "global");
+
+	verificaNaoUtilizadas(global);
+	verificaPrincipal(st);
 
 	return global;
 }

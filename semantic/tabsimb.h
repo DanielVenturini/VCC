@@ -23,6 +23,7 @@ typedef struct {
 	char declarada;	// se a variável foi declarada, visto que é adicionado na tabela mesmo se não for declarado
 	short int *indices;				// se houver índices. Cada posição representa uma dimensão, e cada valor representa o tamanho máximo daquela dimensão
 	struct Identificador *proximo;	// proximo identificador do escopo
+	TokenRecord *token;				// o token deste identificador, pois se precisar printar erro
 
 } Identificador;
 

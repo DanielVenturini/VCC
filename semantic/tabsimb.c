@@ -21,9 +21,9 @@ char getIndice(TreeNode *var, Identificador *id, char *nomeArquivo) {
 	for(i2 = 0; i2 < i; i2 ++) {
 		id->indices[i2] = *((int *) var->filhos[i2]->token->val);
 
-		if(id->indices[i2] < 1) {
+		if(id->indices[i2] < 1 || var->filhos[i2]->token->tokenval == NUM_F) {
 			temErro = 1;
-			erro(nomeArquivo, var->filhos[i2]->token, "Índice menor que '1'.", 0);
+			erro(nomeArquivo, var->filhos[i2]->token, "Índice inválido'.", 0);
 		}
 	}
 
@@ -31,7 +31,7 @@ char getIndice(TreeNode *var, Identificador *id, char *nomeArquivo) {
 }
 
 // dado o nó VAR e o tipo, retorna um Identificador
-Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo) {
+Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo, TokenRecord *token) {
 
 	Identificador *id = (Identificador *) malloc(sizeof(Identificador));
 
@@ -42,6 +42,7 @@ Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo)
 	id->iniciada = 0;
 	id->utilizada = 0;
 	id->proximo = NULL;
+	id->token = token;
 	id->declarada = 1; // mas pode ser alterada se o identificador for criado apenas para informação
 
 	id->erro = getIndice(var, id, nomeArquivo);
@@ -162,7 +163,7 @@ Identificador *contem(TabSimb *escopo, char *id, char escopoProcura, char funcao
 // funcao diz respeito se este VAR é uma função
 Identificador *insere_escopo(TabSimb *tabsimb, TreeNode *var, char funcao, char *nomeArquivo) {
 
-	Identificador *novo_id = cria_identificador(var, funcao, nomeArquivo);	// cria um identificador
+	Identificador *novo_id = cria_identificador(var, funcao, nomeArquivo, var->token);	// cria um identificador
 	novo_id->proximo = (struct Identificador *) tabsimb->declarados;		// aponta para o proximo
 	tabsimb->declarados = novo_id;											// insere na lista
 
