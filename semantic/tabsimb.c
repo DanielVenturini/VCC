@@ -6,14 +6,16 @@ unsigned char numEscopo = 0;
 // cada posição da lista é do tamanho daquela dimensão
 // se um tamanho for negativo, então retorna 1 e marca na variável que esta contém erro
 char getIndice(TreeNode *var, Identificador *id, char *nomeArquivo) {
-	if(!var->filhos[0])					// se não houver índice
+	if(!var->filhos[0]) {				// se não houver índice
+		id->indices = NULL;				// marca como NULL
 		return 0;
+	}
 
 	char i;
 
 	for(i = 0; var->filhos[i]; i ++);	// contando cada filho
 
-	id->indices = (short int *) malloc((i+1)*sizeof(short int));
+	id->indices = (int *) malloc((i+1)*sizeof(int));
 	id->indices[i] = -1;				// na última posição insere o -1 para saber o final dos índices
 
 	char i2;

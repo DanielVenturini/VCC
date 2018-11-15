@@ -23,7 +23,7 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 	// deve procurar apenas no escopo local
 	Identificador *identificador = contem(escopoLocal, id, 0, funcao);
 	if(identificador && !identificador->erro && !identificador->funcao) {
-		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0, 0);
+		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0, 1);
 		// insere do mesmo geito e marca como erro
 		insere_escopo(escopoLocal, var, funcao, filename)->erro = 1;
 	} else {	// se não tem, então insere
@@ -105,11 +105,102 @@ void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char
 	st->tipoExpressao = id->tipo;
 }
 
+
+// verifica se a variável - se for uma VAR - na tabela de símbolos realmente tem índice
+// se tiver, verifica se o índice que está tentando acessar realmente está no limite
+void verificaIndice(TabSimb *escopoLocal, TreeNode *st) {
+	if(st->bnfval != VAR)			// se não for variável
+		return;
+
+	Identificador *id = procura(escopoLocal, st, -1);	// não precisa saber o tipoAnterior
+	if(!id->indices && !st->filhos[0])					// não tem índice e não está sendo acessada com índices
+		return;
+
+	if(id->erro)					// se já teve um erro, não processa
+		return;
+
+	// se tem índices e não está sendo especificado: id[10] id = 20 -> id[pos] = 20
+	if(id->indices && !st->filhos[0]) {
+		erro(filename, st->token, "Utilizando variável sem especificar a dimensão.", 0, 1);
+		id->erro = 1;
+		return;
+	}
+
+	if(!id->indices) {				// se não houver índice
+		if(!id->erro)				// se não houver erro, printa a mensagem; senão, suprime
+			erro(filename, st->token, "Variável não foi declarada com índices.", 0, 1);
+
+		id->erro = 1;
+		return;
+	}
+
+	// se chegou até aqui, então tem índice
+	// então percorre todos os índices do VAR e verifica se confere com o da tabela de símbolos
+	char i;
+	for(i = 0; st->filhos[i] && id->indices[i] != -1; i ++) {
+
+		// verifica se o índice declarado é inteiro
+		if(st->filhos[i]->tipoExpressao != INTEIRO) {
+			erro(filename, st->filhos[i]->token, "Índice não inteiro.", 0, 1);
+			id->erro = 1;
+			return;
+		}
+
+		// se não é um número, e é uma VAR, então verifica se contém na tabela de símbolos
+		if(st->filhos[i]->bnfval == VAR) {
+			printToken(st->filhos[i]->token, 0, 0);
+			printf("oioi.\n");
+			Identificador *var = procura(escopoLocal, st->filhos[i], VAR);
+			if(var->erro)
+				return;
+
+			if(!var->iniciada) {
+				erro(filename, st->filhos[i]->token, "Variável não inicializada.", 0, 1);
+				return;
+			}
+
+			continue;
+		}
+
+		// não é um var, nem número, mas é inteiro, então ignora
+		if(st->filhos[i]->bnfval != NUMERO) {
+			continue;
+		}
+
+		int *indiceAcessado = (int *) st->filhos[i]->token->val;
+		if(*indiceAcessado < 0) {
+			erro(filename, st->filhos[i]->token, "Índice inválido.", 0, 1);
+			id->erro = 1;
+			return;
+		}
+
+		// verifica se o indice acessado é maior que o tamanho máximo
+		int indiceDeclarado = id->indices[i];
+		if(*indiceAcessado >= indiceDeclarado) {
+			erro(filename, st->filhos[i]->token, "Índice maior que o declarado.", 0, 1);
+			id->erro = 1;
+			return;
+		}
+	}
+
+	// se ainda tiver st->filhos[i] então
+	// está tentando acessar uma dimensão que não existe
+	if(st->filhos[i]) {
+		erro(filename, st->token, "Variável não possúi todas estas dimensões.", 0, 1);
+		id->erro = 1;
+		return;
+	}
+}
+
+
 // processa as operações de atribuição, soma e multiplicacao
 void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
 
 	TokenType tipo1 = getTipoNo(escopoLocal, st->filhos[0], tipoAnterior, st->bnfval);
 	TokenType tipo2 = getTipoNo(escopoLocal, st->filhos[1], tipoAnterior, 0);	// não precisa dizer qual é a operação
+
+	verificaIndice(escopoLocal, st->filhos[0]);	// verifica o índice - se houver - da variável que está recebendo
+	verificaIndice(escopoLocal, st->filhos[1]);	// verifica o índice - se houver - da variável que está recebendo
 
 	if(tipo1 == tipo2) {			// são os mesmos tipos
 
@@ -171,6 +262,9 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior,
 
 		case B_RETORNA:
 			operacaoRetorna(escopoLocal, st, tipoAnterior, nomeFuncao);
+			break;
+
+		case CHAMADA_FUNCAO:
 			break;
 	}
 }
@@ -311,10 +405,10 @@ TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
 	recursivo(global, st, -1, "global");
 
-	printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");
+	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");
 	verificaNaoUtilizadas(global);
 	verificaPrincipal(st);
-	verificaRetornos(global);
+	verificaRetornos(global);*/
 
 	return global;
 }
