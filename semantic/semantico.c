@@ -197,8 +197,7 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 	TokenType tipo1 = getTipoNo(escopoLocal, st->filhos[0], tipoAnterior, st->bnfval);
 	TokenType tipo2 = getTipoNo(escopoLocal, st->filhos[1], tipoAnterior, 0);	// não precisa dizer qual é a operação
 
-	verificaIndice(escopoLocal, st->filhos[0]);	// verifica o índice - se houver - da variável que está recebendo
-	verificaIndice(escopoLocal, st->filhos[1]);	// verifica o índice - se houver - da variável que está recebendo
+	// o índice já foi verificado
 
 	if(tipo1 == tipo2) {					// são os mesmos tipos
 
@@ -207,8 +206,11 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 			return;
 
 		Identificador *id = procura(escopoLocal, st->filhos[0], tipoAnterior);
-		//id->iniciada = 1;
 		id->utilizada = 1;
+
+		if(st->bnfval == B_ATRIBUICAO)
+			id->iniciada = 1;
+
 		return;
 
 	// se os dois filhos não for número
@@ -310,7 +312,6 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *
 
 	// aqui a tabela de símbolos é construido
 	if(st->bnfval == VAR) {
-
 		// se for um desses tipos, então adiciona na tabela de símbolos
 		if(tipoAnterior == LISTA_VARIAVEIS || tipoAnterior == DECLARACAO_FUNCAO || tipoAnterior == PARAMETRO) {
 			insere(escopoLocal, st, tipoAnterior);
@@ -321,8 +322,10 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *
 				procura(escopoLocal, st, tipoAnterior)->utilizada = 1;
 			}
 
-		} else {	// então procura na tabela de símbolos
-			procura(escopoLocal, st, tipoAnterior);
+		} else {	// então procura na tabela de símbolos, pois está utilizando normalmente
+			verificaIndice(escopoLocal, st);	// verifica o índice - se houver - da variável que está recebendo
+			Identificador *id = procura(escopoLocal, st, tipoAnterior);
+			id->utilizada = 1;
 		}
 	}
 
