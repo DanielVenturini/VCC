@@ -148,8 +148,6 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st) {
 
 		// se não é um número, e é uma VAR, então verifica se contém na tabela de símbolos
 		if(st->filhos[i]->bnfval == VAR) {
-			printToken(st->filhos[i]->token, 0, 0);
-			printf("oioi.\n");
 			Identificador *var = procura(escopoLocal, st->filhos[i], VAR);
 			if(var->erro)
 				return;
@@ -202,27 +200,37 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 	verificaIndice(escopoLocal, st->filhos[0]);	// verifica o índice - se houver - da variável que está recebendo
 	verificaIndice(escopoLocal, st->filhos[1]);	// verifica o índice - se houver - da variável que está recebendo
 
-	if(tipo1 == tipo2) {			// são os mesmos tipos
+	if(tipo1 == tipo2) {					// são os mesmos tipos
 
-		st->tipoExpressao = tipo1;	// então atribui a operação
-		procura(escopoLocal, st->filhos[0], tipoAnterior)->iniciada = 1;	// marca como iniciada
-	} else {						// fazer cast e gerar um warning
-
-		// se for um NUM por exemplo, não pode chamar a função procura
-		// senão, esta irá tentar inserir o NUM na tabela de símbolos
-		if(st->filhos[1]->bnfval == VAR) {
-			Identificador *id2 = procura(escopoLocal, st->filhos[1], tipoAnterior);
-			if(id2->erro)
-				return;
-		}
-
-		Identificador *id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
-		// se uma das duas tiver erro, então não printa a mensagem de erro
-		if(id1->erro)
+		st->tipoExpressao = tipo1;			// então atribui a operação
+		if(st->filhos[0]->bnfval == NUMERO)	// se o número estiver na esquerda, então simplesmente retorna
 			return;
 
-		id1->iniciada = 1;
-		erro(filename, st->token, "Atribuição com tipos diferentes.", 0, 0);
+		Identificador *id = procura(escopoLocal, st->filhos[0], tipoAnterior);
+		//id->iniciada = 1;
+		id->utilizada = 1;
+		return;
+
+	// se os dois filhos não for número
+	}
+
+	st->tipoExpressao = INTEIRO;			// faz casting para inteiro
+
+	if(st->filhos[0]->bnfval != NUMERO && st->filhos[1]->bnfval != NUMERO){
+
+		Identificador *id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
+		id1->utilizada = 1;
+
+		Identificador *id2 = procura(escopoLocal, st->filhos[1], tipoAnterior);
+		id2->utilizada = 1;
+		if(id1->erro || id2->erro)
+			return;
+
+		erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
+
+	// um dos dois é NUMERO
+	} else {
+		erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
 	}
 }
 
@@ -236,7 +244,6 @@ void operacaoRetorna(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, 
 	TokenType tipo = st->filhos[0]->tipoExpressao;
 	Identificador *funcao = procura_somente_id(escopoLocal, nomeFuncao, st->filhos[0]->token, CHAMADA_FUNCAO);
 
-	printf("Funcao %s retornando.\n", funcao->nome);
 	funcao->retornou = 1;
 	if(funcao->tipo == tipo)
 		return;
@@ -405,10 +412,10 @@ TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
 	recursivo(global, st, -1, "global");
 
-	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");
+	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");*/
 	verificaNaoUtilizadas(global);
 	verificaPrincipal(st);
-	verificaRetornos(global);*/
+	verificaRetornos(global);
 
 	return global;
 }
