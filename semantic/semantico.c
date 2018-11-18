@@ -249,21 +249,34 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 
 		return;
 
-	// se os dois filhos não for número
 	}
 
-	st->tipoExpressao = INTEIRO;			// faz casting para inteiro
+	st->tipoExpressao = FLUTUANTE;			// faz casting para inteiro
 
+	Identificador *id1;
+	Identificador *id2;
+	TreeNode *no;
 	if(st->filhos[0]->bnfval != NUMERO && st->filhos[1]->bnfval != NUMERO){
 
-		Identificador *id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
+		id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
 		id1->utilizada = 1;
 
-		Identificador *id2 = procura(escopoLocal, st->filhos[1], tipoAnterior);
+		if(st->filhos[1]->bnfval == CHAMADA_FUNCAO) {
+			no = st->filhos[1]->filhos[0];
+			tipoAnterior = CHAMADA_FUNCAO;
+		} else {
+			no = st->filhos[0];
+		}
+
+		id2 = procura(escopoLocal, no, tipoAnterior);
 		id2->utilizada = 1;
+
 		if(id1->erro || id2->erro)
 			return;
 	}
+
+	if(!id1->declarada || !id2->declarada)
+		return;
 
 	erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
 }
