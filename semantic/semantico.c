@@ -15,7 +15,7 @@ Identificador *procura_somente_id(TabSimb *escopoLocal, char *id, TokenRecord *t
 }
 
 // função responsável por procurar e inserir um nó na tabela de símbolos
-void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
+Identificador *insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 
 	char *id = (char *) var->token->val;
 	char funcao = tipoAnterior == CHAMADA_FUNCAO ? 1 : tipoAnterior == DECLARACAO_FUNCAO ? 1 : 0;	// recupera se este é uma variavel ou uma declaracao_funcao
@@ -26,9 +26,10 @@ void insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterior) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0, 1);
 		// insere do mesmo geito e marca como erro
 		insere_escopo(escopoLocal, var, funcao, filename)->erro = 1;
+		return NULL;
 	} else {	// se não tem, então insere
 
-		insere_escopo(escopoLocal, var, funcao, filename);
+		return insere_escopo(escopoLocal, var, funcao, filename);
 	}
 }
 
@@ -43,6 +44,7 @@ Identificador *procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnteri
 	// se não tiver
 	Identificador *identificador = contem(escopoLocal, id, 1, funcao);
 	if(!identificador) {
+
 		erro(filename, var->token, "Variável não declarada neste e nem nos escopos superiores.", 0, 1);
 		// insere na tabela, para suprimir os erros que este irão causar
 		identificador = insere_escopo(escopoLocal, var, funcao, filename);
@@ -99,13 +101,6 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 /**********************************************\
 |             OPERAÇÕES SEMÂNTICAS             |
 \**********************************************/
-// atribui o tipo da variável na VAR
-void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
-	Identificador *id = procura(escopoLocal, st, tipoAnterior);
-	st->tipoExpressao = id->tipo;
-}
-
-
 // verifica se a variável - se for uma VAR - na tabela de símbolos realmente tem índice
 // se tiver, verifica se o índice que está tentando acessar realmente está no limite
 void verificaIndice(TabSimb *escopoLocal, TreeNode *st) {
@@ -188,6 +183,41 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st) {
 		id->erro = 1;
 		return;
 	}
+}
+
+
+// atribui o tipo da variável na VAR
+void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
+
+	Identificador *id;
+	TokenType tipo = -1;
+
+	// se for um desses tipos, então adiciona na tabela de símbolos
+	if(tipoAnterior == LISTA_VARIAVEIS || tipoAnterior == DECLARACAO_FUNCAO || tipoAnterior == PARAMETRO) {
+		// insere a VAR
+		id = insere(escopoLocal, st, tipoAnterior);
+
+		// para evitar printar duas vezes que uma função não está sendo utilizada
+		// no seu escopo local, marca que ela está sendo utilizada
+		if(!strcmp((char *) st->token->val, nomeFuncao) && tipoAnterior == DECLARACAO_FUNCAO) {
+			// eu acho q é declarada e não utilizada
+			id->utilizada = 1;
+		}
+
+		tipo = id->tipo;
+
+	} else {	// então procura na tabela de símbolos, pois está utilizando normalmente
+		id = procura(escopoLocal, st, tipoAnterior);
+
+		if(!id->erro) {
+			verificaIndice(escopoLocal, st);	// verifica o índice - se houver - da variável que está recebendo
+			id->utilizada = 1;
+		}
+
+		tipo = id->tipo;
+	}
+
+	st->tipoExpressao = tipo;
 }
 
 
@@ -307,25 +337,6 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *
 			recursivo(escopoInferior, filho, st->bnfval, nomeFuncao);	// utiliza o novo escopo
 		} else {
 			recursivo(escopoLocal, filho, st->bnfval, nomeFuncao);		// utiliza o escopo atual
-		}
-	}
-
-	// aqui a tabela de símbolos é construido
-	if(st->bnfval == VAR) {
-		// se for um desses tipos, então adiciona na tabela de símbolos
-		if(tipoAnterior == LISTA_VARIAVEIS || tipoAnterior == DECLARACAO_FUNCAO || tipoAnterior == PARAMETRO) {
-			insere(escopoLocal, st, tipoAnterior);
-
-			// para evitar printar duas vezes que uma função não está sendo utilizada
-			// no seu escopo local, marca que ela está sendo utilizada
-			if(!strcmp((char *) st->token->val, nomeFuncao) && tipoAnterior == DECLARACAO_FUNCAO) {
-				procura(escopoLocal, st, tipoAnterior)->utilizada = 1;
-			}
-
-		} else {	// então procura na tabela de símbolos, pois está utilizando normalmente
-			verificaIndice(escopoLocal, st);	// verifica o índice - se houver - da variável que está recebendo
-			Identificador *id = procura(escopoLocal, st, tipoAnterior);
-			id->utilizada = 1;
 		}
 	}
 
