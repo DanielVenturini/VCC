@@ -393,7 +393,7 @@ void get_lista_variaveis(TreeNode *lista_variaveis, EBNFType tipo) {
 
 		posFilho += 2;
 
-	} while(lista_variaveis->filhos[posFilho]);				// enquanto tiver o próximo filho
+	} while(lista_variaveis->filhos[posFilho-1]);			// enquanto tiver a vírgula
 
 	for(; posFilho > posVar+1; posFilho --) {				// remove todos nós a frente do último var
 		remove_filho(lista_variaveis);
