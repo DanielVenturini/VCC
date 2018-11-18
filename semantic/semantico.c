@@ -26,8 +26,8 @@ Identificador *insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterio
 	if(identificador && !identificador->erro && !identificador->funcao) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0, 1);
 		// insere do mesmo geito e marca como erro
-		insere_escopo(escopoLocal, var, funcao, filename)->erro = 1;
-		return NULL;
+		identificador->erro = 1;
+		return identificador;
 	} else {	// se não tem, então insere
 
 		Identificador *id = insere_escopo(escopoLocal, var, funcao, filename);
@@ -256,28 +256,35 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 	Identificador *id1;
 	Identificador *id2;
 	TreeNode *no;
-	if(st->filhos[0]->bnfval != NUMERO && st->filhos[1]->bnfval != NUMERO){
+	if(st->filhos[0]->bnfval == VAR){
 
 		id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
 		id1->utilizada = 1;
 
+		if(st->bnfval == B_ATRIBUICAO)
+			id1->iniciada = 1;
+
 		if(st->filhos[1]->bnfval == CHAMADA_FUNCAO) {
 			no = st->filhos[1]->filhos[0];
 			tipoAnterior = CHAMADA_FUNCAO;
-		} else {
+		} else if(st->filhos[1]->bnfval == VAR) {
 			no = st->filhos[0];
+		} else {	// numero
+			goto fora;
 		}
 
+		// se chegou aqui, o filho da direita é uma VAR ou uma CHAMADA DE FUNÇÃO
 		id2 = procura(escopoLocal, no, tipoAnterior);
 		id2->utilizada = 1;
 
 		if(id1->erro || id2->erro)
 			return;
+
+		if(!id1->declarada || !id2->declarada)
+			return;
 	}
 
-	if(!id1->declarada || !id2->declarada)
-		return;
-
+	fora:
 	erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
 }
 
