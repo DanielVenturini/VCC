@@ -47,6 +47,7 @@ Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo,
 	id->indices = NULL;		// pode ser alterado na função getIndice
 	id->proximo = NULL;
 	id->token = token;
+	id->parametros = NULL;
 
 	id->erro = getIndice(var, id, nomeArquivo);
 	return id;
@@ -96,6 +97,20 @@ void tab(char qtd) {
 }
 
 
+void printaParametros(TokenType *parametros) {
+	if(!parametros)
+		return;
+
+	printf(";[");
+
+	unsigned char i;
+	for(i = 0; parametros[i] != -1; i ++) {
+		printf("%s%s", parametros[i] == INTEIRO ? "INT" : "FLU", (parametros[i+1] == -1) ? "" : " ");
+	}
+
+	printf("]");
+}
+
 // printa a tabela de símbolos
 void printEscopo(TabSimb *escopo, char qtdTab) {
 
@@ -117,7 +132,13 @@ void printEscopo(TabSimb *escopo, char qtdTab) {
 		char *indice = id->indices ? "IND" : "N-IND";
 
 		tab(qtdTab+2);
-		printf("|%s: %s;%s;%s;%s;%s;%s;%s|\n", id->nome, funcao, tipo, erro, iniciada, utilizada, retornou, indice);
+		printf("|%s: %s;%s;%s;%s;%s;%s;%s", id->nome, funcao, tipo, erro, iniciada, utilizada, retornou, indice);
+
+		if(funcao) {
+			printaParametros(id->parametros);
+		}
+
+		printf("|\n");
 		id = (Identificador *) id->proximo;
 	}
 
