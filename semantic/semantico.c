@@ -1,6 +1,7 @@
 #include "semantico.h"
 
 char *filename;
+TabSimb *escopoGlobal;
 
 Identificador *procura(TabSimb *, TreeNode *, TokenType);
 /**********************************************\
@@ -29,7 +30,12 @@ Identificador *insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterio
 		return NULL;
 	} else {	// se não tem, então insere
 
-		return insere_escopo(escopoLocal, var, funcao, filename);
+		Identificador *id = insere_escopo(escopoLocal, var, funcao, filename);
+
+		if(tipoAnterior == PARAMETRO)
+			id->iniciada = 1;
+
+		return id;
 	}
 }
 
@@ -103,8 +109,8 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 \**********************************************/
 // verifica se a variável - se for uma VAR - na tabela de símbolos realmente tem índice
 // se tiver, verifica se o índice que está tentando acessar realmente está no limite
-void verificaIndice(TabSimb *escopoLocal, TreeNode *st) {
-	if(st->bnfval != VAR)			// se não for variável
+void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) {
+	if(st->bnfval != VAR || tipoAnterior == CHAMADA_FUNCAO)	// se não for variável ou for uma função
 		return;
 
 	Identificador *id = procura(escopoLocal, st, -1);	// não precisa saber o tipoAnterior
@@ -208,9 +214,9 @@ void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char
 
 	} else {	// então procura na tabela de símbolos, pois está utilizando normalmente
 		id = procura(escopoLocal, st, tipoAnterior);
-
 		if(!id->erro) {
-			verificaIndice(escopoLocal, st);	// verifica o índice - se houver - da variável que está recebendo
+			// verifica o índice - se houver - da variável que está recebendo
+			verificaIndice(escopoLocal, st, tipoAnterior);
 			id->utilizada = 1;
 		}
 
@@ -257,13 +263,9 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 		id2->utilizada = 1;
 		if(id1->erro || id2->erro)
 			return;
-
-		erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
-
-	// um dos dois é NUMERO
-	} else {
-		erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
 	}
+
+	erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
 }
 
 // processa as operações de retorno
@@ -283,13 +285,72 @@ void operacaoRetorna(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, 
 	erro(filename, st->filhos[0]->token, "Função retornando valor com tipo errado.", 0, 1);
 }
 
+
+// verifica se os parâmetros passados para a função são do tipo correto
+// também verifica se os parâmetros são do mesmo tamanho
+void operacaoChamadaFuncao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
+
+	Identificador *id = procura(escopoGlobal, st->filhos[0], CHAMADA_FUNCAO);
+	TreeNode *lista_argumentos = st->filhos[1];
+
+	if(!id->parametros) {
+		return;
+	}
+
+	unsigned char i;
+	for(i = 0; id->parametros[i] != -1 && lista_argumentos->filhos[i]; i ++) {
+
+		if(id->parametros[i] != lista_argumentos->filhos[i]->tipoExpressao) {
+			erro(filename, lista_argumentos->filhos[i]->token, "Argumento possúi tipo incorreto.", 0, 1);
+		}
+	}
+
+	// verificar se ainda contém mais argumentos
+	if(id->parametros[i] != -1) {
+		erro(filename, st->filhos[0]->token, "Chamada de função faltando argumentos.", 0, 1);
+	} else if(lista_argumentos->filhos[i]){
+		erro(filename, st->filhos[0]->token, "Chamada de função com argumentos a mais.", 0, 1);
+	}
+}
+
+
+// para a variável da função, atribui o tipo de cada parametro
+void operacaoDeclaracaoFuncao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
+
+	TokenType tipo = st->filhos[0]->token->tokenval == INTEIRO ? INTEIRO : st->filhos[0]->token->tokenval == FLUTUANTE ? FLUTUANTE : -1;
+	unsigned char pos;
+
+	// vazio, então o primeiro nó da subárvore é o nome
+	if(tipo == -1) {
+		pos = 0;
+	} else {
+		pos = 1;
+	}
+
+	TreeNode *nome = st->filhos[pos];
+	TreeNode *lista_parametros = st->filhos[pos+1];
+
+	Identificador *id = procura(escopoGlobal, nome, DECLARACAO_FUNCAO);
+
+	// quantifica os parametros
+	for(pos = 0; lista_parametros->filhos[pos]; pos ++);
+
+	id->parametros = (TokenType *) malloc((pos+1)*sizeof(TokenType));
+	id->parametros[pos] = -1;		// finaliza a lista de parametros
+
+	// percorre os parametros atribuindo os valores para a lista de parametros do id
+	for(pos = 0; lista_parametros->filhos[pos]; pos ++) {
+		id->parametros[pos] = lista_parametros->filhos[pos]->tipoExpressao;
+	}
+}
+
+
 // verifica os tipos das operações
 void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
 
 	switch(st->bnfval) {
 
 		case VAR:
-			// apenas atribui o tipoExpressao a variavel
 			operacaoVar(escopoLocal, st, tipoAnterior, nomeFuncao);
 			break;
 
@@ -304,6 +365,11 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior,
 			break;
 
 		case CHAMADA_FUNCAO:
+			operacaoChamadaFuncao(escopoLocal, st, tipoAnterior, nomeFuncao);
+			break;
+
+		case DECLARACAO_FUNCAO:
+			operacaoDeclaracaoFuncao(escopoLocal, st, tipoAnterior, nomeFuncao);
 			break;
 	}
 }
@@ -422,14 +488,14 @@ TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
 	filename = nomeArquivo;
 	TabSimb *programa = criaTabSim(NULL/*, "global\0"*/);	// escopo superior, que no caso não existe
-	TabSimb *global = criaTabSim(programa);					// escopo global
+	escopoGlobal = criaTabSim(programa);					// escopo global
 
-	recursivo(global, st, -1, "global");
+	recursivo(escopoGlobal, st, -1, "global");
 
 	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");*/
-	verificaNaoUtilizadas(global);
+	verificaNaoUtilizadas(escopoGlobal);
 	verificaPrincipal(st);
-	verificaRetornos(global);
+	verificaRetornos(escopoGlobal);
 
-	return global;
+	return escopoGlobal;
 }

@@ -421,11 +421,12 @@ void get_parametro(TreeNode *parametro) {
 	TokenType tipo = parametro->filhos[0]->token->tokenval;
 	parametro->filhos[2]->bnfval = VAR;
 	parametro->filhos[2]->tipoExpressao = tipo;
+	parametro->tipoExpressao = tipo;						// adiciona o tipo também no nó da árvore
 
 	unsigned char i = 1;
 	// se tiver vários indices, tem qu deslocar para a esquerda
 	do {
-		parametro->filhos[i] = parametro->filhos[i+1];			// remove o ':' e adiciona o próximo
+		parametro->filhos[i] = parametro->filhos[i+1];		// remove o ':' e adiciona o próximo
 		i ++;
 	} while(parametro->filhos[i+1]);
 
