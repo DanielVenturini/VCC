@@ -157,11 +157,6 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 			if(var->erro)
 				return;
 
-			/*if(!var->iniciada) {
-				erro(filename, st->filhos[i]->token, "Variável não inicializada.", 0, 1);
-				return;
-			}*/
-
 			continue;
 		}
 
@@ -422,6 +417,7 @@ void verificaOperacao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior,
 		case DECLARACAO_FUNCAO:
 			operacaoDeclaracaoFuncao(escopoLocal, st, tipoAnterior, nomeFuncao);
 			break;
+
 	}
 }
 
