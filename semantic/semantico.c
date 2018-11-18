@@ -2,6 +2,7 @@
 
 char *filename;
 TabSimb *escopoGlobal;
+unsigned char pos;
 
 Identificador *procura(TabSimb *, TreeNode *, TokenType);
 /**********************************************\
@@ -32,8 +33,9 @@ Identificador *insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterio
 
 		Identificador *id = insere_escopo(escopoLocal, var, funcao, filename);
 
-		if(tipoAnterior == PARAMETRO)
+		if(tipoAnterior == PARAMETRO || tipoAnterior == DECLARACAO_FUNCAO) {
 			id->iniciada = 1;
+		}
 
 		return id;
 	}
@@ -65,7 +67,8 @@ Identificador *procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnteri
 // retorna o tipo da expressão
 // se for uma VAR e conter erro, RETORNA O TIPO DA PRIMERIA VAR DECLARADA
 // aqui já é feita as verificações de inicialização e de uso
-TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, EBNFType atribuicao) {
+// se for atribuição, tem que verificar qual é o lado desta
+TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, EBNFType atribuicao, char lado) {
 	if(!no)
 		return -1;
 
@@ -91,10 +94,11 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 
 		// se não é atribuição, tem que verificar se a VAR foi iniciada
 		// se não foi iniciada, e não tiver erro, então gera o erro
-		if (atribuicao != B_ATRIBUICAO && !var->iniciada && !var->erro && !var->funcao) {
+		if ((atribuicao != B_ATRIBUICAO || lado) && !var->iniciada && !var->erro && !var->funcao) {
 			erro(filename, no->token, "Variável não inicializada.", 0, 1);
 			return var->tipo;
 		} else if (atribuicao != B_ATRIBUICAO) {
+
 			var->utilizada = 1;			// marca como sendo utilizada
 		}
 
@@ -153,10 +157,10 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 			if(var->erro)
 				return;
 
-			if(!var->iniciada) {
+			/*if(!var->iniciada) {
 				erro(filename, st->filhos[i]->token, "Variável não inicializada.", 0, 1);
 				return;
-			}
+			}*/
 
 			continue;
 		}
@@ -213,11 +217,17 @@ void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char
 		tipo = id->tipo;
 
 	} else {	// então procura na tabela de símbolos, pois está utilizando normalmente
+
 		id = procura(escopoLocal, st, tipoAnterior);
 		if(!id->erro) {
 			// verifica o índice - se houver - da variável que está recebendo
 			verificaIndice(escopoLocal, st, tipoAnterior);
 			id->utilizada = 1;
+		}
+
+		if((tipoAnterior != B_ATRIBUICAO || pos) && !id->iniciada && !id->erro) {
+
+			erro(filename, st->token, "Variável não inicializada.", 0, 1);
 		}
 
 		tipo = id->tipo;
@@ -230,8 +240,8 @@ void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char
 // processa as operações de atribuição, soma e multiplicacao
 void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
 
-	TokenType tipo1 = getTipoNo(escopoLocal, st->filhos[0], tipoAnterior, st->bnfval);
-	TokenType tipo2 = getTipoNo(escopoLocal, st->filhos[1], tipoAnterior, 0);	// não precisa dizer qual é a operação
+	TokenType tipo1 = getTipoNo(escopoLocal, st->filhos[0], tipoAnterior, st->bnfval, 0);
+	TokenType tipo2 = getTipoNo(escopoLocal, st->filhos[1], tipoAnterior, 0, 1);	// não precisa dizer qual é a operação
 
 	// o índice já foi verificado
 
@@ -244,16 +254,17 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 		Identificador *id = procura(escopoLocal, st->filhos[0], tipoAnterior);
 		id->utilizada = 1;
 
-		if(st->bnfval == B_ATRIBUICAO)
+		if(st->bnfval == B_ATRIBUICAO) {
 			id->iniciada = 1;
+		}
 
 		return;
 
 	}
 
-	st->tipoExpressao = FLUTUANTE;			// faz casting para inteiro
+	st->tipoExpressao = FLUTUANTE;			// faz casting para flutuante
 
-	Identificador *id1;
+	Identificador *id1 = NULL;
 	Identificador *id2;
 	TreeNode *no;
 	if(st->filhos[0]->bnfval == VAR){
@@ -261,8 +272,10 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 		id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
 		id1->utilizada = 1;
 
-		if(st->bnfval == B_ATRIBUICAO)
+		// se for atribuição e a VAR estiver no lado esquerdo
+		if(st->bnfval == B_ATRIBUICAO && !pos) {
 			id1->iniciada = 1;
+		}
 
 		if(st->filhos[1]->bnfval == CHAMADA_FUNCAO) {
 			no = st->filhos[1]->filhos[0];
@@ -285,6 +298,10 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 	}
 
 	fora:
+
+	if(id1 && id1->erro)
+		return;
+
 	erro(filename, st->token, "Operação com tipos diferentes.", 0, 0);
 }
 
@@ -302,13 +319,27 @@ void operacaoRetorna(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, 
 	if(funcao->tipo == tipo)
 		return;
 
-	erro(filename, st->filhos[0]->token, "Função retornando valor com tipo errado.", 0, 1);
+	erro(filename, st->filhos[0]->token, "Função retornando valor com tipo incorreto.", 0, 1);
 }
 
 
 // verifica se os parâmetros passados para a função são do tipo correto
 // também verifica se os parâmetros são do mesmo tamanho
+// tem que verificar se a chamada não é para a principal
 void operacaoChamadaFuncao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *nomeFuncao) {
+
+	st->tipoExpressao = st->filhos[0]->tipoExpressao;
+
+	// se está chamando a principal
+	if(!strcmp((char *) st->filhos[0]->token->val, "principal")) {
+		// se é a própria principal
+		if(!strcmp(nomeFuncao, "principal"))
+			erro(filename, st->filhos[0]->token, "Chamada recursiva para principal()", 0, 0);
+		else
+			erro(filename, st->filhos[0]->token, "Chamada para a função principal() não permitida", 0, 1);
+
+		return;
+	}
 
 	Identificador *id = procura(escopoGlobal, st->filhos[0], CHAMADA_FUNCAO);
 	TreeNode *lista_argumentos = st->filhos[1];
@@ -404,6 +435,7 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *
 
 	unsigned char i;
 	for(i = 0; st->filhos[i]; i ++) {		// cada uma das declaracoes globais
+		pos = i;
 		TreeNode *filho = st->filhos[i];
 
 		TabSimb *escopoInferior;
@@ -512,10 +544,10 @@ TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
 	recursivo(escopoGlobal, st, -1, "global");
 
-	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");*/
+	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");
 	verificaNaoUtilizadas(escopoGlobal);
 	verificaPrincipal(st);
-	verificaRetornos(escopoGlobal);
+	verificaRetornos(escopoGlobal);*/
 
 	return escopoGlobal;
 }
