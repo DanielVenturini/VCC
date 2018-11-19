@@ -173,6 +173,10 @@ TreeNode *get_expressao_simples(TreeNode *exp_simples) {
 
 TreeNode *get_expressao_logica(TreeNode *exp_logico) {
 
+	if(exp_logico->filhos[0]->bnfval == EXPRESSAO_LOGICA && exp_logico->filhos[1]->bnfval == EXPRESSAO_LOGICA) {
+		exp_logico = exp_logico->filhos[0];
+	}
+
 	if(!exp_logico->filhos[1]) {	// se não for um operador_logico, então é uma expressao_simples
 		return get_expressao_simples(exp_logico->filhos[0]);
 	}
