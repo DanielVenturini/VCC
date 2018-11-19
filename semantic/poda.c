@@ -61,6 +61,8 @@ TreeNode *get_fator(TreeNode *fator) {
 			1;		// apenas porque não pode ter declaração de variável como primeiro comando no case
 			TreeNode *numero = fator->filhos[0]->filhos[0];
 			numero->bnfval = NUMERO;
+			// para os números, atualiza o tipo aqui
+			numero->tipoExpressao = numero->token->tokenval == NUM_I ? INTEIRO : FLUTUANTE;
 			return numero;
 
 		default:	// caso onde o fator leva à '(' expressao ')'
@@ -391,7 +393,7 @@ void get_lista_variaveis(TreeNode *lista_variaveis, EBNFType tipo) {
 
 		posFilho += 2;
 
-	} while(lista_variaveis->filhos[posFilho]);				// enquanto tiver o próximo filho
+	} while(lista_variaveis->filhos[posFilho-1]);			// enquanto tiver a vírgula
 
 	for(; posFilho > posVar+1; posFilho --) {				// remove todos nós a frente do último var
 		remove_filho(lista_variaveis);
@@ -419,11 +421,12 @@ void get_parametro(TreeNode *parametro) {
 	TokenType tipo = parametro->filhos[0]->token->tokenval;
 	parametro->filhos[2]->bnfval = VAR;
 	parametro->filhos[2]->tipoExpressao = tipo;
+	parametro->tipoExpressao = tipo;						// adiciona o tipo também no nó da árvore
 
 	unsigned char i = 1;
 	// se tiver vários indices, tem qu deslocar para a esquerda
 	do {
-		parametro->filhos[i] = parametro->filhos[i+1];			// remove o ':' e adiciona o próximo
+		parametro->filhos[i] = parametro->filhos[i+1];		// remove o ':' e adiciona o próximo
 		i ++;
 	} while(parametro->filhos[i+1]);
 

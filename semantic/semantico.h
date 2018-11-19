@@ -3,11 +3,12 @@
 
 #include "tabsimb.h"
 #include "../tree/tree.h"
+#include "../desacerto.h"
 
 /********************************************************************
 *                   	DEFINICAO DAS FUNÇÕES                       *
 ********************************************************************/
 
-TabSimb *constroiTabSimb(TreeNode *);
+TabSimb *constroiTabSimb(TreeNode *, char *);
 
 #endif

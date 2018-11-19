@@ -9,8 +9,8 @@
 typedef TokenRecord TR; // apenas para economizar espaços na linha
 
 char **arquivos;    // este ponteiro conterá todos os arquivo passados por parâmetros
-char flags[6];      // cada posição se refere a um tipo de flag
-// flags: [0] = -tk; [1] = -ax; [2] = -at; [3] = -sx; [4] = -st; [5] = -h;
+char flags[7];      // cada posição se refere a um tipo de flag
+// flags: [0] = -tk; [1] = -ax; [2] = -at; [3] = -sx; [4] = -st; [5] = -ts; [6] = -h;
 
 void qualFlag(char *flag) {
 
@@ -24,8 +24,10 @@ void qualFlag(char *flag) {
         flags[3] = 1;
     else if(strcmp(flag, "-st") == 0 || strcmp(flag, "--st-t") == 0)    // --syntax tree-term
         flags[4] = 1;
-    else if(strcmp(flag, "-h") == 0 || strcmp(flag, "--help") == 0)     // --help
+    else if(strcmp(flag, "-ts") == 0 || strcmp(flag, "--tab-s") == 0)   // --tabel-simbol
         flags[5] = 1;
+    else if(strcmp(flag, "-h") == 0 || strcmp(flag, "--help") == 0)     // --help
+        flags[6] = 1;
     else    // flag desconhecida
         printf("\n\e[38;5;184mvcc:\e[38;5;196m erro: flag desconhecida \e[38;5;255m\'%s\'.\n\n", flag);
 }
@@ -86,7 +88,7 @@ void printHelp() {
     printf("\u2502   -at,   --ast-t,    exibe as árvores de análises sintáticas no terminal----\u2502\n");
     printf("\u2502   -sx,   --st-x,     exibe as árvores sintáticas no xdot--------------------\u2502\n");
     printf("\u2502   -st,   --st-t,     exibe as árvores sintáticas no terminal----------------\u2502\n");
-    //printf("\u2502   -ts,   --tab-s,    exibe a tabela de símbolos-----------------------------\u2502\n");
+    printf("\u2502   -ts,   --tab-s,    exibe a tabela de símbolos-----------------------------\u2502\n");
 
     desenhaLinha(2);
 }
@@ -149,12 +151,14 @@ int main(int argc, char *argv[]) {
         if(flags[4])
             printArvoreT(st);
 
-        TabSimb *tabela = constroiTabSimb(st);          // recupera a tabela de símbolos a partir da ST
+        TabSimb *tabela = constroiTabSimb(st, arquivos[i]); // recupera a tabela de símbolos a partir da ST
 
+        if(flags[5])
+            printEscopo(tabela, 0);
         i ++;
     }
 
-    if(flags[5]) {
+    if(flags[6]) {
         printHelp();
     }
 
