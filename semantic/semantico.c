@@ -95,7 +95,7 @@ TokenType getTipoNo(TabSimb *escopoLocal, TreeNode *no, EBNFType tipoAnterior, E
 		// se não é atribuição, tem que verificar se a VAR foi iniciada
 		// se não foi iniciada, e não tiver erro, então gera o erro
 		if ((atribuicao != B_ATRIBUICAO || lado) && !var->iniciada && !var->erro && !var->funcao) {
-			erro(filename, no->token, "Variável não inicializada.", 0, 1);
+			//erro(filename, no->token, "Variável não inicializada.", 0, 1);
 			return var->tipo;
 		} else if (atribuicao != B_ATRIBUICAO) {
 
@@ -220,7 +220,9 @@ void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char
 			id->utilizada = 1;
 		}
 
-		if((tipoAnterior != B_ATRIBUICAO || pos) && !id->iniciada && !id->erro) {
+		if(tipoAnterior == B_LEIA) {
+			id->iniciada = 1;
+		} else if((tipoAnterior != B_ATRIBUICAO || pos) && !id->iniciada && !id->erro) {
 
 			erro(filename, st->token, "Variável não inicializada.", 0, 1);
 		}
@@ -267,8 +269,8 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 		id1 = procura(escopoLocal, st->filhos[0], tipoAnterior);
 		id1->utilizada = 1;
 
-		// se for atribuição e a VAR estiver no lado esquerdo
-		if(st->bnfval == B_ATRIBUICAO && !pos) {
+		// se for atribuição
+		if(st->bnfval == B_ATRIBUICAO) {
 			id1->iniciada = 1;
 		}
 
@@ -540,10 +542,10 @@ TabSimb *constroiTabSimb(TreeNode *st, char *nomeArquivo) {
 
 	recursivo(escopoGlobal, st, -1, "global");
 
-	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");
+	/*printf("FIM DA ANÁLISE. AGORA É O PÓS-SEMANTICA\n");*/
 	verificaNaoUtilizadas(escopoGlobal);
 	verificaPrincipal(st);
-	verificaRetornos(escopoGlobal);*/
+	verificaRetornos(escopoGlobal);
 
 	return escopoGlobal;
 }
