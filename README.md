@@ -66,3 +66,8 @@ A flag ```-sx``` ou ```--st-x``` gera a saída da árvore sintática. Esta árvo
 ![Alt Text](https://github.com/danielventurini/vcc/raw/master/semantic/st-x.jpeg)
 
 Já a flag ```-st``` ou ```--st-t``` gera a saída da árvore sintática utilizando o terminal de maneira semelhante ao da AST.
+
+### Tabela de Símbolos
+A tabela de símbolos é a última estrutura gerada pelo ```vcc```. Para cada escopo encontrado - se, senão, repita, função e o escopo global - é criado uma nova tabela de símbolos para permitir múltiplos níveis de escopo. Ou seja, pode haver um ```se``` dentro de um ```repita``` dentro de um ```senão``` e assim por diante. Para exibir a tabela de símbolos, use a flag ```-ts``` ou ```--tab-s```. Uasndo esta flag para o mesmo arquivo de entrada, ```exemplos/test.tpp``` o ```vcc``` gera a seguinte saída:
+
+![Alt Text](https://github.com/danielventurini/vcc/raw/master/semantic/tab-s.jpeg)
