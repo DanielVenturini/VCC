@@ -42,7 +42,9 @@ Para cada uma das três primeiras partes da compilação, é possível verificar
 #### Tokens
 A flag ```-tk``` ou ```--tokens``` apresentam os tokens de cada arquivo de entrada. Para os arquivos de entrada ```exemplos/teste.tpp``` e ```exemplos/hashtable.tpp```, o ```vcc``` gera a seguinte saída:
 
-![Alt Text](https://github.com/danielventurini/vcc/raw/master/lexical/tokens.jpeg)
+<p align="center">
+  <img src="https://github.com/danielventurini/vcc/raw/master/lexical/tokens.jpeg">
+</p>
 
 #### Árvore de Análise Sintática
 Há dois tipos de flags para saída da árvore de análise sintática: ```--ast-x``` e ```--ast-t```.
@@ -50,11 +52,15 @@ Há dois tipos de flags para saída da árvore de análise sintática: ```--ast-
 
 A flag ```-ax``` ou ```--ast-x``` gera a saída da árvore de análise sintática. Esta árvore é gerada utilizando o software ```xdot```, que é instalado junto com o ```vcc```. Usando esta flag para o arquivo de entrada ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
 
-![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg)
+<p align="center">
+  <img src="https://github.com/danielventurini/vcc/raw/master/syntactic/ast-x.jpeg">
+</p>
 
 Já a flag ```-at``` ou ```--ast-t``` gera a saída da árvore de anaĺise sintática utilizando o terminal. Este modelo é similar ao útilizado pelo ```Windows``` para printar a árvore de diretórios. Usando a flag para o arquivo de entrada ```exemplos/hashtable.tpp```, o ```vcc``` gera a seguinte saída no terminal:
 
-![Alt Text](https://github.com/danielventurini/vcc/raw/master/syntactic/ast-t.jpeg)
+<p align="center">
+  <img src="https://github.com/danielventurini/vcc/raw/master/syntactic/ast-t.jpeg">
+</p>
 
 #### Árvore Sintática
 Diferente da árvore de análise sintática, a Árvore Sintática é a simplificação da AST. Os nós intermediários que eram usados para análise sintática são removidos, assim, deixando a árvore mais simples e de fácil visualização. Esta não segue um padrão formal para simplificação, apenas foi escolhido os nós que seriam removidos.
@@ -63,11 +69,15 @@ Para gerar a saída da árvore sintática, use as flags: ```--st-x``` e ```--st-
 
 A flag ```-sx``` ou ```--st-x``` gera a saída da árvore sintática. Esta árvore é gerada utilizando o software ```xdot```, que é instalado junto com o ```vcc```. Usando esta flag para o mesmo arquivo de entrada, ```exemplos/teste.tpp```, o ```vcc``` gera a seguinte saída:
 
-![Alt Text](https://github.com/danielventurini/vcc/raw/master/semantic/st-x.jpeg)
+<p align="center">
+  <img src="https://github.com/danielventurini/vcc/raw/master/semantic/st-x.jpeg">
+</p>
 
 Já a flag ```-st``` ou ```--st-t``` gera a saída da árvore sintática utilizando o terminal de maneira semelhante ao da AST.
 
 ### Tabela de Símbolos
 A tabela de símbolos é a última estrutura gerada pelo ```vcc```. Para cada escopo encontrado - se, senão, repita, função e o escopo global - é criado uma nova tabela de símbolos para permitir múltiplos níveis de escopo. Ou seja, pode haver um ```se``` dentro de um ```repita``` dentro de um ```senão``` e assim por diante. Para exibir a tabela de símbolos, use a flag ```-ts``` ou ```--tab-s```. Uasndo esta flag para o mesmo arquivo de entrada, ```exemplos/test.tpp``` o ```vcc``` gera a seguinte saída:
 
-![Alt Text](https://github.com/danielventurini/vcc/raw/master/semantic/tab-s.jpeg)
+<p align="center">
+  <img src="https://github.com/danielventurini/vcc/raw/master/semantic/tab-s.jpeg">
+</p>
