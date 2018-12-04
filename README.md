@@ -15,6 +15,8 @@ cd vcc
 sudo make install
 ```
 
+Use ```vcc --version``` para verificar se o ```vcc``` foi compilado e instalado com sucesso junto com suas dependências.
+
 O software ```xdot``` é instalado junto, pois é usado para exibir a árvore gerada na análise sintática. Porém, o ```vcc``` funcionará normalmente se este não for instalado. Para verificar se o ```xdot``` foi instalado, apenas execute ```xdot```.
 
 Também na instalação, é copiado os arquivos necessários para o ```hithlight Syntax``` no ```Sublime Text 3```. As seguintes etapas devem ser realizadas para finalizar a instalação:
