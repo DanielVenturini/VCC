@@ -11,7 +11,11 @@ typedef TokenRecord TR; // apenas para economizar espaços na linha
 char **arquivos;    // este ponteiro conterá todos os arquivo passados por parâmetros
 char flags[8];      // cada posição se refere a um tipo de flag
 // flags: [0] = -tk; [1] = -ax; [2] = -at; [3] = -sx; [4] = -st; [5] = -ts; [6] = -h; [7] = -v;
-char *version = "4.2.0";
+
+// inves de incluir a biblioteca geracao.h
+void geraCodigo(TreeNode *, TabSimb *);
+
+char *version = "4.2.1";
 
 void qualFlag(char *flag) {
 
@@ -101,7 +105,7 @@ void printVersion() {
     printf("Venturini Compiler Compiler\n");
     printf("Release: %s\n", version);
     printf("BuildOn: Linux 4.15.0-38-generic\n");
-    printf("LLVM, Clang and LLI: 3.8.0\n");
+    printf("LLVM and Clang: 3.5.2\n");
     printf("VCC (https://github.com/danielventurini/vcc)\n");
 }
 
@@ -167,6 +171,12 @@ int main(int argc, char *argv[]) {
 
         if(flags[5])
             printEscopo(tabela, 0);
+
+        /*******************\
+        * geração de código *
+        \*******************/
+        geraCodigo(ast, tabela);
+
         i ++;
     }
 
