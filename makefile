@@ -1,5 +1,5 @@
-all: main								# compila todos os arquivos
-install: main clean move xdot highlight	# instala o vcc
+all: main											# compila todos os arquivos
+install: main clean move xdot codeinstall highlight	# instala o vcc
 
 main: varredura parse semantic	# parse já inclui a árvore
 	gcc main.c lexical/varredura.o tree/tree.o syntactic/parse.o desacerto.o tree/stack.o semantic/poda.o semantic/tabsimb.o semantic/semantico.o -o vcc
@@ -29,6 +29,9 @@ semantic: poda tabsimb
 poda:
 	gcc -c semantic/poda.c -o semantic/poda.o
 
+geracao:
+	gcc codegenerator/geracao.c -o codegenerator/geracao.o
+
 clean:		# apaga os arquivos objetos de compilação
 	rm lexical/varredura.o -f
 	rm tree/tree.o -f
@@ -41,6 +44,9 @@ clean:		# apaga os arquivos objetos de compilação
 
 xdot:		# instala o xdot
 	apt-get install xdot --allow-unauthenticated -y
+
+codeinstall:	# instala llvm e clang, todos na versão 3.5
+	apt-get install clang-3.5 --allow-unauthenticated -y
 
 move:		# move o executavel para a pasta /bin/
 	mv vcc /usr/bin/
