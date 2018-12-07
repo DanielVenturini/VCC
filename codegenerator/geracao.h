@@ -4,6 +4,9 @@
 #include "../tree/tree.h"
 #include "../semantic/tabsimb.h"
 
+/*-----------------------------*
+ * BIBLIOTECAS DO LLVM E CLANG *
+ *-----------------------------*/
 #include <llvm-c/BitWriter.h>
 #include <llvm-c/Core.h>
 

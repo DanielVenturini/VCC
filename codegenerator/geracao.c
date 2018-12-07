@@ -1,6 +1,5 @@
 #include "geracao.h"
 
-int main() {
-
-	return 0;
+void geraCodigo(TreeNode *programa, TabSimb *tabela) {
+	// do somenthing
 }
