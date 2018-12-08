@@ -26,6 +26,7 @@ Identificador *insere(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnterio
 	Identificador *identificador = contem(escopoLocal, id, 0, funcao);
 	if(identificador && !identificador->erro && !identificador->funcao) {
 		erro(filename, var->token, "Redeclaração de variável no mesmo escopo.", 0, 1);
+		escopoGlobal->erro = 1;
 		// insere do mesmo geito e marca como erro
 		identificador->erro = 1;
 		return identificador;
@@ -54,6 +55,7 @@ Identificador *procura(TabSimb *escopoLocal, TreeNode *var, TokenType tipoAnteri
 	if(!identificador) {
 
 		erro(filename, var->token, "Variável não declarada neste e nem nos escopos superiores.", 0, 1);
+		escopoGlobal->erro = 1;
 		// insere na tabela, para suprimir os erros que este irão causar
 		identificador = insere_escopo(escopoLocal, var, funcao, filename);
 		identificador->declarada = 0;	// marca que não existe
@@ -127,6 +129,7 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 	// se tem índices e não está sendo especificado: id[10] id = 20 -> id[pos] = 20
 	if(id->indices && !st->filhos[0]) {
 		erro(filename, st->token, "Utilizando variável sem especificar a dimensão.", 0, 1);
+		escopoGlobal->erro = 1;
 		id->erro = 1;
 		return;
 	}
@@ -135,6 +138,7 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 		if(!id->erro)				// se não houver erro, printa a mensagem; senão, suprime
 			erro(filename, st->token, "Variável não foi declarada com índices.", 0, 1);
 
+		escopoGlobal->erro = 1;
 		id->erro = 1;
 		return;
 	}
@@ -147,6 +151,7 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 		// verifica se o índice declarado é inteiro
 		if(st->filhos[i]->tipoExpressao != INTEIRO) {
 			erro(filename, st->filhos[i]->token, "Índice não inteiro.", 0, 1);
+			escopoGlobal->erro = 1;
 			id->erro = 1;
 			return;
 		}
@@ -168,6 +173,7 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 		int *indiceAcessado = (int *) st->filhos[i]->token->val;
 		if(*indiceAcessado < 0) {
 			erro(filename, st->filhos[i]->token, "Índice inválido.", 0, 1);
+			escopoGlobal->erro = 1;
 			id->erro = 1;
 			return;
 		}
@@ -176,6 +182,7 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 		int indiceDeclarado = id->indices[i];
 		if(*indiceAcessado >= indiceDeclarado) {
 			erro(filename, st->filhos[i]->token, "Índice maior que o declarado.", 0, 1);
+			escopoGlobal->erro = 1;
 			id->erro = 1;
 			return;
 		}
@@ -185,6 +192,7 @@ void verificaIndice(TabSimb *escopoLocal, TreeNode *st, TokenType tipoAnterior) 
 	// está tentando acessar uma dimensão que não existe
 	if(st->filhos[i]) {
 		erro(filename, st->token, "Variável não possúi todas estas dimensões.", 0, 1);
+		escopoGlobal->erro = 1;
 		id->erro = 1;
 		return;
 	}
@@ -225,6 +233,7 @@ void operacaoVar(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char
 		} else if((tipoAnterior != B_ATRIBUICAO || pos) && !id->iniciada && !id->erro) {
 
 			erro(filename, st->token, "Variável não inicializada.", 0, 1);
+			escopoGlobal->erro = 1;
 		}
 
 		tipo = id->tipo;
@@ -317,6 +326,7 @@ void operacaoRetorna(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, 
 		return;
 
 	erro(filename, st->filhos[0]->token, "Função retornando valor com tipo incorreto.", 0, 1);
+	escopoGlobal->erro = 1;
 }
 
 
@@ -332,8 +342,10 @@ void operacaoChamadaFuncao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnte
 		// se é a própria principal
 		if(!strcmp(nomeFuncao, "principal"))
 			erro(filename, st->filhos[0]->token, "Chamada recursiva para principal()", 0, 0);
-		else
+		else {
 			erro(filename, st->filhos[0]->token, "Chamada para a função principal() não permitida", 0, 1);
+			escopoGlobal->erro = 1;
+		}
 
 		return;
 	}
@@ -350,14 +362,17 @@ void operacaoChamadaFuncao(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnte
 
 		if(id->parametros[i] != lista_argumentos->filhos[i]->tipoExpressao) {
 			erro(filename, lista_argumentos->filhos[i]->token, "Argumento possúi tipo incorreto.", 0, 1);
+			escopoGlobal->erro = 1;
 		}
 	}
 
 	// verificar se ainda contém mais argumentos
 	if(id->parametros[i] != -1) {
 		erro(filename, st->filhos[0]->token, "Chamada de função faltando argumentos.", 0, 1);
+		escopoGlobal->erro = 1;
 	} else if(lista_argumentos->filhos[i]){
 		erro(filename, st->filhos[0]->token, "Chamada de função com argumentos a mais.", 0, 1);
+		escopoGlobal->erro = 1;
 	}
 }
 
@@ -507,6 +522,7 @@ void verificaPrincipal(TreeNode *st) {
 	}
 
 	erro(filename, NULL, "Função principal() não declarada.", 0, 1);
+	escopoGlobal->erro = 1;
 }
 
 
@@ -525,6 +541,7 @@ void verificaRetornos(TabSimb *escopo) {
 			// se não está retornando
 			if(id->funcao && id->tipo && !id->retornou) {
 				erro(filename, id->token, "Função deveria retornar algum valor, mas retorna vazio.", 0, 1);
+				escopoGlobal->erro = 1;
 			}
 
 			id = (Identificador *) id->proximo;

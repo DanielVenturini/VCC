@@ -37,6 +37,7 @@ typedef struct {
 	Identificador *declarados;		// lista das variáveis declaradas neste escopo
 	unsigned char numEscopo;		// numero deste escopo
 	char *nome;						// nome do escopo: 'nome de função', se, senao, enquanto
+	char erro;						// se houve algum erro na análise semântica
 
 } TabSimb;
 
