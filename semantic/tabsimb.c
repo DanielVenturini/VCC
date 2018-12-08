@@ -83,6 +83,8 @@ TabSimb *criaTabSim(TabSimb *escopoSuperior) {
 	tabsimb->proximo = NULL;			// não tem próximo no seu escopo irmão
 	tabsimb->numEscopo = numEscopo ++;
 
+	tabsimb->erro = 0;
+
 	insereListaEscopo(escopoSuperior, tabsimb);
 
 	return tabsimb;
@@ -192,5 +194,6 @@ Identificador *insere_escopo(TabSimb *tabsimb, TreeNode *var, char funcao, char 
 	novo_id->proximo = (struct Identificador *) tabsimb->declarados;		// aponta para o proximo
 	tabsimb->declarados = novo_id;											// insere na lista
 
+	tabsimb->erro = novo_id->erro ? novo_id->erro : tabsimb->erro;
 	return novo_id;
 }
