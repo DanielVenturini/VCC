@@ -245,7 +245,8 @@ void operacoesTernarias(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterio
 	if(tipo1 == tipo2) {					// são os mesmos tipos
 
 		st->tipoExpressao = tipo1;			// então atribui a operação
-		if(st->filhos[0]->bnfval == NUMERO)	// se o número estiver na esquerda, então simplesmente retorna
+		// se no lado esquerdo não for uma variável ou função, então simplesmente retorna
+		if(st->filhos[0]->bnfval == NUMERO || st->filhos[0]->bnfval == OPERADOR_SOMA || st->filhos[0]->bnfval == OPERADOR_MULTIPLICACAO)
 			return;
 
 		Identificador *id = procura(escopoLocal, st->filhos[0], tipoAnterior);
