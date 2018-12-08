@@ -14,6 +14,6 @@
 *                   	DEFINICAO DAS FUNÇÕES                       *
 ********************************************************************/
 
-void geraCodigo(TreeNode *, TabSimb *);
+void geraCodigo(TreeNode *, TabSimb *, char *, char);
 
 #endif

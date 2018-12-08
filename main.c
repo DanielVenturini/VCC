@@ -9,13 +9,13 @@
 typedef TokenRecord TR; // apenas para economizar espaços na linha
 
 char **arquivos;    // este ponteiro conterá todos os arquivo passados por parâmetros
-char flags[8];      // cada posição se refere a um tipo de flag
-// flags: [0] = -tk; [1] = -ax; [2] = -at; [3] = -sx; [4] = -st; [5] = -ts; [6] = -h; [7] = -v;
+char flags[9];      // cada posição se refere a um tipo de flag
+// flags: [0] = -tk; [1] = -ax; [2] = -at; [3] = -sx; [4] = -st; [5] = -ts; [6] = -h; [7] = -v; [8] = -c
 
 // inves de incluir a biblioteca geracao.h
-void geraCodigo(TreeNode *, TabSimb *);
+void geraCodigo(TreeNode *, TabSimb *, char *, char);
 
-char *version = "4.3.1";
+char *version = "5.0.0";
 
 void qualFlag(char *flag) {
 
@@ -33,8 +33,10 @@ void qualFlag(char *flag) {
         flags[5] = 1;
     else if(strcmp(flag, "-h") == 0 || strcmp(flag, "--help") == 0)     // --help
         flags[6] = 1;
-    else if(strcmp(flag, "-v") == 0 || strcmp(flag, "--version") == 0)  // --help
+    else if(strcmp(flag, "-v") == 0 || strcmp(flag, "--version") == 0)  // --version
         flags[7] = 1;
+    else if(strcmp(flag, "-c") == 0 || strcmp(flag, "--code") == 0)     // --code
+        flags[8] = 1;
     else    // flag desconhecida
         printf("\n\e[38;5;184mvcc:\e[38;5;196m erro: flag desconhecida \e[38;5;255m\'%s\'.\n\n", flag);
 }
@@ -91,6 +93,7 @@ void printHelp() {
     printf("\u2502Flags:                                                                       \u2502\n");
     printf("\u2502   -h,    --help      exibe ajuda--------------------------------------------\u2502\n");
     printf("\u2502   -v,    --version   exibe a versão atual do VCC----------------------------\u2502\n");
+    printf("\u2502   -c,    --code,     exibe código Assembly----------------------------------\u2502\n");
     printf("\u2502   -tk,   --tokens,   exibe os tokens----------------------------------------\u2502\n");
     printf("\u2502   -ax,   --ast-x,    exibe as árvores de análises sintáticas no xdot--------\u2502\n");
     printf("\u2502   -at,   --ast-t,    exibe as árvores de análises sintáticas no terminal----\u2502\n");
@@ -176,7 +179,7 @@ int main(int argc, char *argv[]) {
         * geração de código *
         \*******************/
         if(!tabela->erro)
-            geraCodigo(ast, tabela);
+            geraCodigo(ast, tabela, arquivos[i], flags[8]);
 
         i ++;
     }

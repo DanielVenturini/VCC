@@ -7,12 +7,13 @@ CXX = clang++-3.5
 LLVMCFG = llvm-config-3.5
 OPT = opt-3.5
 CFLAGS = -Wall `$(LLVMCFG) --cflags`
-LDFLAGS = -Wall `$(LLVMCFG) --libs core --system-libs` `$(LLVMCFG) --ldflags`
+LDFLAGS = -Wall `$(LLVMCFG) --libs --system-libs` `$(LLVMCFG) --ldflags`
 
 # regras do make
 # gera todos os arquivos .o e depois linka tudo
-main: varredura parse semantic geracao	# parse já inclui a árvore
-	gcc main.c lexical/varredura.o tree/tree.o syntactic/parse.o desacerto.o tree/stack.o semantic/poda.o semantic/tabsimb.o semantic/semantico.o codegenerator/geracao.o -o vcc
+main: varredura parse semantic geracao # parse já inclui a árvore
+	gcc -c main.c -o main.o
+	$(CXX) -g main.o lexical/varredura.o tree/tree.o syntactic/parse.o desacerto.o tree/stack.o semantic/poda.o semantic/tabsimb.o semantic/semantico.o codegenerator/geracao.o -o vcc $(LDFLAGS)
 	make clean
 
 varredura:
@@ -40,9 +41,13 @@ poda:
 	gcc -c semantic/poda.c -o semantic/poda.o
 
 geracao:
-	gcc -c codegenerator/geracao.c -o codegenerator/geracao.o $(CFLAGS)
+	$(CC) -c codegenerator/geracao.c -o codegenerator/geracao.o $(CFLAGS)
+
+depurar:
+	gdb -q --args vcc exemplos/teste.tpp
 
 clean:		# apaga os arquivos objetos de compilação
+	rm main.o -f
 	rm lexical/varredura.o -f
 	rm tree/tree.o -f
 	rm syntactic/parse.o -f
@@ -58,7 +63,15 @@ xdot:		# instala o xdot
 
 codeinstall:	# instala llvm e clang, todos na versão 3.5; biblioteca necessária para o -ledit
 	apt-get install clang-3.5 --allow-unauthenticated -y
-	sudo apt-get install libedit-dev --allow-unauthenticated -y
+	apt-get install llvm-3.5 --allow-unauthenticated -y
+	#apt-get install libedit-dev --allow-unauthenticated -y
+	#apt-get install libcxxtools-dev --allow-unauthenticated -y
+	#apt-get install libcxxtools9v5 --allow-unauthenticated -y
+	cp /usr/lib/llvm-3.5/include/llvm-c/ /usr/include/ -r
+	cp /usr/lib/llvm-3.5/include/llvm/ /usr/include/ -r
+
+gdbinstall:		# depurador para C
+	apt-get install gdb --allow-unauthenticated -y
 
 move:		# move o executavel para a pasta /bin/
 	mv vcc /usr/bin/
