@@ -15,7 +15,7 @@ char flags[8];      // cada posição se refere a um tipo de flag
 // inves de incluir a biblioteca geracao.h
 void geraCodigo(TreeNode *, TabSimb *);
 
-char *version = "4.3.0";
+char *version = "4.3.1";
 
 void qualFlag(char *flag) {
 
