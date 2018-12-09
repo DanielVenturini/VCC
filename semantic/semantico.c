@@ -457,6 +457,8 @@ void recursivo(TabSimb *escopoLocal, TreeNode *st, EBNFType tipoAnterior, char *
 		}
 	}
 
+	// adiciona o escopo
+	st->escopo = (void *) escopoLocal;
 	// se não for um VAR, então é uma operação
 	verificaOperacao(escopoLocal, st, tipoAnterior, nomeFuncao);
 }
