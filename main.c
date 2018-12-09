@@ -13,9 +13,9 @@ char flags[9];      // cada posição se refere a um tipo de flag
 // flags: [0] = -tk; [1] = -ax; [2] = -at; [3] = -sx; [4] = -st; [5] = -ts; [6] = -h; [7] = -v; [8] = -c
 
 // inves de incluir a biblioteca geracao.h
-void geraCodigo(TreeNode *, TabSimb *, char *, char);
+void geraCodigo(TreeNode *, char *, char);
 
-char *version = "5.0.0";
+char *version = "6.0.0";
 
 void qualFlag(char *flag) {
 
@@ -179,7 +179,7 @@ int main(int argc, char *argv[]) {
         * geração de código *
         \*******************/
         if(!tabela->erro)
-            geraCodigo(ast, tabela, arquivos[i], flags[8]);
+            geraCodigo(ast, arquivos[i], flags[8]);
 
         i ++;
     }

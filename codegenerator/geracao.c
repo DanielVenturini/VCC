@@ -33,22 +33,40 @@ void salva(LLVMModuleRef module, char *fileName, char code) {
 
 // troca o nome das funções
 // é preciso que haja uma função chamada 'main', e esta deve ser a função 'principal'
-char *resolveNome(char *nome) {
-	char *nomeFinal = NULL;
+void resolveNome(TreeNode *programa) {
 
-	if(!strcmp("principal", nome)) {	// se for a função principal, troca para main
-		nomeFinal = "main";
-	} else if (!strcmp("main", nome)) {	// se houver uma função chamada main, troca para principal
-		nomeFinal = "principal";
-	} else {
-		nomeFinal = nome;
+	unsigned char i;
+	for(i = 0; programa->filhos[i]; i ++) {
+
+		// so altera as funções
+		if(programa->filhos[i]->bnfval != DECLARACAO_FUNCAO)
+			continue;
+
+		TreeNode *funcao = programa->filhos[i];
+
+		// recupera a posição do nó que contém o nome da função
+		TokenType tipo = funcao->filhos[0]->tipoExpressao;	// INTEIRO, FLUTUANTE ou VAZIO
+		unsigned char pos = (tipo == INTEIRO || tipo == FLUTUANTE) ? 1 : 0;
+
+		char *nome = (char *) funcao->filhos[pos]->token->val;
+		Identificador *id = contem(funcao->escopo, nome, 0, 1);
+
+		char *nomeFinal = nome;
+
+		if(!strcmp("principal", nome)) {	// se for a função principal, troca para main
+			nomeFinal = "main";
+		} else if (!strcmp("main", nome)) {	// se houver uma função chamada main, troca para principal
+			nomeFinal = "principal";
+		}
+
+		// substitui pelo nome alterado ou mantém o nome original
+		funcao->filhos[pos]->token->val = nomeFinal;
+		id->nome = nomeFinal;
 	}
-
-	return nomeFinal;
 }
 
 
-void geraDecVariaveis(TreeNode *declaracao, TabSimb *tabela) {
+void geraDecVariaveis(TreeNode *declaracao) {
 
 	TokenType tipo = declaracao->filhos[0]->tipoExpressao;	// INTEIRO ou FLUTUANTE
 	TreeNode *lista = declaracao->filhos[1];				// LISTA_VARIAVEIS
@@ -64,7 +82,7 @@ void geraDecVariaveis(TreeNode *declaracao, TabSimb *tabela) {
 }
 
 
-LLVMTypeRef *geraParametros(TreeNode *parametros, TabSimb *tabela, unsigned char *qtdParametros) {
+LLVMTypeRef *geraParametros(TreeNode *parametros, unsigned char *qtdParametros) {
 
 	if(!parametros) {
 		return NULL;
@@ -92,107 +110,142 @@ LLVMTypeRef *geraParametros(TreeNode *parametros, TabSimb *tabela, unsigned char
 	return paramns;
 }
 
-void geraDecFuncao(TreeNode *declaracao, TabSimb *tabela) {
+void geraDecFuncao(TreeNode *noFuncao) {
 
-	TokenType tipo = declaracao->filhos[0]->token->tokenval;
+	TokenType tipo = noFuncao->filhos[0]->token->tokenval;
 	char *nome;
-	//TreeNode *lista;
 	unsigned int pos = 1;	// se for tipo INTEIRO ou FLUTUANTE, senão troca
-	LLVMBuilderRef builder = builderGlobal;
+
+	// ponteiros necessários
+	LLVMTypeRef tipoRetorno = NULL;
+
+	if(tipo == INTEIRO) {
+		tipoRetorno = LLVMInt32TypeInContext(contextoGlobal);		// Declara o tipo do retorno da função.
+	} else if (tipo == FLUTUANTE) {
+		tipoRetorno = LLVMFloatTypeInContext(contextoGlobal);		// Declara o tipo do retorno da função.
+	} else {	// vazio
+		tipoRetorno = LLVMVoidTypeInContext(contextoGlobal);
+		pos = 0;
+	}
+
+	nome = (char *) noFuncao->filhos[pos]->token->val;
+
+	// Cria a função.
+	unsigned char qtdParametros = 0;
+
+	// aloca um espaço para a função
+	LLVMValueRef *funcao = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+	*funcao = LLVMAddFunction(moduleGlobal, nome, LLVMFunctionType(tipoRetorno, geraParametros(noFuncao->filhos[pos+1], &qtdParametros), qtdParametros, 0));
+
+	// Declara o bloco de entrada.
+  	LLVMBasicBlockRef entryBlock = LLVMAppendBasicBlockInContext(contextoGlobal, *funcao, "entry");
+
+	// adiciona no nó da árvore e no identificador o seu LLVMValueRef
+	Identificador *id = contem(noFuncao->escopo, nome, 0, 1);
+
+	// aloca a posição
+	id->llvmValueRef = (void *) funcao;
+	noFuncao->llvmValueRef = (void *) funcao;
+
+	// Adiciona o bloco de entrada.
+	LLVMPositionBuilderAtEnd(builderGlobal, entryBlock);
+}
+
+
+void geraEndFuncao(TreeNode *noFuncao) {
+
+	TokenType tipo = noFuncao->filhos[0]->token->tokenval;
+	unsigned int pos = 1;	// se for tipo INTEIRO ou FLUTUANTE, senão troca
 
 	// ponteiros necessários
 	LLVMValueRef valorRetorno = NULL;
-	LLVMTypeRef tipoRetorno = NULL;
 	LLVMTypeRef (*tipoFuncaoRetorno)(void);
 	tipoFuncaoRetorno = NULL;
 
 	if(tipo == INTEIRO) {
 		valorRetorno = LLVMConstInt(LLVMInt32Type(), 0, 0);			// Cria um valor zero para colocar no retorno.
-		tipoRetorno = LLVMInt32TypeInContext(contextoGlobal);		// Declara o tipo do retorno da função.
 		tipoFuncaoRetorno = &LLVMInt32Type;
 	} else if (tipo == FLUTUANTE) {
 		valorRetorno = LLVMConstReal(LLVMFloatType(), 0);			// Cria um valor zero para colocar no retorno.
-		tipoRetorno = LLVMFloatTypeInContext(contextoGlobal);		// Declara o tipo do retorno da função.
 		tipoFuncaoRetorno = &LLVMFloatType;
 	} else {	// vazio
 		valorRetorno = LLVMConstReal(LLVMFloatType(), 0);			// Cria um valor zero para colocar no retorno.
-		//valorRetorno = LLVMVoidType();
-		tipoRetorno = LLVMVoidTypeInContext(contextoGlobal);
 		tipoFuncaoRetorno = &LLVMFloatType;
 		pos = 0;
 	}
 
-	nome = resolveNome((char *) declaracao->filhos[pos]->token->val);
+	// recupera a função criada
+	LLVMValueRef *funcao = (LLVMValueRef *) noFuncao->llvmValueRef;
 
-	// Cria a função.
-	unsigned char qtdParametros = 0;
-	LLVMValueRef funcao = LLVMAddFunction(moduleGlobal, nome, LLVMFunctionType(tipoRetorno, geraParametros(declaracao->filhos[pos+1], tabela, &qtdParametros), qtdParametros, 0));
-
-	// Declara o bloco de entrada.
-  	LLVMBasicBlockRef entryBlock = LLVMAppendBasicBlockInContext(contextoGlobal, funcao, "entry");
-  	// Declara o bloco de saída.
-  	LLVMBasicBlockRef endBasicBlock = LLVMAppendBasicBlock(funcao, "exit");
-
-	// Adiciona o bloco de entrada.
-	LLVMPositionBuilderAtEnd(builder, entryBlock);
-
-	// acho que aqui vai o código do CORPO
-	// acho que não
+	// Declara o bloco de saída.
+	LLVMBasicBlockRef exitFunc = LLVMAppendBasicBlock(*funcao, "exit");
 
 	LLVMValueRef returnVal = NULL;
 	// se for VOID, não cria tipo de retorno
 	if(pos) {
 		// Cria o valor de retorno e inicializa com zero.
-		returnVal = LLVMBuildAlloca(builder, tipoFuncaoRetorno(), "retorno");
-		LLVMBuildStore(builder, valorRetorno, returnVal);
+		returnVal = LLVMBuildAlloca(builderGlobal, tipoFuncaoRetorno(), "retorno");
+		LLVMBuildStore(builderGlobal, valorRetorno, returnVal);
 	}
 
 	// Cria um salto para o bloco de saída.
-	LLVMBuildBr(builder, endBasicBlock);
+	LLVMBuildBr(builderGlobal, exitFunc);
 
 	// Adiciona o bloco de saída.
-	LLVMPositionBuilderAtEnd(builder, endBasicBlock);
+	LLVMPositionBuilderAtEnd(builderGlobal, exitFunc);
 
 	if(pos) {
 		// Cria o return.
-		LLVMBuildRet(builder, LLVMBuildLoad(builder, returnVal, ""));
+		LLVMBuildRet(builderGlobal, LLVMBuildLoad(builderGlobal, returnVal, ""));
 	}
 }
 
-void percorre(TreeNode *node, TabSimb *tabela) {
+
+void percorre(TreeNode *node) {
 	if(!node)
 		return;
 
+	// casos que precisa ser tratado antes de continuar descendo na árvore
 	switch(node->bnfval) {
 
 		case DECLARACAO_VARIAVEIS:
-			//geraDecVariaveis(node, tabela);
+			// cria os LLVMValueRef, insere na tabela de símbolos e na árvore e gera código
+			//geraDecVariaveis(node);
 			break;
 
 		case DECLARACAO_FUNCAO:
-			geraDecFuncao(node, tabela);
+			// gera o código do cabeçalho da função
+			geraDecFuncao(node);
 			break;
 
 		default:
-			tabela = NULL;
+			printf("");
 	}
 
 	unsigned char i;
-	for(i = 0; node->filhos[i]; i ++) {		// cada uma das declaracoes globais
+	for(i = 0; node->filhos[i]; i ++) {
 		TreeNode *filho = node->filhos[i];
-		percorre(filho, tabela);
+		percorre(filho);
+	}
+
+	// se for uma função, finaliza ela
+	if(node->bnfval == DECLARACAO_FUNCAO) {
+		geraEndFuncao(node);
 	}
 }
 
 
-void geraCodigo(TreeNode *programa, TabSimb *tabela, char *fileName, char code) {
+void geraCodigo(TreeNode *programa, char *fileName, char code) {
 	contextoGlobal = LLVMGetGlobalContext();
 	builderGlobal = LLVMCreateBuilderInContext(contextoGlobal);
 	LLVMModuleRef module = LLVMModuleCreateWithNameInContext(fileName, contextoGlobal);
 
 	moduleGlobal = module;
 
-	percorre(programa, tabela);
+	// troca o nome da função principal para 'main'
+	// se houver alguma função main, troca para 'principal'
+	resolveNome(programa);
+	percorre(programa);
 
 	salva(module, fileName, code);
 }
