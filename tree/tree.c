@@ -50,6 +50,10 @@ TreeNode *novo_node(TokenRecord *token, EBNFType bnfval){
     node->max_filhos = NUM_INICIAL_FILHOS;
     node->tipoExpressao = 0;    // 0 é VAZIO. Também pode ser INTEIRO ou FLUTUANTE
 
+    // usado somente no gerador de código
+    node->escopo = NULL;
+    node->llvmValueRef = NULL;
+
     nullPosicoes(node, 0, node->max_filhos);
 
     return node;
