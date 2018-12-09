@@ -26,6 +26,9 @@ typedef struct TreeNode {
 	EBNFType bnfval;			// tipo do nó de acordo com a BNF
 	/* USADO PELO ANALISADOR SEMÂNTICO */
 	TokenType tipoExpressao;	// o tipo desta expressão.
+	/* USADO PELO GERADOR DE CÓDIGO */
+	void *escopo;				// o escopo onde está este nó; não pode ser TabSimb pois gerará erro de include e ifndef
+	void *llvmValueRef;			// a variável do llvm que representa este nó. Este está também no Identificador da tabela de símbolos
 } TreeNode;
 
 /********************************************************************

@@ -26,6 +26,8 @@ typedef struct {
 	TokenType *parametros;			// lista dos parâmetros, caso seja uma função
 	struct Identificador *proximo;	// proximo identificador do escopo
 	TokenRecord *token;				// o token deste identificador, pois se precisar printar erro
+	/* USADO PELO GERADOR DE CÓDIGO */
+	void *llvmValueRef;				// representa a variável no llvm
 
 } Identificador;
 

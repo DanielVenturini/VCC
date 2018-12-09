@@ -49,6 +49,8 @@ Identificador *cria_identificador(TreeNode *var, char funcao, char *nomeArquivo,
 	id->token = token;
 	id->parametros = NULL;
 
+	id->llvmValueRef = NULL;	// usado somente pelo gerador de código
+
 	id->erro = getIndice(var, id, nomeArquivo);
 	return id;
 }
