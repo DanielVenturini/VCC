@@ -13,6 +13,8 @@ LLVMContextRef contextoAtual;
 LLVMModuleRef moduleAtual;
 LLVMBuilderRef builderAtual;
 
+TreeNode *funcaoAtual;
+
 void salva(LLVMModuleRef module, char *fileName, char code) {
 
 	unsigned char tam = strlen(fileName);
@@ -110,6 +112,50 @@ LLVMTypeRef *geraParametros(TreeNode *parametros, unsigned char *qtdParametros) 
 	return paramns;
 }
 
+
+// inicializa as variáveis que estão no parametro
+// mas primeiro tem que criar a função, pois isso
+// essa função é desacoplada da geraDecFuncao
+void inicializaParametros(TreeNode *parametros, LLVMTypeRef *paramns, unsigned char qtd) {
+
+	if(!parametros) {
+		return;
+	}
+
+	// recupera a quantidade de parametros
+	unsigned char i;
+	for(i = 0; i < qtd; i ++) {
+		TreeNode *parametro = parametros->filhos[i];
+
+		// recuperando a função
+		LLVMValueRef funcao = *(LLVMValueRef *) funcaoAtual->llvmValueRef;
+
+		// recuperando o parametro
+		LLVMValueRef *var = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+		*var = LLVMGetParam(funcao, i);
+
+		// salvando na tabela de símbolos e no nó
+		Identificador *id = contem((TabSimb *) parametro->escopo, (char *) parametro->filhos[1]->token->val, 0, 0);
+		id->llvmValueRef = (void *) var;
+		parametro->filhos[1]->llvmValueRef = (void *) var;
+
+		// iniciando os parametros
+		// cria uma variável do tipo do parametro e inicializa com zero rhs
+		// soma ao parametro para inicia-lo
+		LLVMValueRef rhs;
+		if(parametro->tipoExpressao == INTEIRO)
+			rhs = LLVMConstInt(LLVMInt32Type(), 0, 0);
+		else
+			rhs = LLVMConstInt(LLVMFloatType(), 0, 0);
+
+		// parametro propriamente dito
+		LLVMValueRef lhs = LLVMGetParam(funcao, i);
+		LLVMBuildAdd(builderGlobal, lhs, rhs, id->nome);
+		//LLVMBuildLShr(builderGlobal, lhs, rhs, id->nome);
+	}
+}
+
+
 void geraDecFuncao(TreeNode *noFuncao) {
 
 	TokenType tipo = noFuncao->filhos[0]->token->tokenval;
@@ -135,7 +181,9 @@ void geraDecFuncao(TreeNode *noFuncao) {
 
 	// aloca um espaço para a função
 	LLVMValueRef *funcao = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-	*funcao = LLVMAddFunction(moduleGlobal, nome, LLVMFunctionType(tipoRetorno, geraParametros(noFuncao->filhos[pos+1], &qtdParametros), qtdParametros, 0));
+	// já recupera a lista de parâmetros
+	LLVMTypeRef *paramns = geraParametros(noFuncao->filhos[pos+1], &qtdParametros);
+	*funcao = LLVMAddFunction(moduleGlobal, nome, LLVMFunctionType(tipoRetorno, paramns, qtdParametros, 0));
 
 	// Declara o bloco de entrada.
   	LLVMBasicBlockRef entryBlock = LLVMAppendBasicBlockInContext(contextoGlobal, *funcao, "entry");
@@ -149,6 +197,9 @@ void geraDecFuncao(TreeNode *noFuncao) {
 
 	// Adiciona o bloco de entrada.
 	LLVMPositionBuilderAtEnd(builderGlobal, entryBlock);
+
+	// recupera os parametros e insere nos nós respectivos
+	inicializaParametros(noFuncao->filhos[pos+1], paramns, qtdParametros);
 }
 
 
@@ -210,10 +261,12 @@ void percorre(TreeNode *node) {
 
 		case DECLARACAO_VARIAVEIS:
 			// cria os LLVMValueRef, insere na tabela de símbolos e na árvore e gera código
-			//geraDecVariaveis(node);
+			geraDecVariaveis(node);
 			break;
 
 		case DECLARACAO_FUNCAO:
+			// salva a função atual
+			funcaoAtual = node;
 			// gera o código do cabeçalho da função
 			geraDecFuncao(node);
 			break;
@@ -231,6 +284,7 @@ void percorre(TreeNode *node) {
 	// se for uma função, finaliza ela
 	if(node->bnfval == DECLARACAO_FUNCAO) {
 		geraEndFuncao(node);
+		funcaoAtual = NULL;
 	}
 }
 

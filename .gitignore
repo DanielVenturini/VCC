@@ -3,6 +3,8 @@ main
 *.tpp
 syntactic/parse
 *.dot
+*.bc
+*.s
 
 # Prerequisites
 *.d
