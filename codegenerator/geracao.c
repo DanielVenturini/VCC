@@ -68,9 +68,41 @@ void resolveNome(TreeNode *programa) {
 }
 
 
-void geraDecVariaveis(TreeNode *declaracao) {
 
-	TokenType tipo = declaracao->filhos[0]->tipoExpressao;	// INTEIRO ou FLUTUANTE
+void geraDecVariaveisGlobal(TreeNode *declaracao) {
+
+	TokenType tipo = declaracao->filhos[0]->token->tokenval;// INTEIRO ou FLUTUANTE
+	TreeNode *lista = declaracao->filhos[1];				// LISTA_VARIAVEIS
+
+	LLVMTypeRef tipoLista = tipo == INTEIRO ? LLVMIntType(32) : LLVMFloatType();
+	printf("Tipo: %d.\n", tipo);
+	unsigned char i;
+	for(i = 0; lista->filhos[i]; i ++) {
+
+		TreeNode *var = lista->filhos[i];
+		Identificador *id = contem((TabSimb *) var->escopo, (char *) var->token->val, 0, 0);
+
+		// LLVMValueRef LLVMAddGlobal(LLVMModuleRef M, LLVMTypeRef Ty, const char *Name);
+		LLVMValueRef varLLVM = LLVMAddGlobal(moduleGlobal, tipoLista, (char *) id->nome);
+
+		// void LLVMSetInitializer(LLVMValueRef GlobalVar, LLVMValueRef ConstantVal);
+		LLVMSetInitializer(varLLVM, LLVMConstInt(tipoLista, 0, 0));
+
+		// common.
+		LLVMSetLinkage(varLLVM, LLVMCommonLinkage);
+
+		// Alignment.
+		LLVMSetAlignment(varLLVM, 4);
+
+		var->llvmValueRef = (void *) varLLVM;
+		id->llvmValueRef = (void *) varLLVM;
+	}
+}
+
+
+void geraDecVariaveisLocal(TreeNode *declaracao) {
+
+	TokenType tipo = declaracao->filhos[0]->token->tokenval;// INTEIRO ou FLUTUANTE
 	TreeNode *lista = declaracao->filhos[1];				// LISTA_VARIAVEIS
 
 	LLVMTypeRef tipoLista = tipo == INTEIRO ? LLVMIntType(32) : LLVMFloatType();
@@ -80,6 +112,16 @@ void geraDecVariaveis(TreeNode *declaracao) {
 		LLVMValueRef var = LLVMBuildAlloca(builderGlobal, tipoLista, (char *) lista->filhos[i]->token->val);
 		LLVMSetAlignment(var, 4);
 		LLVMBuildStore(builderGlobal, LLVMConstInt(tipoLista, 0, 0), var);		// penúltimo parâmetro é false
+	}
+
+}
+void geraDecVariaveis(TreeNode *declaracao) {
+
+	// se estiver no escopo global
+	if(!funcaoAtual) {
+		geraDecVariaveisGlobal(declaracao);
+	} else {
+		geraDecVariaveisLocal(declaracao);
 	}
 }
 
