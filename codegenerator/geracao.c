@@ -8,11 +8,6 @@ LLVMContextRef contextoGlobal;
 LLVMModuleRef moduleGlobal;
 LLVMBuilderRef builderGlobal;
 
-// essas conterão os valores atuais em um determinado instante
-LLVMContextRef contextoAtual;
-LLVMModuleRef moduleAtual;
-LLVMBuilderRef builderAtual;
-
 TreeNode *funcaoAtual;
 
 void salva(LLVMModuleRef module, char *fileName, char code) {
@@ -23,9 +18,8 @@ void salva(LLVMModuleRef module, char *fileName, char code) {
 	sprintf(fileNameOut, "%s.bc", fileName);						// concatenando o nome original com '.bc'
 
 	// Escreve para um arquivo no formato bitcode.
-	if (LLVMWriteBitcodeToFile(module, fileNameOut) != 0) {
+	if (LLVMWriteBitcodeToFile(module, fileNameOut) != 0)
 		fprintf(stderr, "error writing bitcode to file, skipping\n");
-	}
 
 	// Imprime o código do módulo.
 	if(code)
@@ -55,11 +49,10 @@ void resolveNome(TreeNode *programa) {
 
 		char *nomeFinal = nome;
 
-		if(!strcmp("principal", nome)) {	// se for a função principal, troca para main
+		if(!strcmp("principal", nome))	// se for a função principal, troca para main
 			nomeFinal = "main";
-		} else if (!strcmp("main", nome)) {	// se houver uma função chamada main, troca para principal
+		else if (!strcmp("main", nome))	// se houver uma função chamada main, troca para principal
 			nomeFinal = "principal";
-		}
 
 		// substitui pelo nome alterado ou mantém o nome original
 		funcao->filhos[pos]->token->val = (void *) nomeFinal;
@@ -73,6 +66,10 @@ LLVMTypeRef getTipoGen(TreeNode *node) {
 }
 
 
+char isFuncao(TreeNode *expressao) {
+	return expressao->bnfval == CHAMADA_FUNCAO;
+}
+
 void geraDecVariaveisGlobal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *lista) {
 
 	unsigned char i;
@@ -81,15 +78,13 @@ void geraDecVariaveisGlobal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *li
 		TreeNode *var = lista->filhos[i];
 		Identificador *id = contem((TabSimb *) var->escopo, (char *) var->token->val, 0, 0);
 
-		// LLVMValueRef LLVMAddGlobal(LLVMModuleRef M, LLVMTypeRef Ty, const char *Name);
 		LLVMValueRef *varLLVM = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
 		*varLLVM = LLVMAddGlobal(moduleGlobal, tipo, (char *) id->nome);
 
-		// void LLVMSetInitializer(LLVMValueRef GlobalVar, LLVMValueRef ConstantVal);
-		LLVMSetInitializer(*varLLVM, LLVMConstInt(tipo, 0, 0));
-
-		// common.
-		LLVMSetLinkage(*varLLVM, LLVMCommonLinkage);
+		if(var->tipoExpressao == INTEIRO)
+			LLVMSetInitializer(*varLLVM, LLVMConstInt(tipo, 0, 0));
+		else
+			LLVMSetInitializer(*varLLVM, LLVMConstReal(tipo, 0.0));
 
 		// Alignment.
 		LLVMSetAlignment(*varLLVM, 4);
@@ -121,6 +116,8 @@ void geraDecVariaveisLocal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *lis
 	}
 
 }
+
+
 void geraDecVariaveis(TreeNode *declaracao) {
 
 	// INTEIRO ou FLUTUANTE
@@ -129,11 +126,10 @@ void geraDecVariaveis(TreeNode *declaracao) {
 	TreeNode *lista = declaracao->filhos[1];
 
 	// se estiver no escopo global
-	if(!funcaoAtual) {
+	if(!funcaoAtual)
 		geraDecVariaveisGlobal(declaracao, tipo, lista);
-	} else {
+	else
 		geraDecVariaveisLocal(declaracao, tipo, lista);
-	}
 }
 
 
@@ -293,13 +289,11 @@ void geraEndFuncao(TreeNode *noFuncao) {
 	// Adiciona o bloco de saída.
 	LLVMPositionBuilderAtEnd(builderGlobal, exitFunc);
 
-	if(pos) {
-		// Cria o return.
+	// Cria o return
+	if(pos)
 		LLVMBuildRet(builderGlobal, LLVMBuildLoad(builderGlobal, returnVal, "retorno"));
-	} else {
-		// Cria um return vazio
-		LLVMBuildRetVoid(builderGlobal);
-	}
+	else
+		LLVMBuildRetVoid(builderGlobal);	// Cria um return vazio
 }
 
 
@@ -309,18 +303,30 @@ void geraAtribuicao(TreeNode *node) {
 	TreeNode *var = node->filhos[0];
 	TreeNode *expressao = node->filhos[1];
 
-	LLVMTypeRef tipo = getTipoGen(node);
+	// sempre procura nos escopos superiores, para poder usar variáveis globais
+	Identificador *id = contem((TabSimb *) var->escopo, (char *) var->token->val, 1, isFuncao(expressao));
 
-	// recupera o identificador e o LLVMValueRef dele
-	Identificador *id = contem((TabSimb *) var->escopo, (char *) var->token->val, 0, 0);
 	LLVMValueRef *resp = (LLVMValueRef *) id->llvmValueRef;
+	LLVMValueRef *exp = (LLVMValueRef *) expressao->llvmValueRef;
 
 	// atribui com o tipo certo
-	if(var->tipoExpressao == INTEIRO) {
-		LLVMBuildStore(builderGlobal, LLVMConstInt(tipo, 10, 0), *resp);
-	} else {
-		LLVMBuildStore(builderGlobal, LLVMConstReal(tipo, 10.0), *resp);
-	}
+	if(expressao->tipoExpressao == INTEIRO)
+		LLVMBuildStore(builderGlobal, *exp, *resp);
+	else
+		LLVMBuildStore(builderGlobal, *exp, *resp);
+}
+
+
+// apenas cria um número do LLVM e insere no nó
+void geraNumero(TreeNode *node) {
+
+	LLVMValueRef *num = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+	if(node->tipoExpressao == INTEIRO)
+		*num = LLVMConstInt(LLVMIntType(32), *(int *) node->token->val, 0);
+	else
+		*num = LLVMConstReal(LLVMFloatType(), 0.78);
+
+	node->llvmValueRef = (void *) num;
 }
 
 
@@ -344,10 +350,6 @@ void percorre(TreeNode *node) {
 			geraDecFuncao(node);
 			break;
 
-		case NUMERO:
-			//geraNumero(node);
-			break;
-
 		default:
 			printf("");
 	}
@@ -369,7 +371,11 @@ void percorre(TreeNode *node) {
 			break;
 
 		case B_ATRIBUICAO:
-			//geraAtribuicao(node);
+			geraAtribuicao(node);
+			break;
+
+		case NUMERO:
+			geraNumero(node);
 			break;
 
 		default:
