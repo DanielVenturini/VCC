@@ -9,6 +9,9 @@ LLVMModuleRef moduleGlobal;
 LLVMBuilderRef builderGlobal;
 
 TreeNode *funcaoAtual;
+LLVMValueRef *resolveOperando(TreeNode *no);
+EBNFType tipoAnterior;
+unsigned char pos;
 
 void salva(LLVMModuleRef module, char *fileName, char code) {
 
@@ -108,7 +111,11 @@ void geraDecVariaveisLocal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *lis
 		*varLLVM = LLVMBuildAlloca(builderGlobal, tipo, (char *) lista->filhos[i]->token->val);
 
 		LLVMSetAlignment(*varLLVM, 4);
-		LLVMBuildStore(builderGlobal, LLVMConstInt(tipo, 0, 0), *varLLVM);		// penúltimo parâmetro é false
+
+		if(var->tipoExpressao == INTEIRO)
+			LLVMBuildStore(builderGlobal, LLVMConstInt(tipo, 0, 0), *varLLVM);		// penúltimo parâmetro é false
+		else
+			LLVMBuildStore(builderGlobal, LLVMConstReal(tipo, 0.0), *varLLVM);		// penúltimo parâmetro é false
 
 		// guarda o valor no Identificador e no nó
 		var->llvmValueRef = (void *) varLLVM;
@@ -303,17 +310,13 @@ void geraAtribuicao(TreeNode *node) {
 	TreeNode *var = node->filhos[0];
 	TreeNode *expressao = node->filhos[1];
 
-	// sempre procura nos escopos superiores, para poder usar variáveis globais
-	Identificador *id = contem((TabSimb *) var->escopo, (char *) var->token->val, 1, isFuncao(expressao));
+	LLVMValueRef *varOp = resolveOperando(var);
+	LLVMValueRef *expOp = resolveOperando(expressao);
 
-	LLVMValueRef *resp = (LLVMValueRef *) id->llvmValueRef;
-	LLVMValueRef *exp = (LLVMValueRef *) expressao->llvmValueRef;
+	if(expressao->bnfval == VAR)
+		LLVMBuildLoad(builderGlobal, *expOp, "_tp");
 
-	// atribui com o tipo certo
-	if(expressao->tipoExpressao == INTEIRO)
-		LLVMBuildStore(builderGlobal, *exp, *resp);
-	else
-		LLVMBuildStore(builderGlobal, *exp, *resp);
+	LLVMBuildStore(builderGlobal, *expOp, *varOp);
 }
 
 
@@ -321,12 +324,131 @@ void geraAtribuicao(TreeNode *node) {
 void geraNumero(TreeNode *node) {
 
 	LLVMValueRef *num = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-	if(node->tipoExpressao == INTEIRO)
-		*num = LLVMConstInt(LLVMIntType(32), *(int *) node->token->val, 0);
-	else
-		*num = LLVMConstReal(LLVMFloatType(), 0.78);
+	if(node->tipoExpressao == INTEIRO) {
+		*num = LLVMBuildAlloca(builderGlobal, LLVMIntType(32), "_t_num");
+		LLVMBuildStore(builderGlobal, LLVMConstInt(LLVMIntType(32), *(int *) node->token->val, 0), *num);
+	} else {
+		*num = LLVMBuildAlloca(builderGlobal, LLVMFloatType(), "_t_num");
+		LLVMBuildStore(builderGlobal, LLVMConstReal(LLVMFloatType(), *(float *) node->token->val), *num);
+	}
 
 	node->llvmValueRef = (void *) num;
+}
+
+
+// escolhe qual a função que será usada:
+// se o operador for de soma, retorna o ADD ou o SUB
+LLVMValueRef *getOperador(TreeNode *node, TokenType tipo, void *func1, void *func2) {
+	if(node->token->tokenval == tipo)
+		return func1;
+	else
+		return func2;
+}
+
+
+// retorna o tipo da expressão:
+// se for dois inteiro ou dois flutuantes, a expressão se mantém
+// se for diferente, realiza o casting para o tipo do nó que está recebendo
+TokenType resolveTipo(TreeNode *no) {
+	if(no->filhos[0]->tipoExpressao == no->filhos[1]->tipoExpressao)
+		return no->filhos[0]->tipoExpressao;
+
+	TreeNode *noCoercao = NULL;
+	if(no->filhos[0]->tipoExpressao == INTEIRO)
+		noCoercao = no->filhos[1];
+	else
+		noCoercao = no->filhos[0];
+
+	// realiza a coerção
+	LLVMValueRef *novoVar = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+	*novoVar = LLVMBuildAlloca(builderGlobal, LLVMIntType(32), "_coerc");
+	LLVMSetAlignment(*novoVar, 4);
+
+	// inicializando a variável
+	int *valor = (int *) malloc(sizeof(int));
+	*valor = *(float *) noCoercao->token->val;
+	LLVMBuildStore(builderGlobal, LLVMConstInt(LLVMIntType(32), *valor, 0), *novoVar);
+
+	// SE FOR VARIÁVEL, TALVEZ SEJA PERIGOSO AQUI
+	// altera tudo o que tiver para INTEIRO
+	noCoercao->tipoExpressao = INTEIRO;
+	noCoercao->token->tokenval = NUM_I;
+	noCoercao->llvmValueRef = novoVar;
+	noCoercao->token->val = (void *) valor;
+	return INTEIRO;
+}
+
+
+// distingue entre os tipos de operações que usam três endereços
+// verifica qual será o tipo do nó da expressão
+// e retorna a função para realizar a operação
+void *getOperacao(TreeNode *node) {
+
+	node->tipoExpressao = resolveTipo(node);
+	switch(node->bnfval) {
+		case OPERADOR_SOMA:
+			// se o novo tipo for INTEIRO, então recupera a função para inteiro
+			if(node->tipoExpressao == INTEIRO)
+				return getOperador(node, SOMA, &LLVMBuildAdd, &LLVMBuildSub);
+			else
+				return getOperador(node, SOMA, &LLVMBuildFAdd, &LLVMBuildFSub);
+
+		case OPERADOR_MULTIPLICACAO:
+			// se o novo tipo for INTEIRO, então recupera a função para inteiro
+			if(node->tipoExpressao == INTEIRO)
+				return getOperador(node, MULTIPLICACAO, &LLVMBuildMul, &LLVMBuildSDiv);
+			else
+				return getOperador(node, MULTIPLICACAO, &LLVMBuildFMul, &LLVMBuildFDiv);
+
+		/*//LLVMBuildICmp()
+		// LLVMIntPredicate
+		case OPERADOR_RELACIONAL:
+			return getOperador(node, SOMA, &LLVMBuildAdd, &LLVMBuildSub);
+
+		case OPERADOR_LOGICO:
+			return getOperador(node, SOMA, &LLVMBuildAdd, &LLVMBuildSub);*/
+
+		default:
+			printf("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.\n");
+			return NULL;
+	}
+}
+
+
+// retorna um LLVMValueRef representando este operando
+// este operando pode ser um número, função ou variável
+LLVMValueRef *resolveOperando(TreeNode *no) {
+
+	if(no->bnfval == NUMERO)
+		return (LLVMValueRef *) no->llvmValueRef;
+	else if(no->bnfval != VAR && no->bnfval != CHAMADA_FUNCAO)
+		return (LLVMValueRef *) no->llvmValueRef;
+
+	// é uma função ou uma variável
+	// então recupera o id e retorna o llvmValueRef
+	Identificador *id = contem(no->escopo, (char *) no->token->val, 1, isFuncao(no));
+	return (LLVMValueRef *) id->llvmValueRef;
+}
+
+
+void geraTresEnderecos(TreeNode *node) {
+
+	TreeNode *noL = node->filhos[0];
+	TreeNode *noR = node->filhos[1];
+
+	// recupera a função
+	LLVMValueRef (*operacao)(LLVMBuilderRef, LLVMValueRef, LLVMValueRef, const char *) = getOperacao(node);
+
+	// recupera o LLVMValueRef dos dois operando
+	LLVMValueRef *op1 = resolveOperando(noL);
+	LLVMValueRef *op2 = resolveOperando(noR);
+
+	// executa a operacao, e guarda em uma variável temporária
+	LLVMValueRef *_tp = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+	*_tp = operacao(builderGlobal, *op1, *op2, "_tp");
+
+	// coloca no nó o seu LLVMValueRef
+	node->llvmValueRef = (void *) _tp;
 }
 
 
@@ -356,7 +478,10 @@ void percorre(TreeNode *node) {
 
 	unsigned char i;
 	for(i = 0; node->filhos[i]; i ++) {
+		pos = i;
+		tipoAnterior = node->bnfval;
 		TreeNode *filho = node->filhos[i];
+
 		percorre(filho);
 	}
 
@@ -378,6 +503,14 @@ void percorre(TreeNode *node) {
 			geraNumero(node);
 			break;
 
+		// CÓDIGO DE TRÊS ENDEREÇOS
+		case OPERADOR_SOMA:
+		case OPERADOR_RELACIONAL:
+		case OPERADOR_LOGICO:
+		case OPERADOR_MULTIPLICACAO:
+			geraTresEnderecos(node);
+			break;
+
 		default:
 			printf("");
 	}
@@ -393,6 +526,7 @@ void geraCodigo(TreeNode *programa, char *fileName, char code) {
 
 	// troca o nome da função principal para 'main'
 	// se houver alguma função main, troca para 'principal'
+	tipoAnterior = -1;
 	resolveNome(programa);
 	percorre(programa);
 
