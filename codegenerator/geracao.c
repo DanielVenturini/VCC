@@ -47,7 +47,7 @@ void resolveNome(TreeNode *programa) {
 		TreeNode *funcao = programa->filhos[i];
 
 		// recupera a posição do nó que contém o nome da função
-		TokenType tipo = funcao->filhos[0]->tipoExpressao;	// INTEIRO, FLUTUANTE ou VAZIO
+		TokenType tipo = funcao->filhos[0]->token->tokenval;		// INTEIRO, FLUTUANTE ou VAZIO
 		unsigned char pos = (tipo == INTEIRO || tipo == FLUTUANTE) ? 1 : 0;
 
 		char *nome = (char *) funcao->filhos[pos]->token->val;
@@ -62,7 +62,7 @@ void resolveNome(TreeNode *programa) {
 		}
 
 		// substitui pelo nome alterado ou mantém o nome original
-		funcao->filhos[pos]->token->val = nomeFinal;
+		funcao->filhos[pos]->token->val = (void *) nomeFinal;
 		id->nome = nomeFinal;
 	}
 }
@@ -154,12 +154,7 @@ LLVMTypeRef *geraParametros(TreeNode *parametros, unsigned char *qtdParametros) 
 
 	for(i = 0; i < *qtdParametros; i ++) {
 		TreeNode *parametro = parametros->filhos[i];
-
-		if(parametro->filhos[0]->token->tokenval == INTEIRO) {
-			paramns[i] = LLVMInt32Type();
-		} else {
-			paramns[i] = LLVMFloatType();
-		}
+		paramns[i] = getTipoGen(parametro);
 	}
 
 	return paramns;
@@ -183,28 +178,20 @@ void inicializaParametros(TreeNode *parametros, LLVMTypeRef *paramns, unsigned c
 		// recuperando a função
 		LLVMValueRef funcao = *(LLVMValueRef *) funcaoAtual->llvmValueRef;
 
-		// recuperando o parametro
-		LLVMValueRef *var = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-		*var = LLVMGetParam(funcao, i);
-
-		// salvando na tabela de símbolos e no nó
+		// recupera a variável, parâmetro e cria a variávelLLVM
 		Identificador *id = contem((TabSimb *) parametro->escopo, (char *) parametro->filhos[1]->token->val, 0, 0);
+		LLVMValueRef param = LLVMGetParam(funcao, i);
+		LLVMValueRef *var = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+		*var = LLVMBuildAlloca(builderGlobal, getTipoGen(parametro), (char *) id->nome);
+
+		LLVMSetAlignment(*var, 4);
+
+		// inicializando a variável
+		LLVMBuildStore(builderGlobal, param, *var);
+
+		// salva a variável na tabela e no nó
 		id->llvmValueRef = (void *) var;
-		parametro->filhos[i]->llvmValueRef = (void *) var;
-
-		// iniciando os parametros
-		// cria uma variável do tipo do parametro e inicializa com zero rhs
-		// soma ao parametro para inicia-lo
-		LLVMValueRef rhs = LLVMConstInt(getTipoGen(parametro), 0, 0);
-		/*if(parametro->tipoExpressao == INTEIRO)
-			rhs = LLVMConstInt(LLVMInt32Type(), 0, 0);
-		else
-			rhs = LLVMConstInt(LLVMFloatType(), 0, 0);*/
-
-		// parametro propriamente dito
-		LLVMValueRef lhs = LLVMGetParam(funcao, i);
-		LLVMBuildAdd(builderGlobal, lhs, rhs, id->nome);
-		//LLVMBuildLShr(builderGlobal, lhs, rhs, id->nome);
+		parametro->filhos[1]->llvmValueRef = (void *) var;
 	}
 }
 
@@ -256,6 +243,9 @@ void geraDecFuncao(TreeNode *noFuncao) {
 }
 
 
+// cria um bloco exit: no fim da função
+// cria uma label para saltar para este bloco
+// se for vazia a função, cria o bloco unreachable
 void geraEndFuncao(TreeNode *noFuncao) {
 
 	TokenType tipo = noFuncao->filhos[0]->token->tokenval;
@@ -273,8 +263,8 @@ void geraEndFuncao(TreeNode *noFuncao) {
 		valorRetorno = LLVMConstReal(LLVMFloatType(), 0);			// Cria um valor zero para colocar no retorno.
 		tipoFuncaoRetorno = &LLVMFloatType;
 	} else {	// vazio
-		valorRetorno = LLVMConstReal(LLVMFloatType(), 0);			// Cria um valor zero para colocar no retorno.
-		tipoFuncaoRetorno = &LLVMFloatType;
+		valorRetorno = LLVMConstReal(LLVMVoidType(), 0);			// Cria um valor zero para colocar no retorno.
+		tipoFuncaoRetorno = &LLVMVoidType;
 		pos = 0;
 	}
 
@@ -282,14 +272,19 @@ void geraEndFuncao(TreeNode *noFuncao) {
 	LLVMValueRef *funcao = (LLVMValueRef *) noFuncao->llvmValueRef;
 
 	// Declara o bloco de saída.
-	LLVMBasicBlockRef exitFunc = LLVMAppendBasicBlock(*funcao, "exit");
-
+	LLVMBasicBlockRef exitFunc = NULL;
 	LLVMValueRef returnVal = NULL;
+
 	// se for VOID, não cria tipo de retorno
 	if(pos) {
 		// Cria o valor de retorno e inicializa com zero.
 		returnVal = LLVMBuildAlloca(builderGlobal, tipoFuncaoRetorno(), "retorno");
 		LLVMBuildStore(builderGlobal, valorRetorno, returnVal);
+		// cria um bloco exit, pois a função possui retorna()
+		exitFunc = LLVMAppendBasicBlock(*funcao, "ret");
+	} else {
+		// cria um bloco unreachable
+		exitFunc = LLVMAppendBasicBlock(*funcao, "unreachable");
 	}
 
 	// Cria um salto para o bloco de saída.
@@ -300,7 +295,10 @@ void geraEndFuncao(TreeNode *noFuncao) {
 
 	if(pos) {
 		// Cria o return.
-		LLVMBuildRet(builderGlobal, LLVMBuildLoad(builderGlobal, returnVal, ""));
+		LLVMBuildRet(builderGlobal, LLVMBuildLoad(builderGlobal, returnVal, "retorno"));
+	} else {
+		// Cria um return vazio
+		LLVMBuildRetVoid(builderGlobal);
 	}
 }
 
@@ -346,6 +344,10 @@ void percorre(TreeNode *node) {
 			geraDecFuncao(node);
 			break;
 
+		case NUMERO:
+			//geraNumero(node);
+			break;
+
 		default:
 			printf("");
 	}
@@ -367,7 +369,7 @@ void percorre(TreeNode *node) {
 			break;
 
 		case B_ATRIBUICAO:
-			geraAtribuicao(node);
+			//geraAtribuicao(node);
 			break;
 
 		default:
