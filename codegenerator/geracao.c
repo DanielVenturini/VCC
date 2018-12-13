@@ -9,7 +9,8 @@ LLVMModuleRef moduleGlobal;
 LLVMBuilderRef builderGlobal;
 
 TreeNode *funcaoAtual;
-LLVMValueRef *resolveOperando(TreeNode *no);
+TabSimb *escopoGlobal;
+LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load);
 EBNFType tipoAnterior;
 unsigned char pos;
 
@@ -84,11 +85,14 @@ void geraDecVariaveisGlobal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *li
 		LLVMValueRef *varLLVM = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
 		*varLLVM = LLVMAddGlobal(moduleGlobal, tipo, (char *) id->nome);
 
+		// necessário iniciar
 		if(var->tipoExpressao == INTEIRO)
-			LLVMSetInitializer(*varLLVM, LLVMConstInt(tipo, 0, 0));
+			LLVMSetInitializer(*varLLVM, LLVMConstInt(LLVMInt32Type(), 0, 0));
 		else
-			LLVMSetInitializer(*varLLVM, LLVMConstReal(tipo, 0.0));
+			LLVMSetInitializer(*varLLVM, LLVMConstReal(LLVMFloatType(), 0.0));
 
+		// common.
+		LLVMSetLinkage(*varLLVM, LLVMCommonLinkage);
 		// Alignment.
 		LLVMSetAlignment(*varLLVM, 4);
 
@@ -111,11 +115,6 @@ void geraDecVariaveisLocal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *lis
 		*varLLVM = LLVMBuildAlloca(builderGlobal, tipo, (char *) lista->filhos[i]->token->val);
 
 		LLVMSetAlignment(*varLLVM, 4);
-
-		if(var->tipoExpressao == INTEIRO)
-			LLVMBuildStore(builderGlobal, LLVMConstInt(tipo, 0, 0), *varLLVM);		// penúltimo parâmetro é false
-		else
-			LLVMBuildStore(builderGlobal, LLVMConstReal(tipo, 0.0), *varLLVM);		// penúltimo parâmetro é false
 
 		// guarda o valor no Identificador e no nó
 		var->llvmValueRef = (void *) varLLVM;
@@ -304,19 +303,51 @@ void geraEndFuncao(TreeNode *noFuncao) {
 }
 
 
+// retorna 1 se a variável for global
+// se a variável for encontrada no escopo local, então não é global
+char isGlobal(TreeNode *node) {
+	// se encontrar no local, retorna falso
+	if(contem(node->escopo, (char *)node->token->val, 0, isFuncao(node)))
+		return 0;
+
+	// se achar no escopo global, então retorna
+	return contem(escopoGlobal, (char *)node->token->val, 0, isFuncao(node)) ? 1 : 0;
+}
+
+
+void atribuicaoNumero(TreeNode *node, LLVMValueRef *varOp, LLVMValueRef *expOp) {
+	// se estiver no escopo global
+	if(isGlobal(node))
+		LLVMSetInitializer(*varOp, *expOp);
+	else
+		LLVMBuildStore(builderGlobal, *expOp, *varOp);
+}
+
+
 void geraAtribuicao(TreeNode *node) {
 
 	// nó que vai receber o valor
 	TreeNode *var = node->filhos[0];
 	TreeNode *expressao = node->filhos[1];
 
-	LLVMValueRef *varOp = resolveOperando(var);
-	LLVMValueRef *expOp = resolveOperando(expressao);
+	LLVMValueRef *varOp = resolveOperando(var, 0);
+	LLVMValueRef *expOp = resolveOperando(expressao, 1);
 
-	if(expressao->bnfval == VAR)
-		LLVMBuildLoad(builderGlobal, *expOp, "_tp");
+	switch (expressao->bnfval) {
+		// se for um número, apenas inicializa a variável
+		case NUMERO:
+			LLVMBuildStore(builderGlobal, *expOp, *varOp);
+			break;
 
-	LLVMBuildStore(builderGlobal, *expOp, *varOp);
+		// se for um var, primeiro carrega
+		case VAR:
+			LLVMBuildLoad(builderGlobal, *expOp, "");
+
+		// se for uma var, também entrará aqui
+		// qualquer outra coisa, realiza um store
+		default:
+			LLVMBuildStore(builderGlobal, *expOp, *varOp);
+	}
 }
 
 
@@ -324,13 +355,11 @@ void geraAtribuicao(TreeNode *node) {
 void geraNumero(TreeNode *node) {
 
 	LLVMValueRef *num = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-	if(node->tipoExpressao == INTEIRO) {
-		*num = LLVMBuildAlloca(builderGlobal, LLVMIntType(32), "_t_num");
-		LLVMBuildStore(builderGlobal, LLVMConstInt(LLVMIntType(32), *(int *) node->token->val, 0), *num);
-	} else {
-		*num = LLVMBuildAlloca(builderGlobal, LLVMFloatType(), "_t_num");
-		LLVMBuildStore(builderGlobal, LLVMConstReal(LLVMFloatType(), *(float *) node->token->val), *num);
-	}
+
+	if(node->tipoExpressao == INTEIRO)
+		*num = LLVMConstInt(LLVMIntType(32), *(int *) node->token->val, 0);	// último parâmetro é false
+	else
+		*num = LLVMConstReal(LLVMFloatType(), *(float *) node->token->val);	// penúltimo parâmetro é false
 
 	node->llvmValueRef = (void *) num;
 }
@@ -417,7 +446,8 @@ void *getOperacao(TreeNode *node) {
 
 // retorna um LLVMValueRef representando este operando
 // este operando pode ser um número, função ou variável
-LLVMValueRef *resolveOperando(TreeNode *no) {
+// se precisar, realiza um load se for variável
+LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load) {
 
 	if(no->bnfval == NUMERO)
 		return (LLVMValueRef *) no->llvmValueRef;
@@ -426,8 +456,15 @@ LLVMValueRef *resolveOperando(TreeNode *no) {
 
 	// é uma função ou uma variável
 	// então recupera o id e retorna o llvmValueRef
-	Identificador *id = contem(no->escopo, (char *) no->token->val, 1, isFuncao(no));
-	return (LLVMValueRef *) id->llvmValueRef;
+	LLVMValueRef *var = (LLVMValueRef *) contem(no->escopo, (char *) no->token->val, 1, isFuncao(no))->llvmValueRef;
+	if(!load)
+		return var;
+
+	// se for para executar o load
+	//OUTRA ABORDAGEM É NÃO USAR O MALLOC E JOGAR O RETORNO NO PRÓPRIO *var = LLVMBui...
+	LLVMValueRef *varL = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+	*varL = LLVMBuildLoad(builderGlobal, *var, "");
+	return varL;
 }
 
 
@@ -440,15 +477,15 @@ void geraTresEnderecos(TreeNode *node) {
 	LLVMValueRef (*operacao)(LLVMBuilderRef, LLVMValueRef, LLVMValueRef, const char *) = getOperacao(node);
 
 	// recupera o LLVMValueRef dos dois operando
-	LLVMValueRef *op1 = resolveOperando(noL);
-	LLVMValueRef *op2 = resolveOperando(noR);
+	LLVMValueRef *op1 = resolveOperando(noL, 1);
+	LLVMValueRef *op2 = resolveOperando(noR, 1);
 
 	// executa a operacao, e guarda em uma variável temporária
-	LLVMValueRef *_tp = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-	*_tp = operacao(builderGlobal, *op1, *op2, "_tp");
+	LLVMValueRef *temp = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+	*temp = operacao(builderGlobal, *op1, *op2, "temp");
 
 	// coloca no nó o seu LLVMValueRef
-	node->llvmValueRef = (void *) _tp;
+	node->llvmValueRef = (void *) temp;
 }
 
 
@@ -523,6 +560,7 @@ void geraCodigo(TreeNode *programa, char *fileName, char code) {
 	LLVMModuleRef module = LLVMModuleCreateWithNameInContext(fileName, contextoGlobal);
 
 	moduleGlobal = module;
+	escopoGlobal = programa->escopo;
 
 	// troca o nome da função principal para 'main'
 	// se houver alguma função main, troca para 'principal'
