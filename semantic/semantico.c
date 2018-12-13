@@ -10,7 +10,7 @@ Identificador *procura(TabSimb *, TreeNode *, TokenType);
 \**********************************************/
 // função para adaptação da função procura
 Identificador *procura_somente_id(TabSimb *escopoLocal, char *id, TokenRecord *token, TokenType tipoAnterior) {
-	TreeNode *no = novo_node(token, ID);
+	TreeNode *no = novo_node(getToken(), ID);
 	no->token->val = (void *) id;
 
 	return procura(escopoLocal, no, tipoAnterior);
