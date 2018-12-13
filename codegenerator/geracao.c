@@ -319,7 +319,7 @@ void geraAtribuicao(TreeNode *node) {
 
 		// se for um var, primeiro carrega
 		case VAR:
-			LLVMBuildLoad(builderGlobal, *expOp, "");
+			LLVMBuildLoad(builderGlobal, *expOp, "_var");
 
 		// se for uma var, também entrará aqui
 		// qualquer outra coisa, realiza um store
@@ -442,7 +442,7 @@ LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load) {
 	// se for para executar o load
 	//OUTRA ABORDAGEM É NÃO USAR O MALLOC E JOGAR O RETORNO NO PRÓPRIO *var = LLVMBui...
 	LLVMValueRef *varL = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-	*varL = LLVMBuildLoad(builderGlobal, *var, "");
+	*varL = LLVMBuildLoad(builderGlobal, *var, "_var");
 	return varL;
 }
 
@@ -452,16 +452,16 @@ LLVMIntPredicate getComparacao(TreeNode *node) {
 	switch(node->token->tokenval) {
 
 		case MAIOR:
-			return LLVMIntUGT;
+			return LLVMIntSGT;
 
 		case MAIOR_IGUAL:
-			return LLVMIntUGE;
+			return LLVMIntSGE;
 
 		case MENOR:
-			return LLVMIntULT;
+			return LLVMIntSLT;
 
 		case MENOR_IGUAL:
-			return LLVMIntULE;
+			return LLVMIntSLE;
 
 		case IGUALDADE:
 			return LLVMIntEQ;
@@ -521,7 +521,7 @@ void geraTresEnderecos(TreeNode *node) {
 }
 
 
-void blocoIf(TreeNode **node, LLVMBasicBlockRef bloco) {
+void blocoIf(TreeNode **node, LLVMBasicBlockRef bloco, LLVMBasicBlockRef fim) {
 
 	LLVMPositionBuilderAtEnd(builderGlobal, bloco);
 	if(node)
@@ -529,7 +529,7 @@ void blocoIf(TreeNode **node, LLVMBasicBlockRef bloco) {
 
 	// não permite chamar na volta da recursão
 	*node = NULL;
-	LLVMBuildBr(builderGlobal, bloco);
+	LLVMBuildBr(builderGlobal, fim);
 }
 
 
@@ -548,8 +548,8 @@ void geraSe(TreeNode *node) {
 	LLVMValueRef *condicao = resolveOperando(node->filhos[0], 1);
 	LLVMBuildCondBr(builderGlobal, *condicao, se_verdade, se_falso);
 
-	blocoIf(&node->filhos[1], se_verdade);
-	blocoIf(&node->filhos[2], se_falso);
+	blocoIf(&node->filhos[1], se_verdade, se_fim);
+	blocoIf(&node->filhos[2], se_falso, se_fim);
 
 	LLVMPositionBuilderAtEnd(builderGlobal, se_fim);
 }
