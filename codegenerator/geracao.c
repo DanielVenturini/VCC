@@ -8,9 +8,11 @@ LLVMContextRef contextoGlobal;
 LLVMModuleRef moduleGlobal;
 LLVMBuilderRef builderGlobal;
 
+LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load);
+void percorre(TreeNode *no);
+
 TreeNode *funcaoAtual;
 TabSimb *escopoGlobal;
-LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load);
 LLVMValueRef returnVal = NULL;
 LLVMBasicBlockRef exitFunc = NULL;
 EBNFType tipoAnterior;
@@ -405,13 +407,14 @@ void *getOperacao(TreeNode *node) {
 			else
 				return getOperador(node, MULTIPLICACAO, &LLVMBuildFMul, &LLVMBuildFDiv);
 
-		/*//LLVMBuildICmp()
-		// LLVMIntPredicate
 		case OPERADOR_RELACIONAL:
-			return getOperador(node, SOMA, &LLVMBuildAdd, &LLVMBuildSub);
+			if(node->tipoExpressao == INTEIRO)
+				return &LLVMBuildICmp;
+			else
+				return &LLVMBuildFCmp;
 
 		case OPERADOR_LOGICO:
-			return getOperador(node, SOMA, &LLVMBuildAdd, &LLVMBuildSub);*/
+			return getOperador(node, SOMA, &LLVMBuildAdd, &LLVMBuildSub);
 
 		default:
 			printf("OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO.\n");
@@ -444,13 +447,54 @@ LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load) {
 }
 
 
+LLVMIntPredicate getComparacao(TreeNode *node) {
+
+	switch(node->token->tokenval) {
+
+		case MAIOR:
+			return LLVMIntUGT;
+
+		case MAIOR_IGUAL:
+			return LLVMIntUGE;
+
+		case MENOR:
+			return LLVMIntULT;
+
+		case MENOR_IGUAL:
+			return LLVMIntULE;
+
+		case IGUALDADE:
+			return LLVMIntEQ;
+
+		default:
+			return LLVMIntNE;
+	}
+}
+
+
+LLVMValueRef geraTresEnderecosNormal(TreeNode *node, LLVMValueRef *op1, LLVMValueRef *op2) {
+
+	// recupera a função
+	LLVMValueRef (*operacao)(LLVMBuilderRef, LLVMValueRef, LLVMValueRef, const char *) = getOperacao(node);
+
+	return operacao(builderGlobal, *op1, *op2, "temp");
+}
+
+
+// operador lógico é um pouco diferente dos normais
+LLVMValueRef geraTresEnderecosLogico(TreeNode *node, LLVMValueRef *op1, LLVMValueRef *op2) {
+
+	// recupera a função
+	LLVMValueRef (*operacao)(LLVMBuilderRef, LLVMIntPredicate, LLVMValueRef, LLVMValueRef, const char *) = getOperacao(node);
+
+	return operacao(builderGlobal, getComparacao(node), *op1, *op2, "se_teste_1");
+}
+
+
 void geraTresEnderecos(TreeNode *node) {
 
 	TreeNode *noL = node->filhos[0];
 	TreeNode *noR = node->filhos[1];
-
-	// recupera a função
-	LLVMValueRef (*operacao)(LLVMBuilderRef, LLVMValueRef, LLVMValueRef, const char *) = getOperacao(node);
 
 	// recupera o LLVMValueRef dos dois operando
 	LLVMValueRef *op1 = resolveOperando(noL, 1);
@@ -458,12 +502,57 @@ void geraTresEnderecos(TreeNode *node) {
 
 	// executa a operacao, e guarda em uma variável temporária
 	LLVMValueRef *temp = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
-	*temp = operacao(builderGlobal, *op1, *op2, "temp");
+
+	switch(node->bnfval) {
+		case OPERADOR_SOMA:
+		case OPERADOR_LOGICO:
+		case OPERADOR_MULTIPLICACAO:
+			*temp = geraTresEnderecosNormal(node, op1, op2);
+			break;
+
+		// OPERADOR RELACIONAL
+		default:
+			*temp = geraTresEnderecosLogico(node, op1, op2);
+			break;
+	}
 
 	// coloca no nó o seu LLVMValueRef
 	node->llvmValueRef = (void *) temp;
 }
 
+
+void blocoIf(TreeNode **node, LLVMBasicBlockRef bloco) {
+
+	LLVMPositionBuilderAtEnd(builderGlobal, bloco);
+	if(node)
+		percorre(*node);
+
+	// não permite chamar na volta da recursão
+	*node = NULL;
+	LLVMBuildBr(builderGlobal, bloco);
+}
+
+
+void geraSe(TreeNode *node) {
+
+	// percorre para montar a condição
+	percorre(node->filhos[0]);
+
+	LLVMValueRef *escopo = (LLVMValueRef *) funcaoAtual->llvmValueRef;
+
+	LLVMBasicBlockRef se_verdade = LLVMAppendBasicBlock(*escopo, "se_verdade");
+	LLVMBasicBlockRef se_falso = LLVMAppendBasicBlock(*escopo, "se_falso");
+	LLVMBasicBlockRef se_fim = LLVMAppendBasicBlock(*escopo, "se_fim");
+
+	// resolve a o resultado da condição
+	LLVMValueRef *condicao = resolveOperando(node->filhos[0], 1);
+	LLVMBuildCondBr(builderGlobal, *condicao, se_verdade, se_falso);
+
+	blocoIf(&node->filhos[1], se_verdade);
+	blocoIf(&node->filhos[2], se_falso);
+
+	LLVMPositionBuilderAtEnd(builderGlobal, se_fim);
+}
 
 void geraRetorna(TreeNode *node) {
 
@@ -493,6 +582,10 @@ void percorre(TreeNode *node) {
 			funcaoAtual = node;
 			// gera o código do cabeçalho da função
 			geraDecFuncao(node);
+			break;
+
+		case B_SE:
+			geraSe(node);
 			break;
 
 		default:
