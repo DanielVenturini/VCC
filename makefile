@@ -44,7 +44,14 @@ geracao:
 	$(CC) -c codegenerator/geracao.c -o codegenerator/geracao.o $(CFLAGS)
 
 depurar:
-	gdb -q --args vcc exemplos/teste.tpp
+	gdb -q --args ./vcc exemplos/gencode-001.tpp -c
+
+codigo:
+	./vcc exemplos/teste.tpp -c 2> exemplos/teste.ll
+	llc-3.5 exemplos/teste.ll -o exemplos/teste.s
+	gcc exemplos/teste.s -o exemplos/teste.exe
+	./exemplos/teste.exe
+	echo $?
 
 clean:		# apaga os arquivos objetos de compilação
 	rm main.o -f
