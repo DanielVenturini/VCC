@@ -1,5 +1,7 @@
 all: main											# compila todos os arquivos
+
 install: xdot codeinstall main clean move highlight	# instala o vcc
+
 
 # configurações para compilar geracao.c
 CC = clang-3.5

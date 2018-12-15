@@ -28,8 +28,10 @@ void salva(LLVMModuleRef module, char *fileName, char code) {
 	sprintf(fileNameOut, "%s.bc", fileName);						// concatenando o nome original com '.bc'
 
 	// Escreve para um arquivo no formato bitcode.
+
 	if (LLVMWriteBitcodeToFile(module, fileNameOut) != 0)
 		fprintf(stderr, "error writing bitcode to file, skipping\n");
+
 
 	// Imprime o código do módulo.
 	if(code)
@@ -51,7 +53,9 @@ void resolveNome(TreeNode *programa) {
 		TreeNode *funcao = programa->filhos[i];
 
 		// recupera a posição do nó que contém o nome da função
+
 		TokenType tipo = funcao->filhos[0]->token->tokenval;		// INTEIRO, FLUTUANTE ou VAZIO
+
 		unsigned char pos = (tipo == INTEIRO || tipo == FLUTUANTE) ? 1 : 0;
 
 		char *nome = (char *) funcao->filhos[pos]->token->val;
@@ -99,6 +103,7 @@ void geraDecVariaveisGlobal(TreeNode *declaracao, LLVMTypeRef tipo, TreeNode *li
 
 		// common.
 		LLVMSetLinkage(*varLLVM, LLVMCommonLinkage);
+
 		// Alignment.
 		LLVMSetAlignment(*varLLVM, 4);
 
@@ -138,6 +143,7 @@ void geraDecVariaveis(TreeNode *declaracao) {
 	TreeNode *lista = declaracao->filhos[1];
 
 	// se estiver no escopo global
+
 	if(!funcaoAtual)
 		geraDecVariaveisGlobal(declaracao, tipo, lista);
 	else
@@ -241,6 +247,7 @@ void geraDecFuncao(TreeNode *noFuncao) {
   	LLVMBasicBlockRef entryBlock = LLVMAppendBasicBlockInContext(contextoGlobal, *funcao, "entry");
 	exitFunc = LLVMAppendBasicBlock(*funcao, "ret");
 
+
 	// adiciona no nó da árvore e no identificador o seu LLVMValueRef
 	Identificador *id = contem(noFuncao->escopo, nome, 0, 1);
 
@@ -250,9 +257,11 @@ void geraDecFuncao(TreeNode *noFuncao) {
 
 	// Adiciona o bloco de entrada.
 	LLVMPositionBuilderAtEnd(builderGlobal, entryBlock);
+
 	// se for void, não pode alocar: %retorno = alloca void
 	if(pos)
 		returnVal = LLVMBuildAlloca(builderGlobal, retorno, "retorno");	// alocando a variável de retorno
+
 	// recupera os parametros e insere nos nós respectivos
 	inicializaParametros(noFuncao->filhos[pos+1], paramns, qtdParametros);
 }
@@ -275,6 +284,7 @@ void geraEndFuncao(TreeNode *noFuncao) {
 
 	// Adiciona o bloco de saída.
 	LLVMPositionBuilderAtEnd(builderGlobal, exitFunc);
+
 
 	// Cria o return
 	if(pos)
@@ -575,6 +585,7 @@ void geraRetorna(TreeNode *node) {
 	LLVMBuildBr(builderGlobal, exitFunc);
 }
 
+
 void percorre(TreeNode *node) {
 	if(!node)
 		return;
@@ -605,6 +616,7 @@ void percorre(TreeNode *node) {
 
 	unsigned char i;
 	for(i = 0; node->filhos[i]; i ++) {
+
 		pos = i;
 		tipoAnterior = node->bnfval;
 		TreeNode *filho = node->filhos[i];
@@ -647,6 +659,7 @@ void percorre(TreeNode *node) {
 	}
 }
 
+
 void geraCodigo(TreeNode *programa, char *fileName, char code) {
 	contextoGlobal = LLVMGetGlobalContext();
 	builderGlobal = LLVMCreateBuilderInContext(contextoGlobal);
@@ -658,6 +671,7 @@ void geraCodigo(TreeNode *programa, char *fileName, char code) {
 	// troca o nome da função principal para 'main'
 	// se houver alguma função main, troca para 'principal'
 	tipoAnterior = -1;
+
 	resolveNome(programa);
 	percorre(programa);
 
