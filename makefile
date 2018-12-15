@@ -1,5 +1,5 @@
 all: main											# compila todos os arquivos
-install: main clean move xdot codeinstall highlight	# instala o vcc
+install: xdot codeinstall main clean move highlight	# instala o vcc
 
 # configurações para compilar geracao.c
 CC = clang-3.5
@@ -71,7 +71,7 @@ xdot:		# instala o xdot
 codeinstall:	# instala llvm e clang, todos na versão 3.5; biblioteca necessária para o -ledit
 	apt-get install clang-3.5 --allow-unauthenticated -y
 	apt-get install llvm-3.5 --allow-unauthenticated -y
-	#apt-get install libedit-dev --allow-unauthenticated -y
+	apt-get install libedit-dev --allow-unauthenticated -y
 	#apt-get install libcxxtools-dev --allow-unauthenticated -y
 	#apt-get install libcxxtools9v5 --allow-unauthenticated -y
 	cp /usr/lib/llvm-3.5/include/llvm-c/ /usr/include/ -r
