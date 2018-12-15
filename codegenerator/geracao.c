@@ -222,6 +222,7 @@ void geraDecFuncao(TreeNode *noFuncao) {
 		retorno = LLVMFloatType();
 	} else {	// vazio
 		tipoRetorno = LLVMVoidTypeInContext(contextoGlobal);
+		retorno = LLVMVoidType();
 		pos = 0;
 	}
 
@@ -249,7 +250,9 @@ void geraDecFuncao(TreeNode *noFuncao) {
 
 	// Adiciona o bloco de entrada.
 	LLVMPositionBuilderAtEnd(builderGlobal, entryBlock);
-	returnVal = LLVMBuildAlloca(builderGlobal, retorno, "retorno");	// alocando a variável de retorno
+	// se for void, não pode alocar: %retorno = alloca void
+	if(pos)
+		returnVal = LLVMBuildAlloca(builderGlobal, retorno, "retorno");	// alocando a variável de retorno
 	// recupera os parametros e insere nos nós respectivos
 	inicializaParametros(noFuncao->filhos[pos+1], paramns, qtdParametros);
 }
