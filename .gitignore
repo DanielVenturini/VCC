@@ -5,6 +5,8 @@ syntactic/parse
 *.dot
 *.bc
 *.s
+*.ll
+
 
 # Prerequisites
 *.d

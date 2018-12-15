@@ -1,5 +1,7 @@
 all: main											# compila todos os arquivos
-install: main clean move xdot codeinstall highlight	# instala o vcc
+
+install: xdot codeinstall main clean move highlight	# instala o vcc
+
 
 # configurações para compilar geracao.c
 CC = clang-3.5
@@ -44,7 +46,14 @@ geracao:
 	$(CC) -c codegenerator/geracao.c -o codegenerator/geracao.o $(CFLAGS)
 
 depurar:
-	gdb -q --args vcc exemplos/teste.tpp
+	gdb -q --args ./vcc exemplos/gencode-001.tpp -c
+
+codigo:
+	./vcc exemplos/teste.tpp -c 2> exemplos/teste.ll
+	llc-3.5 exemplos/teste.ll -o exemplos/teste.s
+	gcc exemplos/teste.s -o exemplos/teste.exe
+	./exemplos/teste.exe
+	echo $?
 
 clean:		# apaga os arquivos objetos de compilação
 	rm main.o -f
@@ -64,7 +73,7 @@ xdot:		# instala o xdot
 codeinstall:	# instala llvm e clang, todos na versão 3.5; biblioteca necessária para o -ledit
 	apt-get install clang-3.5 --allow-unauthenticated -y
 	apt-get install llvm-3.5 --allow-unauthenticated -y
-	#apt-get install libedit-dev --allow-unauthenticated -y
+	apt-get install libedit-dev --allow-unauthenticated -y
 	#apt-get install libcxxtools-dev --allow-unauthenticated -y
 	#apt-get install libcxxtools9v5 --allow-unauthenticated -y
 	cp /usr/lib/llvm-3.5/include/llvm-c/ /usr/include/ -r
