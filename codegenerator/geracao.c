@@ -314,6 +314,9 @@ void geraAtribuicao(TreeNode *node) {
 	LLVMValueRef *varOp = resolveOperando(var, 0);
 	LLVMValueRef *expOp = resolveOperando(expressao, 1);
 
+	// variável para guardar a resposta da atribuição
+	LLVMValueRef *resp = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
+
 	switch (expressao->bnfval) {
 		// se for um número, apenas inicializa a variável
 		case NUMERO:
@@ -329,6 +332,11 @@ void geraAtribuicao(TreeNode *node) {
 		default:
 			LLVMBuildStore(builderGlobal, *expOp, *varOp);
 	}
+
+	// carrega a variável atribuida para jogar no nó da atribuição
+	*resp = LLVMBuildLoad(builderGlobal,*varOp, "_res");
+
+	node->llvmValueRef = (void *) resp;
 }
 
 
