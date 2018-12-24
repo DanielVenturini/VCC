@@ -439,13 +439,17 @@ void *getOperacao(TreeNode *node) {
 // se precisar, realiza um load se for variável
 LLVMValueRef *resolveOperando(TreeNode *no, unsigned char load) {
 
-	if(no->bnfval == NUMERO)
-		return (LLVMValueRef *) no->llvmValueRef;
-	else if(no->bnfval != VAR && no->bnfval != CHAMADA_FUNCAO)
+	if(no->bnfval != VAR && no->bnfval != CHAMADA_FUNCAO)
 		return (LLVMValueRef *) no->llvmValueRef;
 
 	// é uma função ou uma variável
 	// então recupera o id e retorna o llvmValueRef
+	if(!contem(no->escopo, (char *) no->token->val, 1, isFuncao(no))) {
+		//printf("no->bnfval : %d.\n", no->bnfval);
+		//printToken(no->token, 0, 0);
+		return NULL;
+	}
+
 	LLVMValueRef *var = (LLVMValueRef *) contem(no->escopo, (char *) no->token->val, 1, isFuncao(no))->llvmValueRef;
 	if(!load)
 		return var;
@@ -498,6 +502,7 @@ LLVMValueRef geraTresEnderecosLogico(TreeNode *node, LLVMValueRef *op1, LLVMValu
 	// recupera a função
 	LLVMValueRef (*operacao)(LLVMBuilderRef, LLVMIntPredicate, LLVMValueRef, LLVMValueRef, const char *) = getOperacao(node);
 
+	//return operacao(builderGlobal, getComparacao(node), *(LLVMValueRef *) node->filhos[0]->llvmValueRef, *op2, "se_teste_1");
 	return operacao(builderGlobal, getComparacao(node), *op1, *op2, "se_teste_1");
 }
 
@@ -510,6 +515,10 @@ void geraTresEnderecos(TreeNode *node) {
 	// recupera o LLVMValueRef dos dois operando
 	LLVMValueRef *op1 = resolveOperando(noL, 1);
 	LLVMValueRef *op2 = resolveOperando(noR, 1);
+
+	if(!op1 || !op2) {
+		//printArvoreX(node, "danielzin", 1);
+	}
 
 	// executa a operacao, e guarda em uma variável temporária
 	LLVMValueRef *temp = (LLVMValueRef *) malloc(sizeof(LLVMValueRef));
